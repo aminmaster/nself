@@ -105,8 +105,10 @@ wizard_service_passwords() {
 
   # Hasura Admin Secret
   local hasura_enabled=false
-  for item in "${!config_array_name}[@]"; do
-    eval "local cfg_item=\${${config_array_name}[$item]}"
+  # Hasura Admin Secret
+  local hasura_enabled=false
+  eval "local config_values=(\"\${${config_array_name}[@]}\")"
+  for cfg_item in "${config_values[@]}"; do
     if [[ "$cfg_item" == "HASURA_ENABLED=true" ]]; then
       hasura_enabled=true
       break
@@ -141,8 +143,10 @@ wizard_service_passwords() {
 
   # Storage/MinIO credentials
   local storage_enabled=false
-  for item in "${!config_array_name}[@]"; do
-    eval "local cfg_item=\${${config_array_name}[$item]}"
+  # Storage/MinIO credentials
+  local storage_enabled=false
+  eval "local config_values=(\"\${${config_array_name}[@]}\")"
+  for cfg_item in "${config_values[@]}"; do
     if [[ "$cfg_item" == "STORAGE_ENABLED=true" ]]; then
       storage_enabled=true
       break
