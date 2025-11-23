@@ -96,9 +96,64 @@ wizard_core_settings() {
       0)
         eval "$config_array_name+=('SSL_PROVIDER=letsencrypt')"
         echo ""
+        
+        # Let's Encrypt Environment (Staging vs Production)
+        echo "Let's Encrypt Environment:"
+        local le_env_options=(
+          "Staging - Safe for testing (untrusted CA, higher rate limits)"
+          "Production - Live certificates (trusted CA, strict rate limits)"
+        )
+        local selected_le_env
+        select_option "Select environment" le_env_options selected_le_env
+        
+        if [[ $selected_le_env -eq 0 ]]; then
+          eval "$config_array_name+=('LETSENCRYPT_ENV=staging')"
+        else
+          eval "$config_array_name+=('LETSENCRYPT_ENV=production')"
+        fi
+        
+        echo ""
         local cert_email
         prompt_input "Email for Let's Encrypt notifications" "admin@$base_domain" cert_email
         eval "$config_array_name+=('LETSENCRYPT_EMAIL=$cert_email')"
+        
+        echo ""
+        echo "DNS Provider (required for wildcard certificates):"
+        local dns_options=(
+          "Cloudflare"
+          "Route53 (AWS)"
+          "DigitalOcean"
+        )
+        local selected_dns
+        select_option "Select DNS provider" dns_options selected_dns
+        
+        case $selected_dns in
+          0)
+            eval "$config_array_name+=('DNS_PROVIDER=cloudflare')"
+            echo ""
+            local cf_token cf_email
+            prompt_input "Cloudflare API Token (DNS:Edit permission)" "" cf_token
+            prompt_input "Cloudflare Email" "$cert_email" cf_email
+            eval "$config_array_name+=('DNS_API_TOKEN=$cf_token')"
+            eval "$config_array_name+=('CF_EMAIL=$cf_email')"
+            ;;
+          1)
+            eval "$config_array_name+=('DNS_PROVIDER=route53')"
+            echo ""
+            local aws_key aws_secret
+            prompt_input "AWS Access Key ID" "" aws_key
+            prompt_input "AWS Secret Access Key" "" aws_secret
+            eval "$config_array_name+=('AWS_ACCESS_KEY_ID=$aws_key')"
+            eval "$config_array_name+=('AWS_SECRET_ACCESS_KEY=$aws_secret')"
+            ;;
+          2)
+            eval "$config_array_name+=('DNS_PROVIDER=digitalocean')"
+            echo ""
+            local do_token
+            prompt_input "DigitalOcean API Key" "" do_token
+            eval "$config_array_name+=('DO_API_KEY=$do_token')"
+            ;;
+        esac
         ;;
       1)
         eval "$config_array_name+=('SSL_PROVIDER=self-signed')"

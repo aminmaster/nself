@@ -245,7 +245,7 @@ wizard_custom_services() {
 
       local service_name service_type service_port
 
-      prompt_input "Service name" "service-$service_count" service_name "^[a-z][a-z0-9-_]*$"
+      prompt_input "Service name" "service-$service_count" service_name "^[a-z][a-z0-9_-]*$"
 
       echo ""
       echo "Service type:"
@@ -254,6 +254,8 @@ wizard_custom_services() {
         "fastapi - Python FastAPI"
         "bullmq-js - BullMQ job processor"
         "grpc - gRPC service"
+        "neo4j - Neo4j Graph Database"
+        "llamaindex - LlamaIndex RAG API"
         "Custom Docker image"
       )
       local selected_type
@@ -264,14 +266,16 @@ wizard_custom_services() {
         1) service_type="fastapi" ;;
         2) service_type="bullmq-js" ;;
         3) service_type="grpc" ;;
-        4)
+        4) service_type="neo4j" ;;
+        5) service_type="llamaindex" ;;
+        6)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
       esac
 
       echo ""
-      prompt_input "Service port" "$((8000 + service_count))" service_port "^[0-9]+$"
+      prompt_input "Service port" "$((8000 + service_count))" service_port "^[0-9][0-9]*$"
 
       eval "$config_array_name+=('CUSTOM_SERVICE_${service_count}=${service_name}:${service_type}:${service_port}')"
 
