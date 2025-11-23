@@ -236,10 +236,24 @@ add_custom_services() {
 
   # Check for custom service definitions
   if [[ -d "services" ]]; then
+    # File-based services
     for service_file in services/*.yml services/*.yaml; do
       if [[ -f "$service_file" ]]; then
         echo "" >> "$file"
         cat "$service_file" >> "$file"
+      fi
+    done
+    
+    # Directory-based services
+    for service_dir in services/*; do
+      if [[ -d "$service_dir" ]]; then
+        if [[ -f "$service_dir/service.yml" ]]; then
+          echo "" >> "$file"
+          cat "$service_dir/service.yml" >> "$file"
+        elif [[ -f "$service_dir/docker-compose.yml" ]]; then
+          echo "" >> "$file"
+          cat "$service_dir/docker-compose.yml" >> "$file"
+        fi
       fi
     done
   fi

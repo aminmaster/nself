@@ -1,0 +1,14 @@
+# Neo4j Service
+
+This service provides a Neo4j graph database instance.
+
+## Configuration
+
+- **Port**: {{SERVICE_PORT}} (HTTP), 7687 (Bolt)
+- **Data**: Persisted in `./data` directory within this service folder.
+- **Auth**: Default user `neo4j`, password configured via `NEO4J_PASSWORD` env var (default: `password`).
+
+## Usage
+
+Access the Neo4j Browser at `http://localhost:{{SERVICE_PORT}}`.
+Connect via Bolt at `bolt://localhost:7687`.
