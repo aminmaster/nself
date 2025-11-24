@@ -1,0 +1,22 @@
+# {{SERVICE_NAME}} (LlamaIndex RAG)
+
+This service provides a RAG (Retrieval-Augmented Generation) API using LlamaIndex.
+
+## Setup
+
+1.  Add your documents (PDF, TXT, MD, etc.) to the `data/` directory.
+2.  Set your OpenAI API key in `.env`: `OPENAI_API_KEY=sk-...` (or configure another LLM provider).
+
+## Usage
+
+### Query
+```bash
+curl -X POST http://localhost:{{SERVICE_PORT}}/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is in the documents?"}'
+```
+
+### Health Check
+```bash
+curl http://localhost:{{SERVICE_PORT}}/healthz
+```

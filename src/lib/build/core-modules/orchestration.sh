@@ -230,7 +230,7 @@ generate_docker_compose() {
 
   if [[ -f "$compose_script" ]]; then
     # Run the compose generation with clean output (disable tracing)
-    if (set +x; bash "$compose_script") >/dev/null 2>&1; then
+    if (set +x; bash "$compose_script"); then
       # Apply health check fixes if available
       if [[ -f "${LIB_ROOT:-/usr/local/lib/nself}/auto-fix/healthcheck-fix.sh" ]]; then
         source "${LIB_ROOT:-/usr/local/lib/nself}/auto-fix/healthcheck-fix.sh"

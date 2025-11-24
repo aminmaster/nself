@@ -16,14 +16,14 @@ wizard_database_config() {
   # Database Name
   local postgres_db
   prompt_input "Database name" "$project_name" postgres_db "^[a-z][a-z0-9_]*$"
-  eval "$config_array_name+=('POSTGRES_DB=$postgres_db')"
+  add_wizard_config "$config_array_name" "POSTGRES_DB" "$postgres_db"
 
   echo ""
 
   # Database User
   local postgres_user
   prompt_input "Database user" "postgres" postgres_user "^[a-z][a-z0-9_]*$"
-  eval "$config_array_name+=('POSTGRES_USER=$postgres_user')"
+  add_wizard_config "$config_array_name" "POSTGRES_USER" "$postgres_user"
 
   echo ""
 
@@ -36,7 +36,7 @@ wizard_database_config() {
   else
     prompt_password "Database password" postgres_password
   fi
-  eval "$config_array_name+=('POSTGRES_PASSWORD=$postgres_password')"
+  add_wizard_secret "$config_array_name" "POSTGRES_PASSWORD" "$postgres_password"
 
   echo ""
 
@@ -45,7 +45,7 @@ wizard_database_config() {
   echo "  Change if you have PostgreSQL already running"
   local postgres_port
   prompt_input "Port" "5432" postgres_port "^[0-9]+$"
-  eval "$config_array_name+=('POSTGRES_PORT=$postgres_port')"
+  add_wizard_config "$config_array_name" "POSTGRES_PORT" "$postgres_port"
 
   echo ""
 
@@ -56,7 +56,7 @@ wizard_database_config() {
     # Connection Pool
     local max_connections
     prompt_input "Max connections" "100" max_connections "^[0-9]+$"
-    eval "$config_array_name+=('POSTGRES_MAX_CONNECTIONS=$max_connections')"
+    add_wizard_config "$config_array_name" "POSTGRES_MAX_CONNECTIONS" "$max_connections"
 
     echo ""
 
@@ -82,7 +82,7 @@ wizard_database_config() {
         prompt_input "Custom size (e.g., 4GB)" "1GB" shared_buffers
         ;;
     esac
-    eval "$config_array_name+=('POSTGRES_SHARED_BUFFERS=$shared_buffers')"
+    add_wizard_config "$config_array_name" "POSTGRES_SHARED_BUFFERS" "$shared_buffers"
 
     echo ""
 
@@ -114,7 +114,7 @@ wizard_database_config() {
     extensions="${extensions%,}"
 
     if [[ -n "$extensions" ]]; then
-      eval "$config_array_name+=('POSTGRES_EXTENSIONS=$extensions')"
+      add_wizard_config "$config_array_name" "POSTGRES_EXTENSIONS" "$extensions"
     fi
   fi
 
@@ -122,7 +122,7 @@ wizard_database_config() {
 
   # Backup Configuration
   if confirm_action "Enable automatic database backups?"; then
-    eval "$config_array_name+=('POSTGRES_BACKUP_ENABLED=true')"
+    add_wizard_config "$config_array_name" "POSTGRES_BACKUP_ENABLED" "true"
 
     echo ""
     echo "Backup schedule:"
@@ -147,14 +147,14 @@ wizard_database_config() {
         prompt_input "Cron expression" "0 0 * * *" backup_schedule
         ;;
     esac
-    eval "$config_array_name+=('POSTGRES_BACKUP_SCHEDULE=\"$backup_schedule\"')"
+    add_wizard_config "$config_array_name" "POSTGRES_BACKUP_SCHEDULE" "$backup_schedule"
 
     echo ""
     local retention_days
     prompt_input "Backup retention (days)" "7" retention_days "^[0-9]+$"
-    eval "$config_array_name+=('POSTGRES_BACKUP_RETENTION_DAYS=$retention_days')"
+    add_wizard_config "$config_array_name" "POSTGRES_BACKUP_RETENTION_DAYS" "$retention_days"
   else
-    eval "$config_array_name+=('POSTGRES_BACKUP_ENABLED=false')"
+    add_wizard_config "$config_array_name" "POSTGRES_BACKUP_ENABLED" "false"
   fi
 
   return 0
@@ -164,7 +164,7 @@ wizard_database_config() {
 generate_password() {
   local length="${1:-16}"
   if command -v openssl >/dev/null 2>&1; then
-    openssl rand -base64 "$length" | tr -d "=+/" | head -c "$length"
+    openssl rand -base64 "$((length * 2))" | tr -d "=+/\n\r" | head -c "$length"
   else
     # Fallback to /dev/urandom
     LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$length"

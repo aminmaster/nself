@@ -1,0 +1,11 @@
+  {{SERVICE_NAME}}:
+    build:
+      context: ./services/{{SERVICE_NAME}}
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_{{SERVICE_NAME}}
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - nself_network

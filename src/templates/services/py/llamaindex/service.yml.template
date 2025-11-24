@@ -1,0 +1,14 @@
+  {{SERVICE_NAME}}:
+    build:
+      context: ./services/{{SERVICE_NAME}}
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_{{SERVICE_NAME}}
+    restart: unless-stopped
+    ports:
+      - "{{SERVICE_PORT}}:{{SERVICE_PORT}}"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./services/{{SERVICE_NAME}}/data:/app/data
+    networks:
+      - nself_network

@@ -155,6 +155,12 @@ generate_template_custom_services() {
     local cs_var="CS_${i}"
     local cs_value="${!cs_var:-}"
 
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${i}"
+      cs_value="${!custom_service_var:-}"
+    fi
+
     [[ -z "$cs_value" ]] && continue
 
     # Parse CS_ format: service_name:template_type:port

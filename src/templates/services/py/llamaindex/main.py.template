@@ -1,0 +1,96 @@
+import os
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document
+from llama_index.core.node_parser import SentenceSplitter
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="{{SERVICE_NAME}}", version="0.1.0")
+
+# Data model for query
+class QueryRequest(BaseModel):
+    query: str
+    similarity_top_k: Optional[int] = 3
+
+class QueryResponse(BaseModel):
+    response: str
+    sources: List[str]
+
+# Global index variable
+index = None
+
+@app.on_event("startup")
+async def startup_event():
+    global index
+    logger.info("Initializing LlamaIndex...")
+    
+    # Check if data directory exists
+    data_dir = "data"
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        # Create a dummy document if empty
+        with open(os.path.join(data_dir, "welcome.txt"), "w") as f:
+            f.write("Welcome to your LlamaIndex RAG service! Add your documents here.")
+    
+    try:
+        # Load documents
+        documents = SimpleDirectoryReader(data_dir).load_data()
+        
+        # Create index
+        if documents:
+            index = VectorStoreIndex.from_documents(
+                documents,
+                transformations=[SentenceSplitter(chunk_size=1024, chunk_overlap=20)]
+            )
+            logger.info(f"Index created with {len(documents)} documents.")
+        else:
+            logger.warning("No documents found in 'data' directory. Index is empty.")
+            # Create empty index
+            index = VectorStoreIndex.from_documents([])
+            
+    except Exception as e:
+        logger.error(f"Failed to initialize index: {e}")
+        # Initialize empty index as fallback
+        index = VectorStoreIndex.from_documents([])
+
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
+
+@app.post("/query", response_model=QueryResponse)
+async def query_index(request: QueryRequest):
+    global index
+    
+    if not index:
+        raise HTTPException(status_code=503, detail="Index not initialized")
+        
+    try:
+        query_engine = index.as_query_engine(similarity_top_k=request.similarity_top_k)
+        response = query_engine.query(request.query)
+        
+        sources = []
+        if hasattr(response, 'source_nodes'):
+            for node in response.source_nodes:
+                sources.append(node.node.get_content()[:200] + "...")
+                
+        return QueryResponse(
+            response=str(response),
+            sources=sources
+        )
+        
+    except Exception as e:
+        logger.error(f"Query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+async def root():
+    return {
+        "service": "{{SERVICE_NAME}}",
+        "status": "running",
+        "docs": "/docs"
+    }

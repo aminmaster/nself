@@ -327,6 +327,14 @@ orchestrate_build() {
   # Load environment files for service detection
   # This tells us WHAT services to build, not HOW to configure them
   load_env_for_detection() {
+    # Peek ENV from .env first to determine which environment to load
+    if [[ -f ".env" ]]; then
+      local env_from_file=$(grep "^ENV=" ".env" | cut -d= -f2 | tr -d '"' | tr -d "'")
+      if [[ -n "$env_from_file" ]]; then
+        export ENV="$env_from_file"
+      fi
+    fi
+
     local env="${ENV:-dev}"
 
     # Load files in cascade order for proper detection
@@ -426,6 +434,12 @@ orchestrate_build() {
     for i in {1..20}; do
       local cs_var="CS_${i}"
       local cs_value="${!cs_var:-}"
+
+      # Fallback to CUSTOM_SERVICE_N
+      if [[ -z "$cs_value" ]]; then
+        local custom_service_var="CUSTOM_SERVICE_${i}"
+        cs_value="${!custom_service_var:-}"
+      fi
 
       if [[ -n "$cs_value" ]]; then
         CUSTOM_SERVICE_COUNT=$((CUSTOM_SERVICE_COUNT + 1))

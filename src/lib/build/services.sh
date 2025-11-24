@@ -187,6 +187,12 @@ generate_custom_service() {
     local cs_var="CS_${cs_num}"
     local cs_value="${!cs_var:-}"
 
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${cs_num}"
+      cs_value="${!custom_service_var:-}"
+    fi
+
     if [[ -z "$cs_value" ]]; then
       break
     fi
@@ -211,7 +217,7 @@ generate_custom_service() {
       local template_found=false
 
       # Look for template in language directories
-      for lang_dir in js python go rust; do
+      for lang_dir in js py go rust db custom; do
         if [[ -d "$template_dir/$lang_dir/$template_type" ]]; then
           # Found the template, copy it
           echo "Copying template '$template_type' to services/$configured_name"
@@ -263,7 +269,7 @@ generate_custom_service_from_template() {
   local template_found=false
 
   # Look for template in language directories
-  for lang_dir in js py go rust; do
+  for lang_dir in js py go rust db custom; do
     if [[ -d "$template_dir/$lang_dir/$template_type" ]]; then
       # Found the template, copy it
       [[ "${VERBOSE:-false}" == "true" ]] && echo "Copying template '$template_type' to services/$service_name"
@@ -308,6 +314,12 @@ generate_custom_services() {
   while true; do
     local cs_var="CS_${cs_num}"
     local cs_value="${!cs_var:-}"
+
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${cs_num}"
+      cs_value="${!custom_service_var:-}"
+    fi
 
     if [[ -z "$cs_value" ]]; then
       break
