@@ -27,7 +27,7 @@ admin_minimal_setup() {
   
   # Pull the admin image (always get latest, suppress output unless there's an update)
   local pull_output
-  pull_output=$(docker pull acamarata/nself-admin:latest 2>&1)
+  pull_output=$(docker pull equilibriango/nself-admin:latest 2>&1)
   if echo "$pull_output" | grep -q "Downloaded newer image"; then
     log_success "Updated nself-admin image"
   elif echo "$pull_output" | grep -q "Image is up to date"; then
@@ -82,7 +82,7 @@ admin_minimal_setup() {
     -e "NSELF_PROJECT_PATH=/workspace" \
     -e "PROJECT_PATH=/workspace" \
     --restart unless-stopped \
-    acamarata/nself-admin:latest 2>&1)
+    equilibriango/nself-admin:latest 2>&1)
 
   if [[ $? -ne 0 ]]; then
     log_error "Failed to start nself-admin container"

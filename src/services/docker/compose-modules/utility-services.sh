@@ -43,7 +43,7 @@ generate_nself_admin_service() {
 
   # nself Admin - Project Management Dashboard
   nself-admin:
-    image: acamarata/nself-admin:${NSELF_ADMIN_VERSION:-latest}
+    image: equilibriango/nself-admin:${NSELF_ADMIN_VERSION:-latest}
     container_name: \${PROJECT_NAME}_admin
     restart: unless-stopped
     networks:

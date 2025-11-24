@@ -19,10 +19,10 @@ wizard_core_services() {
   echo "  Instant GraphQL API over your PostgreSQL database"
   echo "  Features: Real-time subscriptions, auth, permissions"
   if confirm_action "Enable Hasura GraphQL?"; then
-    eval "$config_array_name+=('HASURA_ENABLED=true')"
-    eval "$config_array_name+=('HASURA_PORT=8080')"
+    add_wizard_config "$config_array_name" "HASURA_ENABLED" "true"
+    add_wizard_config "$config_array_name" "HASURA_PORT" "8080"
   else
-    eval "$config_array_name+=('HASURA_ENABLED=false')"
+    add_wizard_config "$config_array_name" "HASURA_ENABLED" "false"
   fi
 
   echo ""
@@ -31,8 +31,8 @@ wizard_core_services() {
   echo "🔐 Authentication Service"
   echo "  User management, JWT tokens, social login"
   if confirm_action "Enable Authentication service?"; then
-    eval "$config_array_name+=('AUTH_ENABLED=true')"
-    eval "$config_array_name+=('AUTH_PORT=4000')"
+    add_wizard_config "$config_array_name" "AUTH_ENABLED" "true"
+    add_wizard_config "$config_array_name" "AUTH_PORT" "4000"
 
     echo ""
     echo "Auth provider:"
@@ -45,12 +45,12 @@ wizard_core_services() {
     select_option "Select auth provider" auth_options selected_auth
 
     case $selected_auth in
-      0) eval "$config_array_name+=('AUTH_PROVIDER=nhost')" ;;
-      1) eval "$config_array_name+=('AUTH_PROVIDER=supabase')" ;;
-      2) eval "$config_array_name+=('AUTH_PROVIDER=custom')" ;;
+      0) add_wizard_config "$config_array_name" "AUTH_PROVIDER" "nhost" ;;
+      1) add_wizard_config "$config_array_name" "AUTH_PROVIDER" "supabase" ;;
+      2) add_wizard_config "$config_array_name" "AUTH_PROVIDER" "custom" ;;
     esac
   else
-    eval "$config_array_name+=('AUTH_ENABLED=false')"
+    add_wizard_config "$config_array_name" "AUTH_ENABLED" "false"
   fi
 
   echo ""
@@ -59,18 +59,26 @@ wizard_core_services() {
   echo "📁 MinIO Object Storage"
   echo "  S3-compatible object storage for file uploads"
   if confirm_action "Enable MinIO storage?"; then
-    eval "$config_array_name+=('MINIO_ENABLED=true')"
-    eval "$config_array_name+=('MINIO_PORT=9000')"
-    eval "$config_array_name+=('MINIO_CONSOLE_PORT=9001')"
+    add_wizard_config "$config_array_name" "MINIO_ENABLED" "true"
+    add_wizard_config "$config_array_name" "MINIO_PORT" "9000"
+    add_wizard_config "$config_array_name" "MINIO_CONSOLE_PORT" "9001"
 
     echo ""
     local minio_user minio_pass
     prompt_input "MinIO root user" "minioadmin" minio_user
-    prompt_input "MinIO root password" "minioadmin" minio_pass
-    eval "$config_array_name+=('MINIO_ROOT_USER=$minio_user')"
-    eval "$config_array_name+=('MINIO_ROOT_PASSWORD=$minio_pass')"
+    
+    if confirm_action "Use auto-generated secure password for MinIO?"; then
+      minio_pass=$(generate_password 24)
+      echo "Generated password: $minio_pass"
+      echo "(This will be saved in .env.secrets file)"
+    else
+      prompt_input "MinIO root password" "minioadmin" minio_pass
+    fi
+    
+    add_wizard_config "$config_array_name" "MINIO_ROOT_USER" "$minio_user"
+    add_wizard_secret "$config_array_name" "MINIO_ROOT_PASSWORD" "$minio_pass"
   else
-    eval "$config_array_name+=('MINIO_ENABLED=false')"
+    add_wizard_config "$config_array_name" "MINIO_ENABLED" "false"
   fi
 
   echo ""
@@ -79,10 +87,10 @@ wizard_core_services() {
   echo "⚡ Functions Runtime"
   echo "  Serverless functions for custom business logic"
   if confirm_action "Enable Functions service?"; then
-    eval "$config_array_name+=('FUNCTIONS_ENABLED=true')"
-    eval "$config_array_name+=('FUNCTIONS_PORT=3008')"
+    add_wizard_config "$config_array_name" "FUNCTIONS_ENABLED" "true"
+    add_wizard_config "$config_array_name" "FUNCTIONS_PORT" "3008"
   else
-    eval "$config_array_name+=('FUNCTIONS_ENABLED=false')"
+    add_wizard_config "$config_array_name" "FUNCTIONS_ENABLED" "false"
   fi
 
   return 0
@@ -101,18 +109,20 @@ wizard_optional_services() {
   # Redis Cache
   echo "💾 Redis Cache"
   echo "  In-memory data store for caching and sessions"
+  local redis_enabled=false
   if confirm_action "Enable Redis?"; then
-    eval "$config_array_name+=('REDIS_ENABLED=true')"
-    eval "$config_array_name+=('REDIS_PORT=6379')"
+    redis_enabled=true
+    add_wizard_config "$config_array_name" "REDIS_ENABLED" "true"
+    add_wizard_config "$config_array_name" "REDIS_PORT" "6379"
 
     echo ""
     if confirm_action "Enable Redis persistence?"; then
-      eval "$config_array_name+=('REDIS_PERSISTENCE=true')"
+      add_wizard_config "$config_array_name" "REDIS_PERSISTENCE" "true"
     else
-      eval "$config_array_name+=('REDIS_PERSISTENCE=false')"
+      add_wizard_config "$config_array_name" "REDIS_PERSISTENCE" "false"
     fi
   else
-    eval "$config_array_name+=('REDIS_ENABLED=false')"
+    add_wizard_config "$config_array_name" "REDIS_ENABLED" "false"
   fi
 
   echo ""
@@ -134,32 +144,32 @@ wizard_optional_services() {
 
     case $selected_queue in
       0)
-        eval "$config_array_name+=('QUEUE_ENABLED=true')"
-        eval "$config_array_name+=('QUEUE_TYPE=bullmq')"
-        if [[ "${REDIS_ENABLED:-false}" != "true" ]]; then
-          eval "$config_array_name+=('REDIS_ENABLED=true')"
-          eval "$config_array_name+=('REDIS_PORT=6379')"
+        add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
+        add_wizard_config "$config_array_name" "QUEUE_TYPE" "bullmq"
+        if [[ "$redis_enabled" != "true" ]]; then
+          add_wizard_config "$config_array_name" "REDIS_ENABLED" "true"
+          add_wizard_config "$config_array_name" "REDIS_PORT" "6379"
           echo "  (Redis enabled for BullMQ)"
         fi
         ;;
       1)
-        eval "$config_array_name+=('QUEUE_ENABLED=true')"
-        eval "$config_array_name+=('QUEUE_TYPE=rabbitmq')"
-        eval "$config_array_name+=('RABBITMQ_PORT=5672')"
+        add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
+        add_wizard_config "$config_array_name" "QUEUE_TYPE" "rabbitmq"
+        add_wizard_config "$config_array_name" "RABBITMQ_PORT" "5672"
         ;;
       2)
-        eval "$config_array_name+=('QUEUE_ENABLED=true')"
-        eval "$config_array_name+=('QUEUE_TYPE=kafka')"
-        eval "$config_array_name+=('KAFKA_PORT=9092')"
+        add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
+        add_wizard_config "$config_array_name" "QUEUE_TYPE" "kafka"
+        add_wizard_config "$config_array_name" "KAFKA_PORT" "9092"
         ;;
       3)
-        eval "$config_array_name+=('QUEUE_ENABLED=true')"
-        eval "$config_array_name+=('QUEUE_TYPE=nats')"
-        eval "$config_array_name+=('NATS_PORT=4222')"
+        add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
+        add_wizard_config "$config_array_name" "QUEUE_TYPE" "nats"
+        add_wizard_config "$config_array_name" "NATS_PORT" "4222"
         ;;
     esac
   else
-    eval "$config_array_name+=('QUEUE_ENABLED=false')"
+    add_wizard_config "$config_array_name" "QUEUE_ENABLED" "false"
   fi
 
   echo ""
@@ -168,34 +178,34 @@ wizard_optional_services() {
   echo "📈 Monitoring & Observability"
   echo "  Metrics, logs, tracing, alerting"
   if confirm_action "Enable monitoring stack?"; then
-    eval "$config_array_name+=('MONITORING_ENABLED=true')"
+    add_wizard_config "$config_array_name" "MONITORING_ENABLED" "true"
 
     echo ""
     local monitoring_services=()
 
     if confirm_action "Enable Prometheus metrics?"; then
       monitoring_services+=("prometheus")
-      eval "$config_array_name+=('PROMETHEUS_ENABLED=true')"
+      add_wizard_config "$config_array_name" "PROMETHEUS_ENABLED" "true"
     fi
 
     if confirm_action "Enable Grafana dashboards?"; then
       monitoring_services+=("grafana")
-      eval "$config_array_name+=('GRAFANA_ENABLED=true')"
-      eval "$config_array_name+=('GRAFANA_PORT=3001')"
+      add_wizard_config "$config_array_name" "GRAFANA_ENABLED" "true"
+      add_wizard_config "$config_array_name" "GRAFANA_PORT" "3001"
     fi
 
     if confirm_action "Enable Jaeger tracing?"; then
       monitoring_services+=("jaeger")
-      eval "$config_array_name+=('JAEGER_ENABLED=true')"
-      eval "$config_array_name+=('JAEGER_PORT=16686')"
+      add_wizard_config "$config_array_name" "JAEGER_ENABLED" "true"
+      add_wizard_config "$config_array_name" "JAEGER_PORT" "16686"
     fi
 
     if confirm_action "Enable Loki log aggregation?"; then
       monitoring_services+=("loki")
-      eval "$config_array_name+=('LOKI_ENABLED=true')"
+      add_wizard_config "$config_array_name" "LOKI_ENABLED" "true"
     fi
   else
-    eval "$config_array_name+=('MONITORING_ENABLED=false')"
+    add_wizard_config "$config_array_name" "MONITORING_ENABLED" "false"
   fi
 
   return 0
@@ -226,44 +236,48 @@ wizard_email_search() {
 
     case $selected_email in
       0)
-        eval "$config_array_name+=('EMAIL_PROVIDER=mailpit')"
-        eval "$config_array_name+=('MAILPIT_ENABLED=true')"
-        eval "$config_array_name+=('MAILPIT_PORT=1025')"
-        eval "$config_array_name+=('MAILPIT_UI_PORT=8025')"
+        add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "mailpit"
+        add_wizard_config "$config_array_name" "MAILPIT_ENABLED" "true"
+        add_wizard_config "$config_array_name" "MAILPIT_PORT" "1025"
+        add_wizard_config "$config_array_name" "MAILPIT_UI_PORT" "8025"
         ;;
       1)
-        eval "$config_array_name+=('EMAIL_PROVIDER=smtp')"
+        add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "smtp"
         echo ""
         local smtp_host smtp_port smtp_user
         prompt_input "SMTP host" "smtp.gmail.com" smtp_host
         prompt_input "SMTP port" "587" smtp_port "^[0-9]+$"
         prompt_input "SMTP user" "user@example.com" smtp_user
-        eval "$config_array_name+=('SMTP_HOST=$smtp_host')"
-        eval "$config_array_name+=('SMTP_PORT=$smtp_port')"
-        eval "$config_array_name+=('SMTP_USER=$smtp_user')"
+        local smtp_pass
+        prompt_password "SMTP password" smtp_pass
+        
+        add_wizard_config "$config_array_name" "SMTP_HOST" "$smtp_host"
+        add_wizard_config "$config_array_name" "SMTP_PORT" "$smtp_port"
+        add_wizard_config "$config_array_name" "SMTP_USER" "$smtp_user"
+        add_wizard_secret "$config_array_name" "SMTP_PASS" "$smtp_pass"
         ;;
       2)
-        eval "$config_array_name+=('EMAIL_PROVIDER=sendgrid')"
+        add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "sendgrid"
         echo ""
         echo "You'll need to add SENDGRID_API_KEY to .env later"
         press_any_key
         ;;
       3)
-        eval "$config_array_name+=('EMAIL_PROVIDER=ses')"
+        add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "ses"
         echo ""
         local ses_region
         prompt_input "AWS region" "us-east-1" ses_region
-        eval "$config_array_name+=('AWS_REGION=$ses_region')"
+        add_wizard_config "$config_array_name" "AWS_REGION" "$ses_region"
         ;;
       4)
-        eval "$config_array_name+=('EMAIL_PROVIDER=postmark')"
+        add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "postmark"
         echo ""
         echo "You'll need to add POSTMARK_SERVER_TOKEN to .env later"
         press_any_key
         ;;
     esac
   else
-    eval "$config_array_name+=('EMAIL_PROVIDER=none')"
+    add_wizard_config "$config_array_name" "EMAIL_PROVIDER" "none"
   fi
 
   echo ""
@@ -286,29 +300,29 @@ wizard_email_search() {
 
     case $selected_search in
       0)
-        eval "$config_array_name+=('SEARCH_ENABLED=true')"
-        eval "$config_array_name+=('SEARCH_ENGINE=meilisearch')"
-        eval "$config_array_name+=('MEILISEARCH_PORT=7700')"
+        add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "SEARCH_ENGINE" "meilisearch"
+        add_wizard_config "$config_array_name" "MEILISEARCH_PORT" "7700"
         ;;
       1)
-        eval "$config_array_name+=('SEARCH_ENABLED=true')"
-        eval "$config_array_name+=('SEARCH_ENGINE=elasticsearch')"
-        eval "$config_array_name+=('ELASTICSEARCH_PORT=9200')"
+        add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "SEARCH_ENGINE" "elasticsearch"
+        add_wizard_config "$config_array_name" "ELASTICSEARCH_PORT" "9200"
         ;;
       2)
-        eval "$config_array_name+=('SEARCH_ENABLED=true')"
-        eval "$config_array_name+=('SEARCH_ENGINE=typesense')"
-        eval "$config_array_name+=('TYPESENSE_PORT=8108')"
+        add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "SEARCH_ENGINE" "typesense"
+        add_wizard_config "$config_array_name" "TYPESENSE_PORT" "8108"
         ;;
       3)
-        eval "$config_array_name+=('SEARCH_ENABLED=true')"
-        eval "$config_array_name+=('SEARCH_ENGINE=postgres')"
+        add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "SEARCH_ENGINE" "postgres"
         echo ""
         echo "PostgreSQL full-text search will be configured"
         ;;
     esac
   else
-    eval "$config_array_name+=('SEARCH_ENABLED=false')"
+    add_wizard_config "$config_array_name" "SEARCH_ENABLED" "false"
   fi
 
   return 0

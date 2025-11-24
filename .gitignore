@@ -38,6 +38,9 @@ dist/
 *.env
 .env.backup.*
 # But DO include env templates
-!src/templates/envs/.env*
+
 !src/templates/demo/.env*
 # Git config fixed
+
+
+equilibriaorg_review/

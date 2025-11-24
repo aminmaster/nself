@@ -187,6 +187,12 @@ generate_custom_service() {
     local cs_var="CS_${cs_num}"
     local cs_value="${!cs_var:-}"
 
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${cs_num}"
+      cs_value="${!custom_service_var:-}"
+    fi
+
     if [[ -z "$cs_value" ]]; then
       break
     fi
@@ -308,6 +314,12 @@ generate_custom_services() {
   while true; do
     local cs_var="CS_${cs_num}"
     local cs_value="${!cs_var:-}"
+
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${cs_num}"
+      cs_value="${!custom_service_var:-}"
+    fi
 
     if [[ -z "$cs_value" ]]; then
       break

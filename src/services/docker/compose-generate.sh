@@ -41,6 +41,8 @@ export PROJECT_NAME="${PROJECT_NAME:-myproject}"
 export ENV="${ENV:-dev}"
 export BASE_DOMAIN="${BASE_DOMAIN:-localhost}"
 
+
+
 # Database defaults
 export POSTGRES_USER="${POSTGRES_USER:-postgres}"
 export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
@@ -66,11 +68,23 @@ if [[ -f "$COMPOSE_SCRIPT_DIR/../../services/auth/multi-app.sh" ]]; then
   source "$COMPOSE_SCRIPT_DIR/../../services/auth/multi-app.sh"
 fi
 
+# Source service modules
+source "$COMPOSE_SCRIPT_DIR/compose-modules/core-services.sh"
+source "$COMPOSE_SCRIPT_DIR/compose-modules/utility-services.sh"
+source "$COMPOSE_SCRIPT_DIR/compose-modules/monitoring-services.sh"
+source "$COMPOSE_SCRIPT_DIR/compose-modules/monitoring-exporters.sh"
+source "$COMPOSE_SCRIPT_DIR/compose-modules/custom-services-templates.sh"
+source "$COMPOSE_SCRIPT_DIR/compose-modules/frontend-apps.sh"
+
 # Source all service modules
 MODULES_DIR="$COMPOSE_SCRIPT_DIR/compose-modules"
 if [[ -d "$MODULES_DIR" ]]; then
   for module in "$MODULES_DIR"/*.sh; do
-    [[ -f "$module" ]] && source "$module"
+    [[ -f "$module" ]] && \
+      # Skip if already sourced (simple check)
+      if ! grep -q "$(basename "$module")" <<< "$0"; then
+        source "$module"
+      fi
   done
 else
   echo "Error: compose-modules directory not found" >&2

@@ -55,7 +55,10 @@ run_modular_wizard() {
   # Extract project name for use in other steps
   local project_name=""
   for item in "${config[@]}"; do
-    if [[ "$item" == PROJECT_NAME=* ]]; then
+    if [[ "$item" == CONF:PROJECT_NAME=* ]]; then
+      project_name="${item#CONF:PROJECT_NAME=}"
+      break
+    elif [[ "$item" == PROJECT_NAME=* ]]; then
       project_name="${item#PROJECT_NAME=}"
       break
     fi
@@ -109,7 +112,11 @@ wizard_service_passwords() {
   local hasura_enabled=false
   eval "local config_values=(\"\${${config_array_name}[@]}\")"
   for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "HASURA_ENABLED=true" ]]; then
+    if [[ "$cfg_item" == "CONF:HASURA_ENABLED=true" ]] || [[ "$cfg_item" == "HASURA_ENABLED=true" ]]; then
+      hasura_enabled=true
+      break
+    fi
+    if [[ "$cfg_item" == "CONF:AUTH_ENABLED=true" ]] || [[ "$cfg_item" == "AUTH_ENABLED=true" ]]; then
       hasura_enabled=true
       break
     fi
@@ -124,7 +131,7 @@ wizard_service_passwords() {
     else
       prompt_password "Admin secret" hasura_secret
     fi
-    eval "$config_array_name+=('HASURA_ADMIN_SECRET=$hasura_secret')"
+    add_wizard_secret "$config_array_name" "HASURA_GRAPHQL_ADMIN_SECRET" "$hasura_secret"
     echo ""
   fi
 
@@ -137,7 +144,7 @@ wizard_service_passwords() {
   else
     prompt_password "JWT secret" jwt_secret
   fi
-  eval "$config_array_name+=('JWT_SECRET=$jwt_secret')"
+  add_wizard_secret "$config_array_name" "AUTH_JWT_SECRET" "$jwt_secret"
 
   echo ""
 
@@ -147,7 +154,7 @@ wizard_service_passwords() {
   local storage_enabled=false
   eval "local config_values=(\"\${${config_array_name}[@]}\")"
   for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "STORAGE_ENABLED=true" ]]; then
+    if [[ "$cfg_item" == "CONF:STORAGE_ENABLED=true" ]] || [[ "$cfg_item" == "STORAGE_ENABLED=true" ]]; then
       storage_enabled=true
       break
     fi
@@ -165,8 +172,8 @@ wizard_service_passwords() {
       prompt_password "Secret key" storage_secret_key
     fi
 
-    eval "$config_array_name+=('STORAGE_ACCESS_KEY=$storage_access_key')"
-    eval "$config_array_name+=('STORAGE_SECRET_KEY=$storage_secret_key')"
+    add_wizard_config "$config_array_name" "STORAGE_ACCESS_KEY" "$storage_access_key"
+    add_wizard_secret "$config_array_name" "STORAGE_SECRET_KEY" "$storage_secret_key"
     echo ""
   fi
 
@@ -184,8 +191,8 @@ wizard_admin_dashboard() {
   echo ""
 
   if confirm_action "Enable nself admin dashboard?"; then
-    eval "$config_array_name+=('NSELF_ADMIN_ENABLED=true')"
-    eval "$config_array_name+=('NSELF_ADMIN_PORT=3021')"
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_ENABLED" "true"
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_PORT" "3021"
 
     echo ""
     echo "Dashboard authentication:"
@@ -200,25 +207,25 @@ wizard_admin_dashboard() {
       prompt_password "Admin password" admin_password
     fi
 
-    eval "$config_array_name+=('NSELF_ADMIN_USER=$admin_user')"
-    eval "$config_array_name+=('NSELF_ADMIN_PASSWORD=$admin_password')"
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_USER" "$admin_user"
+    add_wizard_secret "$config_array_name" "NSELF_ADMIN_PASSWORD" "$admin_password"
 
     echo ""
     echo "Dashboard features to enable:"
 
     if confirm_action "Enable real-time monitoring?"; then
-      eval "$config_array_name+=('NSELF_ADMIN_MONITORING=true')"
+      add_wizard_config "$config_array_name" "NSELF_ADMIN_MONITORING" "true"
     fi
 
     if confirm_action "Enable log viewer?"; then
-      eval "$config_array_name+=('NSELF_ADMIN_LOGS=true')"
+      add_wizard_config "$config_array_name" "NSELF_ADMIN_LOGS" "true"
     fi
 
     if confirm_action "Enable database manager?"; then
-      eval "$config_array_name+=('NSELF_ADMIN_DATABASE=true')"
+      add_wizard_config "$config_array_name" "NSELF_ADMIN_DATABASE" "true"
     fi
   else
-    eval "$config_array_name+=('NSELF_ADMIN_ENABLED=false')"
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_ENABLED" "false"
   fi
 
   return 0
@@ -277,7 +284,7 @@ wizard_custom_services() {
       echo ""
       prompt_input "Service port" "$((8000 + service_count))" service_port "^[0-9][0-9]*$"
 
-      eval "$config_array_name+=('CUSTOM_SERVICE_${service_count}=${service_name}:${service_type}:${service_port}')"
+      add_wizard_config "$config_array_name" "CUSTOM_SERVICE_${service_count}" "${service_name}:${service_type}:${service_port}"
 
       echo ""
       if ! confirm_action "Add another service?"; then
@@ -285,9 +292,9 @@ wizard_custom_services() {
       fi
     done
 
-    eval "$config_array_name+=('CUSTOM_SERVICES_COUNT=$service_count')"
+    add_wizard_config "$config_array_name" "CUSTOM_SERVICES_COUNT" "$service_count"
   else
-    eval "$config_array_name+=('CUSTOM_SERVICES_COUNT=0')"
+    add_wizard_config "$config_array_name" "CUSTOM_SERVICES_COUNT" "0"
   fi
 
   return 0
@@ -341,9 +348,9 @@ wizard_frontend_apps() {
       echo ""
       prompt_input "App port" "$((3000 + app_count - 1))" app_port "^[0-9]+$"
 
-      eval "$config_array_name+=('FRONTEND_APP_${app_count}_NAME=$app_name')"
-      eval "$config_array_name+=('FRONTEND_APP_${app_count}_FRAMEWORK=$app_framework')"
-      eval "$config_array_name+=('FRONTEND_APP_${app_count}_PORT=$app_port')"
+      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_NAME" "$app_name"
+      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_FRAMEWORK" "$app_framework"
+      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_PORT" "$app_port"
       # Frontend apps are external - no DIR needed
 
       echo ""
@@ -352,12 +359,29 @@ wizard_frontend_apps() {
       fi
     done
 
-    eval "$config_array_name+=('FRONTEND_APP_COUNT=$app_count')"
+    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "$app_count"
   else
-    eval "$config_array_name+=('FRONTEND_APP_COUNT=0')"
+    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "0"
   fi
 
   return 0
+}
+
+# Review and generate configuration
+# Add configuration item
+add_wizard_config() {
+  local array_name="$1"
+  local key="$2"
+  local value="$3"
+  eval "$array_name+=('CONF:$key=$value')"
+}
+
+# Add secret item
+add_wizard_secret() {
+  local array_name="$1"
+  local key="$2"
+  local value="$3"
+  eval "$array_name+=('SECR:$key=$value')"
 }
 
 # Review and generate configuration
@@ -375,9 +399,39 @@ wizard_review_generate() {
 
   # Display configuration
   eval "local config_items=(\"\${${config_array_name}[@]}\")"
+  
+  # Check environment mode
+  local env_mode="dev"
   for item in "${config_items[@]}"; do
-    echo "  $item"
-  done | head -20
+    if [[ "$item" == "CONF:ENV=prod" ]] || [[ "$item" == "ENV=prod" ]]; then
+      env_mode="prod"
+      break
+    fi
+  done
+
+  # Display items (masking secrets)
+  local display_count=0
+  for item in "${config_items[@]}"; do
+    local type="${item%%:*}"
+    local content="${item#*:}"
+    
+    # Handle legacy items without prefix
+    if [[ "$type" == "$content" ]]; then
+      type="CONF"
+    fi
+
+    if [[ "$type" == "SECR" ]]; then
+      local key="${content%%=*}"
+      echo "  $key=[hidden]"
+    else
+      echo "  $content"
+    fi
+    
+    ((display_count+=1))
+    if [[ $display_count -ge 20 ]]; then
+      break
+    fi
+  done
 
   local total_items=${#config_items[@]}
   if [[ $total_items -gt 20 ]]; then
@@ -385,7 +439,13 @@ wizard_review_generate() {
   fi
 
   echo ""
-  echo "Configuration will be saved to: $output_file"
+  if [[ "$env_mode" == "prod" ]]; then
+    echo "Configuration will be saved to:"
+    echo "  - .env.prod    (Configuration)"
+    echo "  - .env.secrets (Secrets - DO NOT COMMIT)"
+  else
+    echo "Configuration will be saved to: $output_file"
+  fi
   echo ""
 
   if confirm_action "Generate configuration?"; then
@@ -396,22 +456,71 @@ wizard_review_generate() {
       echo "Backed up existing config to: $backup_file"
     fi
 
-    # Write configuration
-    {
-      echo "# nself Configuration"
-      echo "# Generated by wizard on $(date)"
+    if [[ "$env_mode" == "prod" ]]; then
+      # Production: Split into .env.prod and .env.secrets
+      {
+        echo "# nself Production Configuration"
+        echo "# Generated by wizard on $(date)"
+        echo ""
+        for item in "${config_items[@]}"; do
+          local type="${item%%:*}"
+          local content="${item#*:}"
+          # Handle legacy items
+          if [[ "$type" == "$content" ]]; then type="CONF"; fi
+          
+          if [[ "$type" == "CONF" ]]; then
+            echo "$content"
+          fi
+        done
+      } > ".env.prod"
+
+      {
+        echo "# nself Production Secrets"
+        echo "# Generated by wizard on $(date)"
+        echo "# DO NOT COMMIT THIS FILE TO VERSION CONTROL"
+        echo ""
+        for item in "${config_items[@]}"; do
+          local type="${item%%:*}"
+          local content="${item#*:}"
+          # Handle legacy items
+          if [[ "$type" == "$content" ]]; then type="CONF"; fi
+          
+          if [[ "$type" == "SECR" ]]; then
+            echo "$content"
+          fi
+        done
+      } > ".env.secrets"
+      chmod 600 ".env.secrets"
+      
       echo ""
+      echo "✅ Configuration generated successfully!"
+      echo "Created .env.prod and .env.secrets"
+      
+      # Ensure .env has the correct environment set
+      if ! grep -q "^ENV=" .env 2>/dev/null; then
+        echo "ENV=prod" >> .env
+      else
+        sed -i 's/^ENV=.*/ENV=prod/' .env
+      fi
+    else
+      # Development: Everything in one file
+      {
+        echo "# nself Configuration"
+        echo "# Generated by wizard on $(date)"
+        echo ""
+        for item in "${config_items[@]}"; do
+          local content="${item#*:}"
+          echo "$content"
+        done
+      } > "$output_file"
+      
+      echo ""
+      echo "✅ Configuration generated successfully!"
+    fi
 
-      for item in "${config_items[@]}"; do
-        echo "$item"
-      done
-    } > "$output_file"
-
-    echo ""
-    echo "✅ Configuration generated successfully!"
     echo ""
     echo "Next steps:"
-    echo "  1. Review and edit $output_file if needed"
+    echo "  1. Review generated files"
     echo "  2. Run: nself build"
     echo "  3. Run: nself start"
   else
@@ -422,6 +531,10 @@ wizard_review_generate() {
 
   return 0
 }
+
+# Export functions
+export -f add_wizard_config
+export -f add_wizard_secret
 
 # Export functions
 export -f source_wizard_steps
