@@ -111,8 +111,8 @@ server {
     server_name ${BASE_DOMAIN:-localhost};
 
     # SSL certificates - runtime path based on environment
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -148,8 +148,8 @@ server {
     listen 443 ssl http2;
     server_name ${hasura_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://hasura:8080;
@@ -185,8 +185,8 @@ server {
     listen 443 ssl http2;
     server_name ${auth_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://auth:4000;
@@ -212,8 +212,8 @@ server {
     listen 443 ssl http2;
     server_name ${storage_console_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://minio:9001;
@@ -230,8 +230,8 @@ server {
     listen 443 ssl http2;
     server_name ${storage_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     client_max_body_size 1000M;
 
@@ -263,8 +263,8 @@ server {
     listen 443 ssl http2;
     server_name ${admin_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://nself-admin:3100;
@@ -289,8 +289,8 @@ server {
     listen 443 ssl http2;
     server_name ${grafana_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://grafana:3000;
@@ -312,8 +312,8 @@ server {
     listen 443 ssl http2;
     server_name ${prometheus_route}.${base_domain};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
         proxy_pass http://prometheus:9090;
@@ -347,8 +347,8 @@ server {
     listen 443 ssl http2;
     server_name ${app_route}.\${BASE_DOMAIN:-localhost};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
         # Proxy to external frontend app running on host
@@ -383,8 +383,8 @@ server {
     listen 443 ssl http2;
     server_name ${api_route}.\${BASE_DOMAIN:-localhost};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
         # Proxy to frontend's API endpoint
@@ -426,8 +426,8 @@ server {
     listen 443 ssl http2;
     server_name ${cs_route}.\${BASE_DOMAIN:-localhost};
 
-    ssl_certificate /etc/nginx/ssl/localhost/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/localhost/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
         proxy_pass http://${cs_name}:${cs_port};

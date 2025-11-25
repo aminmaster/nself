@@ -167,6 +167,17 @@ EOF
       start_period: 60s
 EOF
         ;;
+      neo4j)
+        # Neo4j specific healthcheck
+        cat <<EOF
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+EOF
+        ;;
       *)
         # Most other containers should have curl or wget
         cat <<EOF

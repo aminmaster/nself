@@ -62,7 +62,13 @@ load_env_with_priority() {
   fi
 
   # STEP 2: Detect environment using NSELF_ENV first, then ENV
-  local current_env="${NSELF_ENV:-${ENV:-dev}}"
+  # If ENV is not set in shell, try to read it from .env file first
+  local env_from_file=""
+  if [[ -f ".env" ]]; then
+    env_from_file=$(grep "^ENV=" .env | cut -d= -f2 | tr -d '"' | tr -d "'")
+  fi
+  
+  local current_env="${NSELF_ENV:-${ENV:-${env_from_file:-dev}}}"
 
   # Normalize environment names
   case "$current_env" in
