@@ -89,7 +89,7 @@ EOF
 
 # Generate default server block
 generate_default_server() {
-  cat > nginx/conf.d/default.conf <<'EOF'
+  cat > nginx/conf.d/default.conf <<EOF
 # Default server - redirect HTTP to HTTPS
 server {
     listen 80 default_server;
