@@ -15,6 +15,20 @@ generate_template_based_service() {
 
   # Custom Service ${index}: ${service_name}
   ${service_name}:
+EOF
+
+  # Special handling for Neo4j
+  if [[ "$template_type" == "neo4j" ]]; then
+    cat <<EOF
+    image: neo4j:5.11
+    container_name: \${PROJECT_NAME}_${service_name}
+    restart: unless-stopped
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+  else
+    # Standard buildable service
+    cat <<EOF
     build:
       context: ./services/${service_name}
       dockerfile: Dockerfile
@@ -23,6 +37,7 @@ generate_template_based_service() {
     networks:
       - \${DOCKER_NETWORK}
 EOF
+  fi
 
   # Add ports if specified
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
@@ -56,11 +71,32 @@ EOF
       - HASURA_ADMIN_SECRET=\${HASURA_GRAPHQL_ADMIN_SECRET}
 EOF
 
-  # Add volumes for development (language-specific exclusions)
-  cat <<EOF
+  # Add Neo4j specific env vars
+  if [[ "$template_type" == "neo4j" ]]; then
+    cat <<EOF
+      - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD:-password}
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_dbms_memory_heap_initial__size=512M
+      - NEO4J_dbms_memory_heap_max__size=512M
+EOF
+  fi
+
+  # Add volumes
+  if [[ "$template_type" == "neo4j" ]]; then
+    cat <<EOF
+    volumes:
+      - ./.volumes/${service_name}/data:/data
+      - ./.volumes/${service_name}/logs:/logs
+      - ./.volumes/${service_name}/import:/var/lib/neo4j/import
+      - ./.volumes/${service_name}/plugins:/plugins
+EOF
+  else
+    # Standard development volumes
+    cat <<EOF
     volumes:
       - ./services/${service_name}:/app
 EOF
+  fi
 
   # Add language-specific volume exclusions based on template type
   case "$template_type" in
