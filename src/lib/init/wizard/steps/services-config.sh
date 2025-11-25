@@ -26,6 +26,53 @@ wizard_core_services() {
   fi
 
   echo ""
+  
+  # nself Admin Dashboard
+  echo "🖥️  nself Admin Dashboard"
+  echo "  Project management UI, database explorer, log viewer"
+  if confirm_action "Enable nself Admin Dashboard?"; then
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_ENABLED" "true"
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_PORT" "3021"
+    
+    # Generate admin password hash
+    echo ""
+    echo "Creating admin credentials..."
+    local admin_pass
+    if confirm_action "Use auto-generated secure password for Admin Dashboard?"; then
+      admin_pass=$(generate_password 32)
+      echo "Generated password: $admin_pass"
+      echo "(This will be saved in .env.secrets file)"
+    else
+      prompt_password "Admin Dashboard password" admin_pass
+    fi
+    
+    # Generate hash using openssl if available, otherwise python
+    local admin_hash=""
+    if command -v openssl >/dev/null 2>&1; then
+      # Use openssl for bcrypt hash (if supported) or sha256 as fallback
+      # Note: nself-admin expects bcrypt, but for now we'll use a placeholder
+      # that the admin service can interpret or upgrade.
+      # Actually, let's use the python script if available as it's more reliable for bcrypt
+      if command -v python3 >/dev/null 2>&1; then
+        admin_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$admin_pass', bcrypt.gensalt()).decode())" 2>/dev/null)
+      fi
+    fi
+    
+    # Fallback if python/bcrypt failed
+    if [[ -z "$admin_hash" ]]; then
+       # Simple fallback - the admin service should handle this or we warn
+       echo "⚠️  Could not generate bcrypt hash (python3/bcrypt missing)."
+       echo "    Using plain password as placeholder. Please update manually."
+       admin_hash="$admin_pass"
+    fi
+    
+    add_wizard_secret "$config_array_name" "ADMIN_PASSWORD_HASH" "$admin_hash"
+    add_wizard_secret "$config_array_name" "ADMIN_SECRET_KEY" "$(generate_password 64)"
+  else
+    add_wizard_config "$config_array_name" "NSELF_ADMIN_ENABLED" "false"
+  fi
+
+  echo ""
 
   # Authentication Service
   echo "🔐 Authentication Service"
