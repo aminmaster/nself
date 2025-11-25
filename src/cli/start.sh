@@ -248,7 +248,7 @@ start_services() {
   fi
 
   # 7. Generate merged runtime environment
-  local target_env="${ENV:-dev}"
+  local target_env="${env:-dev}"
   if command -v merge_environments >/dev/null 2>&1; then
     if [[ "$VERBOSE" == "false" ]]; then
       merge_environments "$target_env" ".env.runtime" > /dev/null 2>&1
