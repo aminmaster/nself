@@ -19,10 +19,6 @@ generate_tempo_service() {
     ports:
       - "\${TEMPO_PORT:-3200}:3200"
       - "14268:14268"  # Jaeger ingest
-    networks:
-      - \${DOCKER_NETWORK}
-    networks:
-      - \${DOCKER_NETWORK}
 EOF
 }
 
