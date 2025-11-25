@@ -21,12 +21,8 @@ generate_tempo_service() {
       - "14268:14268"  # Jaeger ingest
     networks:
       - \${DOCKER_NETWORK}
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "3200"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
+    networks:
+      - \${DOCKER_NETWORK}
 EOF
 }
 
