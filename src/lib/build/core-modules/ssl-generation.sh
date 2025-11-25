@@ -179,9 +179,10 @@ EOF
   return 0
 }
 
-# Generate nself.org wildcard certificate
-generate_nself_org_ssl() {
-  local output_dir="${1:-ssl/certificates/nself-org}"
+# Generate custom domain wildcard certificate
+generate_custom_domain_ssl() {
+  local domain="${1:-${BASE_DOMAIN:-nself.org}}"
+  local output_dir="${2:-ssl/certificates/$domain}"
 
   mkdir -p "$output_dir"
 
@@ -204,17 +205,17 @@ req_extensions = v3_req
 C = US
 ST = State
 L = City
-O = nself.org
-CN = *.nself.org
+O = $domain
+CN = *.$domain
 
 [v3_req]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = *.nself.org
-DNS.2 = nself.org
-DNS.3 = *.local.nself.org
-DNS.4 = local.nself.org
+DNS.1 = *.$domain
+DNS.2 = $domain
+DNS.3 = *.local.$domain
+DNS.4 = local.$domain
 EOF
 
   # Generate key and certificate
@@ -320,7 +321,7 @@ setup_ssl_certificates() {
 
   # Check domain certificates if not localhost
   if [[ "$base_domain" != "localhost" ]]; then
-    local domain_status=$(check_ssl_status "nself-org")
+    local domain_status=$(check_ssl_status "$base_domain")
     if [[ "$domain_status" != "valid" ]] || [[ "$force" == "true" ]]; then
       needs_ssl=true
     fi
@@ -337,8 +338,8 @@ setup_ssl_certificates() {
   fi
 
   if [[ "$base_domain" != "localhost" ]]; then
-    if ! generate_nself_org_ssl; then
-      echo "Failed to generate nself.org certificates" >&2
+    if ! generate_custom_domain_ssl "$base_domain"; then
+      echo "Failed to generate $base_domain certificates" >&2
       return 1
     fi
   fi
@@ -356,7 +357,7 @@ setup_ssl_certificates() {
 export -f build_localhost_subdomains
 export -f generate_ssl_certificates
 export -f generate_localhost_ssl
-export -f generate_nself_org_ssl
+export -f generate_custom_domain_ssl
 export -f copy_ssl_to_nginx
 export -f reload_nginx_ssl
 export -f check_ssl_status
