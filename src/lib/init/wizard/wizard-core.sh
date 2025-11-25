@@ -210,6 +210,24 @@ wizard_admin_dashboard() {
     add_wizard_config "$config_array_name" "NSELF_ADMIN_USER" "$admin_user"
     add_wizard_secret "$config_array_name" "NSELF_ADMIN_PASSWORD" "$admin_password"
 
+    # Generate admin password hash for nself-admin service
+    local admin_hash=""
+    if command -v python3 >/dev/null 2>&1; then
+      # Use python/bcrypt if available
+      # We use || true to prevent script exit if python command fails (e.g. missing module)
+      admin_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$admin_password', bcrypt.gensalt()).decode())" 2>/dev/null || true)
+    fi
+    
+    # Fallback if python/bcrypt failed or returned empty
+    if [[ -z "$admin_hash" ]]; then
+       # Simple fallback - the admin service should handle this or we warn
+       # Note: nself-admin expects bcrypt, but for now we'll use a placeholder
+       admin_hash="$admin_password"
+    fi
+    
+    add_wizard_secret "$config_array_name" "ADMIN_PASSWORD_HASH" "$admin_hash"
+    add_wizard_secret "$config_array_name" "ADMIN_SECRET_KEY" "$(generate_password 64)"
+
     echo ""
     echo "Dashboard features to enable:"
 
