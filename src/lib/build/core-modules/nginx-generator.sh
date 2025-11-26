@@ -267,7 +267,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://nself-admin:3100;
+        proxy_pass http://nself-admin:3021;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -407,6 +407,21 @@ generate_custom_routes() {
   for i in {1..20}; do
     local cs_name_var="CS_${i}_NAME"
     local cs_name="${!cs_name_var:-}"
+    local cs_port_var="CS_${i}_PORT"
+    local cs_port="${!cs_port_var:-}"
+    local cs_route_var="CS_${i}_ROUTE"
+    local cs_route="${!cs_route_var:-}"
+
+    # Fallback to CUSTOM_SERVICE_N parsing
+    if [[ -z "$cs_name" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${i}"
+      local custom_service_value="${!custom_service_var:-}"
+      
+      if [[ -n "$custom_service_value" ]]; then
+        IFS=':' read -r cs_name template cs_port <<< "$custom_service_value"
+        cs_route="${cs_name}"
+      fi
+    fi
 
     if [[ -n "$cs_name" ]]; then
       # Check if service is public
@@ -415,10 +430,8 @@ generate_custom_routes() {
 
       if [[ "$cs_public" == "true" ]]; then
         # Get route and port from environment (substitute at build time)
-        local cs_route_var="CS_${i}_ROUTE"
-        local cs_route="${!cs_route_var:-${cs_name}}"
-        local cs_port_var="CS_${i}_PORT"
-        local cs_port="${!cs_port_var:-$((8000 + i))}"
+        cs_route="${cs_route:-${cs_name}}"
+        cs_port="${cs_port:-$((8000 + i))}"
 
         cat > "nginx/sites/custom-${cs_name}.conf" <<EOF
 # Custom Service: $cs_name
