@@ -621,10 +621,24 @@ start_services() {
     local base_domain="${BASE_DOMAIN:-localhost}"
     
     if [[ "$ssl_provider" == "letsencrypt" ]]; then
+      local run_setup=false
+      local reason=""
+
       # Check if certificates exist
       if [[ ! -f "ssl/certificates/${base_domain}/fullchain.pem" ]]; then
-        printf "\n${COLOR_YELLOW}⚠ SSL certificates for ${base_domain} are missing or incomplete.${COLOR_RESET}\n"
-        printf "Since SSL_PROVIDER is set to 'letsencrypt', you should run the setup script.\n\n"
+        run_setup=true
+        reason="Certificates are missing."
+      else
+        # Check if existing certificate is self-signed (not Let's Encrypt)
+        if ! openssl x509 -in "ssl/certificates/${base_domain}/fullchain.pem" -noout -issuer 2>/dev/null | grep -q "Let's Encrypt"; then
+          run_setup=true
+          reason="Existing certificate is self-signed."
+        fi
+      fi
+
+      if [[ "$run_setup" == "true" ]]; then
+        printf "\n${COLOR_YELLOW}⚠ SSL Configuration Required: ${reason}${COLOR_RESET}\n"
+        printf "SSL_PROVIDER is set to 'letsencrypt', but valid certificates were not found.\n\n"
         
         # Check if setup script exists
         if [[ -f "src/scripts/setup-ssl.sh" ]]; then
