@@ -101,7 +101,7 @@ server {
     }
 
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 }
 
@@ -123,7 +123,7 @@ server {
     location / {
         root /usr/share/nginx/html;
         index index.html;
-        try_files $uri $uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
 
     location /health {
