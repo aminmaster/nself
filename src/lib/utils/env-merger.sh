@@ -4,11 +4,11 @@
 # Generates .env.runtime for docker-compose with fully resolved values
 
 # Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MERGER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source env-detection for helper functions
-if [[ -f "$SCRIPT_DIR/env-detection.sh" ]]; then
-  source "$SCRIPT_DIR/env-detection.sh"
+if [[ -f "$MERGER_DIR/env-detection.sh" ]]; then
+  source "$MERGER_DIR/env-detection.sh"
 fi
 
 # Merge environment files and generate runtime configuration
