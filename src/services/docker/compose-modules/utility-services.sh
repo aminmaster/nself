@@ -290,6 +290,26 @@ generate_utility_services() {
   generate_mailpit_service
   generate_search_services
   generate_mlflow_service
+  generate_certbot_service
+}
+
+# Generate Certbot service for SSL
+generate_certbot_service() {
+  local provider="${SSL_PROVIDER:-selfsigned}"
+  [[ "$provider" != "letsencrypt" ]] && return 0
+
+  cat <<EOF
+
+  # Certbot - Let's Encrypt SSL
+  certbot:
+    image: certbot/certbot:latest
+    container_name: \${PROJECT_NAME}_certbot
+    volumes:
+      - ./nginx/certbot:/var/www/certbot
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./ssl/letsencrypt:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \${!}; done;'"
+EOF
 }
 
 # Export functions
@@ -298,4 +318,5 @@ export -f generate_nself_admin_service
 export -f generate_functions_service
 export -f generate_mlflow_service
 export -f generate_search_services
+export -f generate_certbot_service
 export -f generate_utility_services
