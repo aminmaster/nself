@@ -202,11 +202,11 @@ build_generate_simple_ssl() {
       fi
     fi
 
-    # Generate nself.org certificates with SANs if needed
+    # Generate custom domain certificates with SANs if needed
     if [[ "$base_domain" != "localhost" ]]; then
-      if [[ ! -f "ssl/certificates/nself-org/fullchain.pem" ]] || [[ ! -f "ssl/certificates/nself-org/privkey.pem" ]]; then
-        if command -v generate_nself_org_ssl >/dev/null 2>&1; then
-          generate_nself_org_ssl "ssl/certificates/nself-org"
+      if [[ ! -f "ssl/certificates/${base_domain}/fullchain.pem" ]] || [[ ! -f "ssl/certificates/${base_domain}/privkey.pem" ]]; then
+        if command -v generate_custom_domain_ssl >/dev/null 2>&1; then
+          generate_custom_domain_ssl "$base_domain" "ssl/certificates/${base_domain}"
           ssl_created=true
         fi
       fi
@@ -215,7 +215,8 @@ build_generate_simple_ssl() {
     # Copy to nginx directory
     cp -f ssl/certificates/localhost/* nginx/ssl/localhost/ 2>/dev/null || true
     if [[ "$base_domain" != "localhost" ]]; then
-      cp -f ssl/certificates/nself-org/* nginx/ssl/nself-org/ 2>/dev/null || true
+      mkdir -p "nginx/ssl/${base_domain}"
+      cp -f "ssl/certificates/${base_domain}/"* "nginx/ssl/${base_domain}/" 2>/dev/null || true
     fi
 
     # Reload nginx if running to pick up new certificates
