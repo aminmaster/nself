@@ -193,7 +193,7 @@ generate_custom_domain_ssl() {
 
   # Create OpenSSL config for *.nself.org
   local temp_config=$(mktemp)
-  cat > "$temp_config" <<'EOF'
+  cat > "$temp_config" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -223,7 +223,7 @@ EOF
     -keyout "$output_dir/privkey.pem" \
     -out "$output_dir/fullchain.pem" \
     -config "$temp_config" \
-    -extensions v3_req 2>/dev/null
+    -extensions v3_req
 
   rm -f "$temp_config"
 
