@@ -31,12 +31,21 @@ if [[ -z "$DNS_TOKEN" ]]; then
 fi
 
 # Prepare Cloudflare credentials
+# Prepare Cloudflare credentials
 CREDENTIALS_DIR="ssl/credentials"
 mkdir -p "$CREDENTIALS_DIR"
-cat > "$CREDENTIALS_DIR/cloudflare.ini" <<EOF
+
+# Write credentials file (handle permissions)
+if [[ -w "$CREDENTIALS_DIR" ]]; then
+  cat > "$CREDENTIALS_DIR/cloudflare.ini" <<EOF
 dns_cloudflare_api_token = $DNS_TOKEN
 EOF
-chmod 600 "$CREDENTIALS_DIR/cloudflare.ini"
+  chmod 600 "$CREDENTIALS_DIR/cloudflare.ini"
+else
+  # Use sudo if directory is not writable (e.g. owned by root)
+  echo "dns_cloudflare_api_token = $DNS_TOKEN" | sudo tee "$CREDENTIALS_DIR/cloudflare.ini" >/dev/null
+  sudo chmod 600 "$CREDENTIALS_DIR/cloudflare.ini"
+fi
 
 show_info "Requesting wildcard certificate for: *.${BASE_DOMAIN} and ${BASE_DOMAIN}"
 
