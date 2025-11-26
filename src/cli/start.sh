@@ -615,6 +615,34 @@ start_services() {
     return 1
   fi
 
+  # 11. Check for SSL setup
+  if [[ $exit_code -eq 0 ]]; then
+    local ssl_provider="${SSL_PROVIDER:-selfsigned}"
+    local base_domain="${BASE_DOMAIN:-localhost}"
+    
+    if [[ "$ssl_provider" == "letsencrypt" ]]; then
+      # Check if certificates exist
+      if [[ ! -f "ssl/certificates/${base_domain}/fullchain.pem" ]]; then
+        printf "\n${COLOR_YELLOW}⚠ SSL certificates for ${base_domain} are missing or incomplete.${COLOR_RESET}\n"
+        printf "Since SSL_PROVIDER is set to 'letsencrypt', you should run the setup script.\n\n"
+        
+        # Check if setup script exists
+        if [[ -f "src/scripts/setup-ssl.sh" ]]; then
+          read -p "Run SSL setup script now? [Y/n] " -n 1 -r
+          echo
+          if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+            # Run setup script
+            bash "src/scripts/setup-ssl.sh"
+          else
+            printf "\nYou can run it later with: ${COLOR_BLUE}src/scripts/setup-ssl.sh${COLOR_RESET}\n"
+          fi
+        else
+          printf "Setup script not found at src/scripts/setup-ssl.sh\n"
+        fi
+      fi
+    fi
+  fi
+
   # Clean up temp files
   rm -f "$start_output" "$error_output"
   return 0

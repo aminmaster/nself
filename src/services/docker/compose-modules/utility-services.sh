@@ -306,7 +306,7 @@ generate_certbot_service() {
     container_name: \${PROJECT_NAME}_certbot
     volumes:
       - ./nginx/certbot:/var/www/certbot
-      - ./nginx/ssl:/etc/nginx/ssl
+      - ./ssl/certificates:/etc/nginx/ssl
       - ./ssl/letsencrypt:/etc/letsencrypt
       - ./ssl/credentials:/etc/letsencrypt/credentials
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \$\${!}; done;'"
