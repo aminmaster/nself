@@ -223,7 +223,8 @@ EOF
     -keyout "$output_dir/privkey.pem" \
     -out "$output_dir/fullchain.pem" \
     -config "$temp_config" \
-    -extensions v3_req
+    -config "$temp_config" \
+    -extensions v3_req >/dev/null 2>&1
 
   rm -f "$temp_config"
 
