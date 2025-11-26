@@ -20,6 +20,9 @@ detect_environment() {
   # Then check ENV variable (might be set from .env)
   elif [[ -n "${ENV:-}" ]]; then
     env="$ENV"
+  # Then check .env file content
+  elif [[ -f ".env" ]] && grep -q "^ENV=" ".env"; then
+    env=$(grep "^ENV=" ".env" | cut -d= -f2 | tr -d '"' | tr -d "'" | tr -d '[:space:]')
   # Default to dev
   else
     env="dev"
