@@ -22,72 +22,47 @@ fi
 BASE_DOMAIN="${BASE_DOMAIN:-localhost}"
 EMAIL="${LETSENCRYPT_EMAIL:-admin@${BASE_DOMAIN}}"
 STAGING="${LETSENCRYPT_ENV:-staging}"
+DNS_PROVIDER="${DNS_PROVIDER:-cloudflare}"
+DNS_TOKEN="${DNS_API_TOKEN:-}"
 
-# Build domain list
-DOMAINS="-d ${BASE_DOMAIN} -d www.${BASE_DOMAIN}"
+if [[ -z "$DNS_TOKEN" ]]; then
+  show_error "DNS_API_TOKEN is missing. Cannot use DNS challenge."
+  exit 1
+fi
 
-# Add required service subdomains
-[[ "${HASURA_ENABLED:-true}" == "true" ]] && DOMAINS+=" -d ${HASURA_ROUTE:-api}.${BASE_DOMAIN}"
-[[ "${AUTH_ENABLED:-true}" == "true" ]] && DOMAINS+=" -d ${AUTH_ROUTE:-auth}.${BASE_DOMAIN}"
+# Prepare Cloudflare credentials
+CREDENTIALS_DIR="ssl/credentials"
+mkdir -p "$CREDENTIALS_DIR"
+cat > "$CREDENTIALS_DIR/cloudflare.ini" <<EOF
+dns_cloudflare_api_token = $DNS_TOKEN
+EOF
+chmod 600 "$CREDENTIALS_DIR/cloudflare.ini"
 
-# Add optional service subdomains
-[[ "${MINIO_ENABLED:-false}" == "true" ]] && DOMAINS+=" -d ${MINIO_ROUTE:-minio}.${BASE_DOMAIN} -d ${MINIO_CONSOLE_ROUTE:-console}.${BASE_DOMAIN}"
-[[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]] && DOMAINS+=" -d ${NSELF_ADMIN_ROUTE:-admin}.${BASE_DOMAIN}"
-[[ "${GRAFANA_ENABLED:-false}" == "true" ]] && DOMAINS+=" -d ${GRAFANA_ROUTE:-grafana}.${BASE_DOMAIN}"
-[[ "${PROMETHEUS_ENABLED:-false}" == "true" ]] && DOMAINS+=" -d ${PROMETHEUS_ROUTE:-prometheus}.${BASE_DOMAIN}"
+show_info "Requesting wildcard certificate for: *.${BASE_DOMAIN} and ${BASE_DOMAIN}"
 
-# Add custom service subdomains
-for i in {1..10}; do
-  cs_var="CS_${i}"
-  if [[ -n "${!cs_var:-}" ]]; then
-    # Parse custom service
-    IFS=':' read -r name template port <<< "${!cs_var}"
-    route_var="CS_${i}_ROUTE"
-    route="${!route_var:-$name}"
-    DOMAINS+=" -d ${route}.${BASE_DOMAIN}"
-  fi
-done
-
-# Add frontend app subdomains
-frontend_count="${FRONTEND_APP_COUNT:-0}"
-for i in $(seq 1 $frontend_count); do
-  name_var="FRONTEND_APP_${i}_NAME"
-  name="${!name_var:-}"
-  route_var="FRONTEND_APP_${i}_ROUTE"
-  route="${!route_var:-$name}"
-  
-  if [[ -n "$name" ]]; then
-    DOMAINS+=" -d ${route}.${BASE_DOMAIN}"
-  fi
-done
-
-show_info "Requesting certificates for: $DOMAINS"
-
-# Construct Certbot command
-CERTBOT_CMD="certbot certonly --webroot --webroot-path /var/www/certbot \
+# Construct Certbot command for DNS challenge
+CERTBOT_CMD="certbot certonly --dns-cloudflare \
+  --dns-cloudflare-credentials /etc/letsencrypt/credentials/cloudflare.ini \
+  --dns-cloudflare-propagation-seconds 30 \
   --email $EMAIL --agree-tos --no-eff-email \
   --non-interactive --expand \
-  $DOMAINS"
+  -d *.${BASE_DOMAIN} -d ${BASE_DOMAIN}"
 
 if [[ "$STAGING" == "staging" ]]; then
   CERTBOT_CMD+=" --staging"
 fi
 
 # Run Certbot via Docker
-show_step "Running Certbot..."
+show_step "Running Certbot (DNS Challenge)..."
 docker compose run --rm --entrypoint "" certbot $CERTBOT_CMD
 
 # Check if successful
 if [[ $? -eq 0 ]]; then
-  show_success "Certificates obtained successfully!"
+  show_success "Wildcard certificate obtained successfully!"
   
   # Copy certificates to Nginx SSL directory
-  # Certbot saves to /etc/letsencrypt/live/$BASE_DOMAIN/
-  # We need to copy them to /etc/nginx/ssl/$BASE_DOMAIN/ (mapped to ./nginx/ssl/$BASE_DOMAIN on host)
-  
   show_step "Installing certificates..."
   
-  # We use a temporary container to copy files because of permissions/volumes
   docker compose run --rm --entrypoint "" certbot sh -c "
     mkdir -p /etc/nginx/ssl/${BASE_DOMAIN} && \
     cp -L /etc/letsencrypt/live/${BASE_DOMAIN}/fullchain.pem /etc/nginx/ssl/${BASE_DOMAIN}/fullchain.pem && \

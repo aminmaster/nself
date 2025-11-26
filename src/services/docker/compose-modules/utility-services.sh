@@ -300,14 +300,15 @@ generate_certbot_service() {
 
   cat <<EOF
 
-  # Certbot - Let's Encrypt SSL
+  # Certbot - Let's Encrypt SSL (with Cloudflare DNS plugin)
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/dns-cloudflare:latest
     container_name: \${PROJECT_NAME}_certbot
     volumes:
       - ./nginx/certbot:/var/www/certbot
       - ./nginx/ssl:/etc/nginx/ssl
       - ./ssl/letsencrypt:/etc/letsencrypt
+      - ./ssl/credentials:/etc/letsencrypt/credentials
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \${!}; done;'"
 EOF
 }
