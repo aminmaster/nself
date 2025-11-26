@@ -233,6 +233,12 @@ check_route_conflicts() {
         local cs_var="CS_${i}"
         local cs_value="${!cs_var:-}"
 
+        # Fallback to CUSTOM_SERVICE_N
+        if [[ -z "$cs_value" ]]; then
+            local custom_service_var="CUSTOM_SERVICE_${i}"
+            cs_value="${!custom_service_var:-}"
+        fi
+
         if [[ -n "$cs_value" ]]; then
             IFS=':' read -r service_name template port <<< "$cs_value"
             local route_var="CS_${i}_ROUTE"
@@ -251,7 +257,14 @@ check_route_conflicts() {
     local frontend_count="${FRONTEND_APP_COUNT:-0}"
     for i in $(seq 1 $frontend_count); do
         local route_var="FRONTEND_APP_${i}_ROUTE"
+        local name_var="FRONTEND_APP_${i}_NAME"
         local route="${!route_var:-}"
+        local name="${!name_var:-}"
+
+        # Default route to name if not set
+        if [[ -z "$route" ]] && [[ -n "$name" ]]; then
+            route="$name"
+        fi
 
         if [[ -n "$route" ]]; then
             route="${route%%.*}"
@@ -441,6 +454,12 @@ output_table() {
         local cs_var="CS_${i}"
         local cs_value="${!cs_var:-}"
 
+        # Fallback to CUSTOM_SERVICE_N
+        if [[ -z "$cs_value" ]]; then
+            local custom_service_var="CUSTOM_SERVICE_${i}"
+            cs_value="${!custom_service_var:-}"
+        fi
+
         if [[ -n "$cs_value" ]]; then
             if [[ $custom_count -eq 0 ]]; then
                 echo -e "${BOLD}${COLOR_BLUE}➞ Custom Services${COLOR_RESET}"
@@ -478,6 +497,12 @@ output_table() {
         local route_var="FRONTEND_APP_${i}_ROUTE"
         local name_var="FRONTEND_APP_${i}_NAME"
         local route="${!route_var:-}"
+        local name="${!name_var:-}"
+
+        # Default route to name if not set
+        if [[ -z "$route" ]] && [[ -n "$name" ]]; then
+            route="$name"
+        fi
         local name="${!name_var:-}"
 
         if [[ -n "$route" ]]; then
