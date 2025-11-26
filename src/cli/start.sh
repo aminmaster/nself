@@ -341,7 +341,7 @@ start_services() {
       last_line=$(tail -n 10 "$start_output" 2>/dev/null | grep -v "^$" | tail -n 1 || echo "")
 
       # Check what's happening based on output patterns with more detail
-      elif echo "$last_line" | grep -q "Building\|Step\|RUN\|COPY\|FROM"; then
+      if echo "$last_line" | grep -q "Building\|Step\|RUN\|COPY\|FROM"; then
         # Building custom images - count steps
         local build_steps=$(grep -c "Step [0-9]" "$start_output" 2>/dev/null || true)
         local image_name=$(echo "$last_line" | grep -oE "Building [a-z_-]+" | sed 's/Building //' || echo "image")
