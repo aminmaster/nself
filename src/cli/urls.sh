@@ -524,15 +524,11 @@ output_table() {
 
     # SSL/Trust Status
     if [[ "${protocol}" == "https" ]]; then
-        local le_cert_path="nginx/ssl/${domain}"
-        local self_cert_path="ssl/certificates/${domain}"
-        
-        if [[ "${SSL_PROVIDER:-}" == "letsencrypt" ]] && [[ -f "${le_cert_path}/fullchain.pem" ]]; then
-             echo -e "  ${COLOR_GREEN}✓ SSL: Let's Encrypt certificate installed${COLOR_RESET}"
-        elif [[ -f "${self_cert_path}/fullchain.pem" ]]; then
+        local cert_path="ssl/certificates/${domain}"
+        if [[ -f "${cert_path}/fullchain.pem" ]]; then
             echo -e "  ${COLOR_GRAY}✓ SSL: Self-signed certificate installed & trusted via /etc/hosts${COLOR_RESET}"
         else
-            echo -e "  ${COLOR_YELLOW}⚠ SSL: Certificate not found (checked ${le_cert_path} and ${self_cert_path})${COLOR_RESET}"
+            echo -e "  ${COLOR_GRAY}⚠ SSL: Certificate not found at ${cert_path}${COLOR_RESET}"
         fi
     fi
 
