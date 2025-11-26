@@ -648,17 +648,18 @@ start_services() {
         printf "SSL_PROVIDER is set to 'letsencrypt', but valid certificates were not found.\n\n"
         
         # Check if setup script exists
-        if [[ -f "src/scripts/setup-ssl.sh" ]]; then
+        local setup_script="$SCRIPT_DIR/../scripts/setup-ssl.sh"
+        if [[ -f "$setup_script" ]]; then
           read -p "Run SSL setup script now? [Y/n] " -n 1 -r
           echo
           if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
             # Run setup script
-            bash "src/scripts/setup-ssl.sh"
+            bash "$setup_script"
           else
-            printf "\nYou can run it later with: ${COLOR_BLUE}src/scripts/setup-ssl.sh${COLOR_RESET}\n"
+            printf "\nYou can run it later with: ${COLOR_BLUE}$setup_script${COLOR_RESET}\n"
           fi
         else
-          printf "Setup script not found at src/scripts/setup-ssl.sh\n"
+          printf "Setup script not found at $setup_script\n"
         fi
       fi
     fi
