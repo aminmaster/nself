@@ -309,7 +309,7 @@ generate_certbot_service() {
       - ./nginx/ssl:/etc/nginx/ssl
       - ./ssl/letsencrypt:/etc/letsencrypt
       - ./ssl/credentials:/etc/letsencrypt/credentials
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \${!}; done;'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \$\${!}; done;'"
 EOF
 }
 
