@@ -13,6 +13,12 @@ source "$PROJECT_ROOT/src/lib/utils/env.sh"
 # Load environment
 load_env_with_priority
 
+# Set derived variables required by docker-compose.yml
+export DOCKER_NETWORK="${PROJECT_NAME:-myproject}_network"
+# Dummy values for variables that might be required by compose validation but not used by certbot
+export DATABASE_URL="${DATABASE_URL:-postgres://user:pass@localhost:5432/db}"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
+
 # Check if SSL provider is Let's Encrypt
 if [[ "${SSL_PROVIDER:-selfsigned}" != "letsencrypt" ]]; then
   log_warning "SSL_PROVIDER is not set to 'letsencrypt'. Skipping Certbot setup."
