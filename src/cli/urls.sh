@@ -526,9 +526,14 @@ output_table() {
     if [[ "${protocol}" == "https" ]]; then
         local cert_path="ssl/certificates/${domain}"
         if [[ -f "${cert_path}/fullchain.pem" ]]; then
-            echo -e "  ${COLOR_GRAY}✓ SSL: Self-signed certificate installed & trusted via /etc/hosts${COLOR_RESET}"
+            # Check if it's Let's Encrypt
+            if openssl x509 -in "${cert_path}/fullchain.pem" -noout -issuer 2>/dev/null | grep -q "Let's Encrypt"; then
+                echo -e "  ${COLOR_GREEN}✓ SSL: Valid Let's Encrypt certificate installed${COLOR_RESET}"
+            else
+                echo -e "  ${COLOR_GRAY}✓ SSL: Self-signed certificate installed & trusted via /etc/hosts${COLOR_RESET}"
+            fi
         else
-            echo -e "  ${COLOR_GRAY}⚠ SSL: Certificate not found at ${cert_path}${COLOR_RESET}"
+            echo -e "  ${COLOR_YELLOW}⚠ SSL: Certificate not found at ${cert_path}${COLOR_RESET}"
         fi
     fi
 
