@@ -15,7 +15,7 @@ load_env_with_priority
 
 # Check if SSL provider is Let's Encrypt
 if [[ "${SSL_PROVIDER:-selfsigned}" != "letsencrypt" ]]; then
-  show_warning "SSL_PROVIDER is not set to 'letsencrypt'. Skipping Certbot setup."
+  log_warning "SSL_PROVIDER is not set to 'letsencrypt'. Skipping Certbot setup."
   exit 0
 fi
 
@@ -26,7 +26,7 @@ DNS_PROVIDER="${DNS_PROVIDER:-cloudflare}"
 DNS_TOKEN="${DNS_API_TOKEN:-}"
 
 if [[ -z "$DNS_TOKEN" ]]; then
-  show_error "DNS_API_TOKEN is missing. Cannot use DNS challenge."
+  log_error "DNS_API_TOKEN is missing. Cannot use DNS challenge."
   exit 1
 fi
 
@@ -47,7 +47,7 @@ else
   sudo chmod 600 "$CREDENTIALS_DIR/cloudflare.ini"
 fi
 
-show_info "Requesting wildcard certificate for: *.${BASE_DOMAIN} and ${BASE_DOMAIN}"
+log_info "Requesting wildcard certificate for: *.${BASE_DOMAIN} and ${BASE_DOMAIN}"
 
 # Construct Certbot command for DNS challenge
 CERTBOT_CMD="certbot certonly --dns-cloudflare \
@@ -62,15 +62,15 @@ if [[ "$STAGING" == "staging" ]]; then
 fi
 
 # Run Certbot via Docker
-show_step "Running Certbot (DNS Challenge)..."
+log_info "Running Certbot (DNS Challenge)..."
 docker compose run --rm --entrypoint "" certbot $CERTBOT_CMD
 
 # Check if successful
 if [[ $? -eq 0 ]]; then
-  show_success "Wildcard certificate obtained successfully!"
+  log_success "Wildcard certificate obtained successfully!"
   
   # Copy certificates to Nginx SSL directory
-  show_step "Installing certificates..."
+  log_info "Installing certificates..."
   
   docker compose run --rm --entrypoint "" certbot sh -c "
     mkdir -p /etc/nginx/ssl/${BASE_DOMAIN} && \
@@ -80,14 +80,14 @@ if [[ $? -eq 0 ]]; then
     chmod 600 /etc/nginx/ssl/${BASE_DOMAIN}/privkey.pem
   "
   
-  show_success "Certificates installed."
+  log_success "Certificates installed."
   
   # Reload Nginx
-  show_step "Reloading Nginx..."
+  log_info "Reloading Nginx..."
   docker compose exec nginx nginx -s reload
   
-  show_success "SSL setup complete!"
+  log_success "SSL setup complete!"
 else
-  show_error "Certbot failed to obtain certificates."
+  log_error "Certbot failed to obtain certificates."
   exit 1
 fi
