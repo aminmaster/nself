@@ -182,6 +182,17 @@ EOF
       start_period: 60s
 EOF
         ;;
+      *llamaindex*)
+        # LlamaIndex uses /healthz
+        cat <<EOF
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
+        ;;
       *)
         # Most other containers should have curl or wget
         cat <<EOF
