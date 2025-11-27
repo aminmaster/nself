@@ -73,10 +73,16 @@ EOF
       - ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY}
       - COHERE_API_KEY=\${COHERE_API_KEY}
       - HUGGINGFACE_API_KEY=\${HUGGINGFACE_API_KEY}
+EOF
+
+  # Add Neo4j connection vars for other services (NOT Neo4j itself to avoid config collision)
+  if [[ "$template_type" != "neo4j" ]]; then
+    cat <<EOF
       - NEO4J_URI=\${NEO4J_URI:-bolt://graph:7687}
       - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
 EOF
+  fi
 
   # Add Neo4j specific env vars
   if [[ "$template_type" == "neo4j" ]]; then
