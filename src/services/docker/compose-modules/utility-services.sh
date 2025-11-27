@@ -137,12 +137,13 @@ EOF
       DATABASE_URL: postgres://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@postgres:5432/\${POSTGRES_DB}
       HASURA_GRAPHQL_ENDPOINT: http://hasura:8080/v1/graphql
       HASURA_GRAPHQL_ADMIN_SECRET: \${HASURA_GRAPHQL_ADMIN_SECRET}
+      HASURA_GRAPHQL_ADMIN_SECRET: \${HASURA_GRAPHQL_ADMIN_SECRET}
       NODE_ENV: \${ENV:-development}
-      PORT: 3008
+      PORT: 3000
     volumes:
       - ./functions:/opt/project
     ports:
-      - "\${FUNCTIONS_PORT:-3008}:3008"
+      - "\${FUNCTIONS_PORT:-3008}:3000"
     healthcheck:
       test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3000/healthz\", (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on(\"error\", () => process.exit(1))' || curl -f http://localhost:3000/healthz || wget -q --spider http://localhost:3000/healthz"]
       interval: 30s

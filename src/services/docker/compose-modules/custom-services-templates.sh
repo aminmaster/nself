@@ -73,6 +73,9 @@ EOF
       - ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY}
       - COHERE_API_KEY=\${COHERE_API_KEY}
       - HUGGINGFACE_API_KEY=\${HUGGINGFACE_API_KEY}
+      - NEO4J_URI=\${NEO4J_URI:-bolt://graph:7687}
+      - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
 EOF
 
   # Add Neo4j specific env vars
