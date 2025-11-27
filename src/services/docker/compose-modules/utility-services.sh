@@ -107,7 +107,7 @@ generate_functions_service() {
       hasura:
         condition: service_healthy
     environment:
-      PORT: 3000
+      PORT: 3008
       NODE_ENV: \${ENV:-development}
       DATABASE_URL: postgres://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@postgres:5432/\${POSTGRES_DB}
       HASURA_GRAPHQL_ENDPOINT: http://hasura:8080/v1/graphql
@@ -115,7 +115,7 @@ generate_functions_service() {
     volumes:
       - ./functions:/opt/project
     ports:
-      - "\${FUNCTIONS_PORT:-3008}:3000"
+      - "\${FUNCTIONS_PORT:-3008}:3008"
 EOF
   else
     # Use original nhost/functions
