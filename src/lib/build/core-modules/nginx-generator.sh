@@ -483,8 +483,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
-        set $upstream_${cs_name} ${cs_name};
-        proxy_pass http://$upstream_${cs_name}:${cs_port};
+        set \$upstream_${cs_name} ${cs_name};
+        proxy_pass http://\$upstream_${cs_name}:${cs_port};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
