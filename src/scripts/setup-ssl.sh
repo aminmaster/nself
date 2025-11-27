@@ -26,6 +26,14 @@ export DOCKER_NETWORK="${PROJECT_NAME:-myproject}_network"
 # Dummy values for variables that might be required by compose validation but not used by certbot
 export DATABASE_URL="${DATABASE_URL:-postgres://user:pass@localhost:5432/db}"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
+export POSTGRES_DB="${POSTGRES_DB:-nself}"
+export POSTGRES_USER="${POSTGRES_USER:-postgres}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
+export HASURA_GRAPHQL_ADMIN_SECRET="${HASURA_GRAPHQL_ADMIN_SECRET:-secret}"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-dummy}"
+export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-dummy}"
+export COHERE_API_KEY="${COHERE_API_KEY:-dummy}"
+export HUGGINGFACE_API_KEY="${HUGGINGFACE_API_KEY:-dummy}"
 
 # Check if SSL provider is Let's Encrypt
 if [[ "${SSL_PROVIDER:-selfsigned}" != "letsencrypt" ]]; then
