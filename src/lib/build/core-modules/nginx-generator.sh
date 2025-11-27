@@ -354,7 +354,7 @@ generate_frontend_routes() {
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${app_route}.\${BASE_DOMAIN:-localhost};
+    server_name ${app_route}.${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
@@ -391,7 +391,7 @@ EOF
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${api_route}.\${BASE_DOMAIN:-localhost};
+    server_name ${api_route}.${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
@@ -448,7 +448,7 @@ generate_custom_routes() {
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${cs_route}.\${BASE_DOMAIN:-localhost};
+    server_name ${cs_route}.${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
