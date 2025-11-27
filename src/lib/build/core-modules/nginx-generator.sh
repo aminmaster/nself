@@ -145,7 +145,8 @@ generate_service_routes() {
     cat > nginx/sites/hasura.conf <<EOF
 # Hasura GraphQL Engine
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${hasura_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -182,7 +183,8 @@ EOF
     cat > nginx/sites/auth.conf <<EOF
 # Authentication Service
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${auth_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -209,7 +211,8 @@ EOF
     cat > nginx/sites/storage.conf <<EOF
 # MinIO Storage Console
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${storage_console_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -227,7 +230,8 @@ server {
 
 # MinIO S3 API
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${storage_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -260,7 +264,8 @@ generate_optional_service_routes() {
   if [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]]; then
     cat > nginx/sites/admin.conf <<EOF
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${admin_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -286,7 +291,8 @@ EOF
 
     cat > nginx/sites/grafana.conf <<EOF
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${grafana_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -309,7 +315,8 @@ EOF
 
     cat > nginx/sites/prometheus.conf <<EOF
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${prometheus_route}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
@@ -344,7 +351,8 @@ generate_frontend_routes() {
       cat > "nginx/sites/frontend-${app_name}.conf" <<EOF
 # Frontend Application: $app_name
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${app_route}.\${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
@@ -380,7 +388,8 @@ EOF
 
         cat >> "nginx/sites/frontend-${app_name}.conf" <<EOF
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${api_route}.\${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
@@ -436,7 +445,8 @@ generate_custom_routes() {
         cat > "nginx/sites/custom-${cs_name}.conf" <<EOF
 # Custom Service: $cs_name
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${cs_route}.\${BASE_DOMAIN:-localhost};
 
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
