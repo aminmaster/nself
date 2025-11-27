@@ -97,6 +97,8 @@ EOF
       - NEO4J_dbms_memory_pagecache_size=512M
       - NEO4J_dbms_memory_heap_initial__size=512M
       - NEO4J_dbms_memory_heap_max__size=512M
+      - NEO4J_dbms_default__advertised__address=graph.equilibria.org
+      - NEO4J_dbms_connector_bolt_advertised__address=graph.equilibria.org:443
 EOF
   fi
 
