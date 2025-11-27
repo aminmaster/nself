@@ -80,6 +80,9 @@ http {
     limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=api:10m rate=100r/s;
 
+    # Resolver for Docker DNS
+    resolver 127.0.0.11 valid=30s;
+
     # Include all configurations
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites/*.conf;
@@ -480,7 +483,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
-        proxy_pass http://${cs_name}:${cs_port};
+        set $upstream_${cs_name} ${cs_name};
+        proxy_pass http://$upstream_${cs_name}:${cs_port};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
