@@ -82,9 +82,9 @@ EOF
   if [[ "$template_type" == "neo4j" ]]; then
     cat <<EOF
       - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD:-password}
-      - NEO4J_dbms_memory_pagecache_size=512M
-      - NEO4J_dbms_memory_heap_initial__size=512M
-      - NEO4J_dbms_memory_heap_max__size=512M
+      - NEO4J_server_memory_pagecache_size=512M
+      - NEO4J_server_memory_heap_initial__size=512M
+      - NEO4J_server_memory_heap_max__size=512M
 EOF
   fi
 
