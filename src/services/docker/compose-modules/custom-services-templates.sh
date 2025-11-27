@@ -20,7 +20,7 @@ EOF
   # Special handling for Neo4j
   if [[ "$template_type" == "neo4j" ]]; then
     cat <<EOF
-    image: neo4j:5.11
+    image: neo4j:4.4
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
@@ -94,9 +94,9 @@ EOF
   if [[ "$template_type" == "neo4j" ]]; then
     cat <<EOF
       - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD:-password}
-      - NEO4J_server_memory_pagecache_size=512M
-      - NEO4J_server_memory_heap_initial__size=512M
-      - NEO4J_server_memory_heap_max__size=512M
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_dbms_memory_heap_initial__size=512M
+      - NEO4J_dbms_memory_heap_max__size=512M
 EOF
   fi
 
