@@ -299,6 +299,42 @@ wizard_custom_services() {
           ;;
       esac
 
+      # Prompt for service-specific credentials
+      if [[ "$service_type" == "neo4j" ]]; then
+        echo ""
+        echo "Neo4j Configuration:"
+        local neo4j_user neo4j_password
+        prompt_input "Neo4j username" "neo4j" neo4j_user
+        
+        if confirm_action "Use auto-generated password?"; then
+          neo4j_password=$(generate_password 24)
+          echo "Generated: $neo4j_password"
+        else
+          prompt_password "Neo4j password" neo4j_password
+        fi
+        
+        add_wizard_config "$config_array_name" "NEO4J_USER" "$neo4j_user"
+        add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+      elif [[ "$service_type" == "llamaindex" ]]; then
+        echo ""
+        echo "LlamaIndex Configuration:"
+        # Check if OPENAI_API_KEY is already set
+        local openai_key_set=false
+        eval "local config_values=(\"\${${config_array_name}[@]}\")"
+        for cfg_item in "${config_values[@]}"; do
+          if [[ "$cfg_item" == "SECR:OPENAI_API_KEY="* ]]; then
+            openai_key_set=true
+            break
+          fi
+        done
+        
+        if [[ "$openai_key_set" == "false" ]]; then
+          local openai_key
+          prompt_password "OpenAI API Key" openai_key
+          add_wizard_secret "$config_array_name" "OPENAI_API_KEY" "$openai_key"
+        fi
+      fi
+
       echo ""
       prompt_input "Service port" "$((8000 + service_count))" service_port "^[0-9][0-9]*$"
 
