@@ -499,7 +499,8 @@ server {
 
     # Health check endpoint
     location /health {
-        proxy_pass http://${cs_name}:${cs_port}/health;
+        set \$upstream_health_${cs_name} ${cs_name};
+        proxy_pass http://\$upstream_health_${cs_name}:${cs_port}/health;
         access_log off;
     }
 }
