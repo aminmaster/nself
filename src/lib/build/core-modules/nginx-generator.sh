@@ -80,6 +80,12 @@ http {
     limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=api:10m rate=100r/s;
 
+    # WebSocket connection upgrade mapping
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     # Resolver for Docker DNS
     resolver 127.0.0.11 valid=30s;
 
@@ -487,7 +493,7 @@ server {
         proxy_pass http://\$upstream_${cs_name}:${cs_port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
+        proxy_set_header Connection \$connection_upgrade;
         proxy_set_header Host \$host;
         proxy_cache_bypass \$http_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
