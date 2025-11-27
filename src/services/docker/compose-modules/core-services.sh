@@ -19,6 +19,7 @@ generate_postgres_service() {
     image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: \${PROJECT_NAME}_postgres
     restart: unless-stopped
+    shm_size: 256mb
     networks:
       - \${DOCKER_NETWORK}
     environment:

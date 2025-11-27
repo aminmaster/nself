@@ -107,7 +107,8 @@ server {
 
 # Default HTTPS server
 server {
-    listen 443 ssl http2 default_server;
+    listen 443 ssl default_server;
+    http2 on;
     server_name ${BASE_DOMAIN:-localhost};
 
     # SSL certificates - runtime path based on environment
