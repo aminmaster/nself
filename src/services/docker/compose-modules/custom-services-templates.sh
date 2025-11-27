@@ -99,6 +99,10 @@ EOF
       - NEO4J_dbms_memory_heap_max__size=512M
       - NEO4J_dbms_default__advertised__address=graph.equilibria.org
       - NEO4J_dbms_connector_bolt_advertised__address=graph.equilibria.org:443
+      - NEO4J_dbms_connector_bolt_listen__address=0.0.0.0:7687
+      - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474
+      - NEO4J_dbms_connector_bolt_enabled=true
+      - NEO4J_dbms_connector_http_enabled=true
 EOF
   fi
 
