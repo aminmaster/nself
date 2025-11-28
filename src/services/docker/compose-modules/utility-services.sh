@@ -155,6 +155,39 @@ EOF
 
 
 
+# Generate RabbitMQ message broker service
+generate_rabbitmq_service() {
+  local enabled="${RABBITMQ_ENABLED:-false}"
+  [[ "$enabled" != "true" ]] && return 0
+
+  cat <<EOF
+
+  # RabbitMQ - Message Broker
+  rabbitmq:
+    image: rabbitmq:\${RABBITMQ_VERSION:-3.13-management-alpine}
+    container_name: \${PROJECT_NAME}_rabbitmq
+    restart: unless-stopped
+    networks:
+      - \${DOCKER_NETWORK}
+    environment:
+      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: \${RABBITMQ_PASSWORD:-changeme}
+      RABBITMQ_DEFAULT_VHOST: \${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "\${RABBITMQ_PORT:-5672}:5672"
+      - "\${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+EOF
+}
+
+
 
 # Generate backup service
 generate_backup_service() {
@@ -286,6 +319,7 @@ generate_utility_services() {
   generate_nself_admin_service
   generate_minio_service
   generate_redis_service
+  generate_rabbitmq_service
   generate_functions_service
   generate_mailpit_service
   generate_search_services
@@ -316,6 +350,7 @@ EOF
 # Export functions
 export -f generate_mailpit_service
 export -f generate_nself_admin_service
+export -f generate_rabbitmq_service
 export -f generate_functions_service
 export -f generate_mlflow_service
 export -f generate_search_services
