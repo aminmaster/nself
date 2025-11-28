@@ -305,10 +305,8 @@ ensure_project_context() {
     export PROJECT_NAME="my-project"
   fi
 
-  # Ensure DOCKER_NETWORK is set
-  if [[ -z "${DOCKER_NETWORK:-}" ]]; then
-    export DOCKER_NETWORK="${PROJECT_NAME}_network"
-  fi
+  # Ensure DOCKER_NETWORK is set and matches PROJECT_NAME
+  export DOCKER_NETWORK="${PROJECT_NAME}_network"
 
   return 0
 }
