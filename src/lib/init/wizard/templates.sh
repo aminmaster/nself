@@ -162,6 +162,11 @@ SEARCH_HOST=search
 SEARCH_PORT=7700
 SEARCH_API_KEY=$(openssl rand -hex 32)
 
+# MeiliSearch specific
+MEILISEARCH_ENABLED=true
+MEILISEARCH_PORT=7700
+MEILISEARCH_MASTER_KEY=$(openssl rand -hex 32)
+
 EOF
   fi
 
