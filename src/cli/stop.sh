@@ -199,6 +199,14 @@ cmd_stop() {
     compose_args+=("--remove-orphans")
   fi
 
+  # Determine environment file
+  local env_file="/dev/null"
+  if [[ -f ".env.runtime" ]]; then
+    env_file=".env.runtime"
+  elif [[ -f ".env.prod" ]]; then
+    env_file=".env.prod"
+  fi
+
   # Execute the shutdown with optional graceful stop first
   local output_file=$(mktemp)
 
@@ -206,20 +214,20 @@ cmd_stop() {
   if [[ "$remove_volumes" != true ]] && [[ "$remove_images" != true ]]; then
     if [[ "$verbose" == true ]]; then
       echo "Gracefully stopping services (timeout: ${graceful_timeout}s)..."
-      docker compose stop --timeout "$graceful_timeout" 2>&1 | tee -a "$output_file"
+      docker compose --env-file "$env_file" stop --timeout "$graceful_timeout" 2>&1 | tee -a "$output_file"
     else
-      docker compose stop --timeout "$graceful_timeout" >/dev/null 2>&1
+      docker compose --env-file "$env_file" stop --timeout "$graceful_timeout" >/dev/null 2>&1
     fi
   fi
 
   if [[ "$verbose" == true ]]; then
     # Show full output in verbose mode
     printf "\n"
-    docker compose "${compose_args[@]}" 2>&1 | tee -a "$output_file"
+    docker compose --env-file "$env_file" "${compose_args[@]}" 2>&1 | tee -a "$output_file"
     result=${PIPESTATUS[0]}
   else
     # Run silently with spinner and progress
-    (docker compose "${compose_args[@]}" 2>&1) >>"$output_file" &
+    (docker compose --env-file "$env_file" "${compose_args[@]}" 2>&1) >>"$output_file" &
     local compose_pid=$!
 
     # Show spinner with progress tracking
