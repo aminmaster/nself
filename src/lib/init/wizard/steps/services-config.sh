@@ -322,6 +322,15 @@ wizard_email_search() {
         add_wizard_config "$config_array_name" "MEILISEARCH_PORT" "7700"
         
         add_wizard_config "$config_array_name" "MEILI_ENV" "\${ENV:-production}"
+        
+        local meilisearch_key
+        if confirm_action "Use auto-generated master key for MeiliSearch?"; then
+          meilisearch_key=$(generate_password 64)
+          echo "Generated: [hidden for security]"
+        else
+          prompt_password "MeiliSearch master key" meilisearch_key
+        fi
+        add_wizard_secret "$config_array_name" "MEILISEARCH_MASTER_KEY" "$meilisearch_key"
         ;;
       1)
         add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"

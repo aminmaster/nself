@@ -179,30 +179,7 @@ wizard_service_passwords() {
 
 
 
-  # MeiliSearch credentials
-  local meilisearch_enabled=false
-  eval "local config_values=(\"\${${config_array_name}[@]}\")"
-  for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:SEARCH_ENGINE=meilisearch" ]] || [[ "$cfg_item" == "SEARCH_ENGINE=meilisearch" ]]; then
-      meilisearch_enabled=true
-      break
-    fi
-  done
 
-  if [[ "$meilisearch_enabled" == "true" ]]; then
-    echo "MeiliSearch Master Key:"
-    local meilisearch_key
-    
-    if confirm_action "Use auto-generated master key?"; then
-      meilisearch_key=$(generate_password 64)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "MeiliSearch master key" meilisearch_key
-    fi
-    
-    add_wizard_secret "$config_array_name" "MEILISEARCH_MASTER_KEY" "$meilisearch_key"
-    echo ""
-  fi
 
   return 0
 }
