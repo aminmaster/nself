@@ -16,6 +16,7 @@ generate_nginx_service() {
     ports:
       - "\${NGINX_PORT:-80}:80"
       - "\${NGINX_SSL_PORT:-443}:443"
+      - "7687:7687"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro

@@ -20,6 +20,9 @@ generate_nginx_config() {
 
   # Generate custom service routes
   generate_custom_routes
+
+  # Generate stream routes
+  generate_stream_routes
 }
 
 # Generate main nginx.conf
@@ -94,11 +97,65 @@ http {
     include /etc/nginx/sites/*.conf;
 }
 
-    # Include all configurations
-    include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites/*.conf;
+
+
+# Stream configuration for TCP/UDP proxies (e.g. Neo4j Bolt)
+stream {
+    log_format basic '$remote_addr [$time_local] '
+                     '$protocol $status $bytes_sent $bytes_received '
+                     '$session_time';
+    access_log /var/log/nginx/stream.log basic;
+
+    include /etc/nginx/streams/*.conf;
 }
 EOF
+}
+
+# Generate stream configurations for custom services
+generate_stream_routes() {
+  local services_found=false
+
+  # Check for CS_ variables (format: service_name:template_type:port)
+  for i in {1..20}; do
+    local cs_var="CS_${i}"
+    local cs_value="${!cs_var:-}"
+
+    # Fallback to CUSTOM_SERVICE_N
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${i}"
+      cs_value="${!custom_service_var:-}"
+    fi
+
+    [[ -z "$cs_value" ]] && continue
+
+    # Parse CS_ format: service_name:template_type:port
+    IFS=':' read -r cs_name template_type cs_port <<< "$cs_value"
+
+    # Only generate stream config for Neo4j services
+    if [[ "$template_type" == "neo4j" ]]; then
+        if [[ "$services_found" == "false" ]]; then
+            echo "Generating Nginx stream routes..."
+            mkdir -p nginx/streams
+            services_found=true
+        fi
+
+        echo "  - Stream Route: ${cs_name} (Bolt 7687)"
+        
+        cat > "nginx/streams/${cs_name}.conf" <<EOF
+# Stream config for ${cs_name} (Bolt)
+server {
+    listen 7687 ssl;
+    proxy_pass ${cs_name}:7687;
+    
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
+    
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+}
+EOF
+    fi
+  done
 }
 
 # Generate stream configurations for custom services
@@ -593,4 +650,5 @@ export -f generate_service_routes
 export -f generate_optional_service_routes
 export -f generate_frontend_routes
 export -f generate_custom_routes
+export -f generate_stream_routes
 export -f generate_database_init
