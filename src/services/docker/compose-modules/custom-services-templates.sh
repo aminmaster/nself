@@ -20,7 +20,7 @@ EOF
   # Special handling for Neo4j
   if [[ "$template_type" == "neo4j" ]]; then
     cat <<EOF
-    image: neo4j:4.4
+    image: neo4j:5.26
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
@@ -87,22 +87,6 @@ EOF
       - NEO4J_URI=\${NEO4J_URI:-bolt://graph:7687}
       - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
-EOF
-  fi
-
-  # Add Neo4j specific env vars
-  if [[ "$template_type" == "neo4j" ]]; then
-    cat <<EOF
-      - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD:-password}
-      - NEO4J_dbms_memory_pagecache_size=512M
-      - NEO4J_dbms_memory_heap_initial__size=512M
-      - NEO4J_dbms_memory_heap_max__size=512M
-      - NEO4J_dbms_default__advertised__address=graph.equilibria.org
-      - NEO4J_dbms_connector_bolt_advertised__address=graph.equilibria.org:443
-      - NEO4J_dbms_connector_bolt_listen__address=0.0.0.0:7687
-      - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474
-      - NEO4J_dbms_connector_bolt_enabled=true
-      - NEO4J_dbms_connector_http_enabled=true
 EOF
   fi
 
