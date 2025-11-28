@@ -156,6 +156,14 @@ wizard_optional_services() {
         add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
         add_wizard_config "$config_array_name" "QUEUE_TYPE" "rabbitmq"
         add_wizard_config "$config_array_name" "RABBITMQ_PORT" "5672"
+        
+        echo ""
+        local rabbitmq_mgmt_port rabbitmq_user
+        prompt_input "RabbitMQ Management Port" "15672" rabbitmq_mgmt_port "^[0-9]+$"
+        prompt_input "RabbitMQ User" "admin" rabbitmq_user
+        
+        add_wizard_config "$config_array_name" "RABBITMQ_MANAGEMENT_PORT" "$rabbitmq_mgmt_port"
+        add_wizard_config "$config_array_name" "RABBITMQ_USER" "$rabbitmq_user"
         ;;
       2)
         add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
@@ -303,6 +311,11 @@ wizard_email_search() {
         add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
         add_wizard_config "$config_array_name" "SEARCH_ENGINE" "meilisearch"
         add_wizard_config "$config_array_name" "MEILISEARCH_PORT" "7700"
+        
+        echo ""
+        local meili_env
+        prompt_input "MeiliSearch Environment (production/development)" "production" meili_env
+        add_wizard_config "$config_array_name" "MEILI_ENV" "$meili_env"
         ;;
       1)
         add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"

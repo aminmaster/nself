@@ -300,6 +300,8 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 
@@ -316,6 +318,62 @@ server {
 
     location / {
         proxy_pass http://minio:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
+  # Search Service (MeiliSearch)
+  if [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] || [[ "${SEARCH_ENABLED:-false}" == "true" ]]; then
+    local search_route="${SEARCH_ROUTE:-search}"
+    local base_domain="${BASE_DOMAIN:-localhost}"
+
+    cat > nginx/sites/search.conf <<EOF
+# MeiliSearch API
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${search_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://meilisearch:7700;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
+  # Message Queue (RabbitMQ Management)
+  if [[ "${RABBITMQ_ENABLED:-false}" == "true" ]]; then
+    local rabbitmq_route="${RABBITMQ_ROUTE:-rabbitmq}"
+    local base_domain="${BASE_DOMAIN:-localhost}"
+
+    cat > nginx/sites/rabbitmq.conf <<EOF
+# RabbitMQ Management Console
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${rabbitmq_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://rabbitmq:15672;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
