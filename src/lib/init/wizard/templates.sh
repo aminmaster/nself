@@ -453,6 +453,10 @@ generate_production_secrets() {
   if grep -q "RABBITMQ_PASSWORD=" .env.secrets; then
     sed -i.bak "s/RABBITMQ_PASSWORD=.*/RABBITMQ_PASSWORD=$rabbitmq_pass/" .env.secrets
   fi
+  if grep -q "MEILISEARCH_MASTER_KEY=" .env.secrets; then
+    local meilisearch_key=$(openssl rand -hex 32)
+    sed -i.bak "s/MEILISEARCH_MASTER_KEY=.*/MEILISEARCH_MASTER_KEY=$meilisearch_key/" .env.secrets
+  fi
   
   # Clean up backup files
   rm -f .env.secrets.bak
