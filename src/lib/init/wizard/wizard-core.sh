@@ -181,7 +181,7 @@ wizard_service_passwords() {
   local rabbitmq_enabled=false
   eval "local config_values=(\"\${${config_array_name}[@]}\")"
   for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:RABBITMQ_ENABLED=true" ]] || [[ "$cfg_item" == "RABBITMQ_ENABLED=true" ]]; then
+    if [[ "$cfg_item" == "CONF:QUEUE_TYPE=rabbitmq" ]] || [[ "$cfg_item" == "QUEUE_TYPE=rabbitmq" ]]; then
       rabbitmq_enabled=true
       break
     fi
@@ -206,7 +206,7 @@ wizard_service_passwords() {
   local meilisearch_enabled=false
   eval "local config_values=(\"\${${config_array_name}[@]}\")"
   for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:MEILISEARCH_ENABLED=true" ]] || [[ "$cfg_item" == "MEILISEARCH_ENABLED=true" ]] || [[ "$cfg_item" == "CONF:SEARCH_ENABLED=true" ]] || [[ "$cfg_item" == "SEARCH_ENABLED=true" ]]; then
+    if [[ "$cfg_item" == "CONF:SEARCH_ENGINE=meilisearch" ]] || [[ "$cfg_item" == "SEARCH_ENGINE=meilisearch" ]]; then
       meilisearch_enabled=true
       break
     fi

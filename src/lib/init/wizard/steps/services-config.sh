@@ -312,10 +312,7 @@ wizard_email_search() {
         add_wizard_config "$config_array_name" "SEARCH_ENGINE" "meilisearch"
         add_wizard_config "$config_array_name" "MEILISEARCH_PORT" "7700"
         
-        echo ""
-        local meili_env
-        prompt_input "MeiliSearch Environment (production/development)" "production" meili_env
-        add_wizard_config "$config_array_name" "MEILI_ENV" "$meili_env"
+        add_wizard_config "$config_array_name" "MEILI_ENV" "\${ENV:-production}"
         ;;
       1)
         add_wizard_config "$config_array_name" "SEARCH_ENABLED" "true"
