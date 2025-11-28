@@ -177,30 +177,7 @@ wizard_service_passwords() {
     echo ""
   fi
 
-  # RabbitMQ credentials
-  local rabbitmq_enabled=false
-  eval "local config_values=(\"\${${config_array_name}[@]}\")"
-  for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:QUEUE_TYPE=rabbitmq" ]] || [[ "$cfg_item" == "QUEUE_TYPE=rabbitmq" ]]; then
-      rabbitmq_enabled=true
-      break
-    fi
-  done
 
-  if [[ "$rabbitmq_enabled" == "true" ]]; then
-    echo "RabbitMQ Message Broker Credentials:"
-    local rabbitmq_password
-    
-    if confirm_action "Use auto-generated password?"; then
-      rabbitmq_password=$(generate_password 32)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "RabbitMQ password" rabbitmq_password
-    fi
-    
-    add_wizard_secret "$config_array_name" "RABBITMQ_PASSWORD" "$rabbitmq_password"
-    echo ""
-  fi
 
   # MeiliSearch credentials
   local meilisearch_enabled=false

@@ -164,6 +164,15 @@ wizard_optional_services() {
         
         add_wizard_config "$config_array_name" "RABBITMQ_MANAGEMENT_PORT" "$rabbitmq_mgmt_port"
         add_wizard_config "$config_array_name" "RABBITMQ_USER" "$rabbitmq_user"
+        
+        local rabbitmq_password
+        if confirm_action "Use auto-generated password for RabbitMQ?"; then
+          rabbitmq_password=$(generate_password 32)
+          echo "Generated: [hidden for security]"
+        else
+          prompt_password "RabbitMQ password" rabbitmq_password
+        fi
+        add_wizard_secret "$config_array_name" "RABBITMQ_PASSWORD" "$rabbitmq_password"
         ;;
       2)
         add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
