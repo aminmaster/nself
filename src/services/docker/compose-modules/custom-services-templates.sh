@@ -45,12 +45,12 @@ EOF
     ports:
       - "${service_port}:${service_port}"
 EOF
-    # Expose Bolt port for Neo4j
-    if [[ "$template_type" == "neo4j" ]]; then
-      cat <<EOF
-      - "7687:7687"
-EOF
-    fi
+    # Expose Bolt port for Neo4j (Removed: Proxied via Nginx Stream)
+    # if [[ "$template_type" == "neo4j" ]]; then
+    #   cat <<EOF
+    #   - "7687:7687"
+    # EOF
+    # fi
   fi
 
   # Add environment variables
