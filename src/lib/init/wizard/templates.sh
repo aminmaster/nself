@@ -303,6 +303,8 @@ create_environment_file() {
   local env="$1"
   local project_name="$2"
   local base_domain="$3"
+  shift 3
+  local services=("$@")
   
   case "$env" in
   staging)
@@ -355,6 +357,33 @@ BACKUP_SCHEDULE="0 2 * * *"
 ADMIN_2FA_ENABLED=true
 RATE_LIMITING_ENABLED=true
 EOF
+
+    # Add service enable flags based on selected services
+    for service in "${services[@]}"; do
+      case "$service" in
+        "Redis")
+          echo "REDIS_ENABLED=true" >> .env.prod
+          ;;
+        "MinIO Storage")
+          echo "MINIO_ENABLED=true" >> .env.prod
+          ;;
+        "RabbitMQ")
+          echo "RABBITMQ_ENABLED=true" >> .env.prod
+          ;;
+        "Search"|"MeiliSearch")
+          echo "MEILISEARCH_ENABLED=true" >> .env.prod
+          ;;
+        "Email Service")
+          echo "MAILPIT_ENABLED=true" >> .env.prod
+          ;;
+        "Admin UI")
+          echo "NSELF_ADMIN_ENABLED=true" >> .env.prod
+          ;;
+        "Functions")
+          echo "FUNCTIONS_ENABLED=true" >> .env.prod
+          ;;
+      esac
+    done
     
     # Create .env.secrets template
     cat > .env.secrets << EOF
@@ -368,6 +397,7 @@ POSTGRES_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 REDIS_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 MINIO_ROOT_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 RABBITMQ_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
+MEILISEARCH_MASTER_KEY=CHANGE_ME_$(openssl rand -hex 32)
 
 # API Keys
 HASURA_GRAPHQL_ADMIN_SECRET=CHANGE_ME_$(openssl rand -hex 32)
