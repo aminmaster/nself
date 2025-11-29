@@ -298,7 +298,7 @@ generate_search_services() {
       - \${DOCKER_NETWORK}
     environment:
       MEILI_MASTER_KEY: \${MEILISEARCH_MASTER_KEY:-changeme}
-      MEILI_ENV: \${MEILI_ENV:-development}
+      MEILI_ENV: \\${MEILI_ENV:-production}
       MEILI_HTTP_ADDR: 0.0.0.0:7700
       MEILI_NO_ANALYTICS: true
     volumes:
