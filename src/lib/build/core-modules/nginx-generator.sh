@@ -346,7 +346,7 @@ server {
     client_max_body_size 100M;
 
     location / {
-        proxy_pass http://meilisearch:7700;
+        proxy_pass http://${project_name}_meilisearch:7700;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
