@@ -228,6 +228,12 @@ check_route_conflicts() {
         add_route "$route" "NestJS API"
     fi
 
+    if [[ "${RABBITMQ_ENABLED:-false}" == "true" ]]; then
+        local route="${RABBITMQ_ROUTE:-rabbitmq}"
+        route="${route%%.*}"
+        add_route "$route" "RabbitMQ Management"
+    fi
+
     # Check custom services
     for i in {1..10}; do
         local cs_var="CS_${i}"
@@ -439,6 +445,12 @@ output_table() {
         has_optional=true
     fi
 
+    if [[ "${RABBITMQ_ENABLED:-false}" == "true" ]]; then
+        local rabbitmq_route="${RABBITMQ_ROUTE:-rabbitmq}"
+        echo -e "  RabbitMQ Admin: ${COLOR_GREEN}${protocol}://${rabbitmq_route}.${domain}${COLOR_RESET}"
+        has_optional=true
+    fi
+
     # Show Redis if enabled (internal)
     if [[ "$show_all" == "true" && "${REDIS_ENABLED:-false}" == "true" ]]; then
         echo -e "  Redis:          ${COLOR_GRAY}Internal only (port 6379)${COLOR_RESET}"
@@ -563,6 +575,7 @@ count_active_routes() {
     [[ "${BULLMQ_UI_ENABLED:-false}" == "true" ]] && count=$((count + 1))
     [[ "${WEBHOOK_SERVICE_ENABLED:-false}" == "true" ]] && count=$((count + 1))
     [[ "${NESTJS_ENABLED:-false}" == "true" ]] && count=$((count + 1))
+    [[ "${RABBITMQ_ENABLED:-false}" == "true" ]] && count=$((count + 1))
 
     # Custom services with public routes
     for i in {1..10}; do
