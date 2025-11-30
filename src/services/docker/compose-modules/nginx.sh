@@ -21,6 +21,7 @@ generate_nginx_service() {
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/sites:/etc/nginx/sites:ro
+      - ./nginx/streams:/etc/nginx/streams:ro
       - ./nginx/includes:/etc/nginx/includes:ro
       - ./ssl/certificates:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx
