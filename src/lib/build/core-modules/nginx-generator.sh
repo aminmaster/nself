@@ -150,7 +150,7 @@ server {
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
     
-    ssl_session_cache shared:SSL:10m;
+    ssl_session_cache shared:SSL_STREAM:10m;
     ssl_session_timeout 10m;
 }
 EOF
