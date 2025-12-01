@@ -479,9 +479,9 @@ EOF
       local auth_pass="${PROMETHEUS_BASIC_AUTH_PASSWORD:-admin}"
       
       echo "Generating Basic Auth for Prometheus..."
-      # Generate htpasswd file using python (available in environment)
-      # We use python to generate the hash to avoid dependency on apache2-utils
-      python3 -c "import crypt; print('${auth_user}:' + crypt.crypt('${auth_pass}', crypt.mksalt(crypt.METHOD_SHA512)))" > nginx/conf.d/prometheus.htpasswd
+      # Generate htpasswd file using openssl (available everywhere)
+      # APR1-MD5 is compatible with Apache htpasswd format
+      echo "${auth_user}:$(openssl passwd -apr1 "${auth_pass}")" > nginx/conf.d/prometheus.htpasswd
       
       auth_config="
     auth_basic \"Prometheus Restricted Access\";
