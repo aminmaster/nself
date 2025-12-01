@@ -472,6 +472,23 @@ EOF
     local prometheus_route="${PROMETHEUS_ROUTE:-prometheus}"
     local base_domain="${BASE_DOMAIN:-localhost}"
 
+    # Basic Auth Configuration for Prometheus
+    local auth_config=""
+    if [[ "${PROMETHEUS_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+      local auth_user="${PROMETHEUS_BASIC_AUTH_USER:-admin}"
+      local auth_pass="${PROMETHEUS_BASIC_AUTH_PASSWORD:-admin}"
+      
+      echo "Generating Basic Auth for Prometheus..."
+      # Generate htpasswd file using python (available in environment)
+      # We use python to generate the hash to avoid dependency on apache2-utils
+      python3 -c "import crypt; print('${auth_user}:' + crypt.crypt('${auth_pass}', crypt.mksalt(crypt.METHOD_SHA512)))" > nginx/conf.d/prometheus.htpasswd
+      
+      auth_config="
+    auth_basic \"Prometheus Restricted Access\";
+    auth_basic_user_file /etc/nginx/conf.d/prometheus.htpasswd;
+"
+    fi
+
     cat > nginx/sites/prometheus.conf <<EOF
 server {
     listen 443 ssl;
@@ -480,6 +497,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    ${auth_config}
 
     location / {
         proxy_pass http://prometheus:9090;
