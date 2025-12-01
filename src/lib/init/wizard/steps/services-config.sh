@@ -203,12 +203,36 @@ wizard_optional_services() {
     if confirm_action "Enable Prometheus metrics?"; then
       monitoring_services+=("prometheus")
       add_wizard_config "$config_array_name" "PROMETHEUS_ENABLED" "true"
+      
+      echo ""
+      local prom_user
+      prompt_input "Prometheus Basic Auth User" "admin" prom_user
+      add_wizard_config "$config_array_name" "PROMETHEUS_BASIC_AUTH_USER" "$prom_user"
+      
+      local prom_pass
+      if confirm_action "Use auto-generated password for Prometheus?"; then
+        prom_pass=$(generate_password 24)
+        echo "Generated: [hidden for security]"
+      else
+        prompt_password "Prometheus Basic Auth Password" prom_pass
+      fi
+      add_wizard_secret "$config_array_name" "PROMETHEUS_BASIC_AUTH_PASSWORD" "$prom_pass"
     fi
 
     if confirm_action "Enable Grafana dashboards?"; then
       monitoring_services+=("grafana")
       add_wizard_config "$config_array_name" "GRAFANA_ENABLED" "true"
       add_wizard_config "$config_array_name" "GRAFANA_PORT" "3001"
+      
+      echo ""
+      local grafana_pass
+      if confirm_action "Use auto-generated password for Grafana?"; then
+        grafana_pass=$(generate_password 24)
+        echo "Generated: [hidden for security]"
+      else
+        prompt_password "Grafana Admin Password" grafana_pass
+      fi
+      add_wizard_secret "$config_array_name" "GRAFANA_ADMIN_PASSWORD" "$grafana_pass"
     fi
 
     if confirm_action "Enable Jaeger tracing?"; then
