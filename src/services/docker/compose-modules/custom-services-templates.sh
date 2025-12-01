@@ -75,6 +75,13 @@ EOF
       - HUGGINGFACE_API_KEY=\${HUGGINGFACE_API_KEY}
 EOF
 
+  # Add Neo4j-specific vars for Neo4j itself
+  if [[ "$template_type" == "neo4j" ]]; then
+    cat <<EOF
+      - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD}
+EOF
+  fi
+
   # Add Neo4j connection vars for other services (NOT Neo4j itself to avoid config collision)
   if [[ "$template_type" != "neo4j" ]]; then
     cat <<EOF
