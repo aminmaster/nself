@@ -307,7 +307,9 @@ show_service_overview() {
       fi
     else
       # Use compose ps output
-      local info=$(echo "$all_containers" | grep "^$service\t" | head -1)
+      echo "Checking service: $service"
+      echo "All containers: $all_containers"
+      local info=$(echo "$all_containers" | grep "^$service" | head -1)
       if [[ -n "$info" ]]; then
         local status=$(echo "$info" | cut -f2)
         if [[ "$status" == *"Up"* ]]; then
