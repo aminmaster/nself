@@ -34,6 +34,11 @@ compose() {
       source ".env.local" 2>/dev/null || true
       set +a
     fi
+    if [[ -f ".env.prod" ]]; then
+      set -a
+      source ".env.prod" 2>/dev/null || true
+      set +a
+    fi
   fi
 
   # Try .env.runtime first (merged runtime config), then environment-specific files, then defaults
