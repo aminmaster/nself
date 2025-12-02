@@ -36,7 +36,7 @@ compose() {
     fi
   fi
 
-  # Try .env.runtime first (merged runtime config), then .env.local, then .env, then .env.dev
+  # Try .env.runtime first (merged runtime config), then environment-specific files, then defaults
   local env_file="${COMPOSE_ENV_FILE:-}"
   if [[ -z "$env_file" ]] && [[ -f ".env.runtime" ]]; then
     env_file=".env.runtime"
@@ -46,6 +46,12 @@ compose() {
   fi
   if [[ -z "$env_file" ]] && [[ -f ".env" ]]; then
     env_file=".env"
+  fi
+  if [[ -z "$env_file" ]] && [[ -f ".env.prod" ]]; then
+    env_file=".env.prod"
+  fi
+  if [[ -z "$env_file" ]] && [[ -f ".env.secrets" ]]; then
+    env_file=".env.secrets"
   fi
   if [[ -z "$env_file" ]] && [[ -f ".env.dev" ]]; then
     env_file=".env.dev"
