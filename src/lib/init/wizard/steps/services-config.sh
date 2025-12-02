@@ -155,6 +155,7 @@ wizard_optional_services() {
       1)
         add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
         add_wizard_config "$config_array_name" "QUEUE_TYPE" "rabbitmq"
+        add_wizard_config "$config_array_name" "RABBITMQ_ENABLED" "true"
         add_wizard_config "$config_array_name" "RABBITMQ_PORT" "5672"
         
         echo ""
