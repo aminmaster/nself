@@ -66,6 +66,9 @@ load_env_with_priority() {
   local env_from_file=""
   if [[ -f ".env" ]]; then
     env_from_file=$(grep "^ENV=" .env | cut -d= -f2 | tr -d '"' | tr -d "'")
+  elif [[ -f ".env.prod" ]]; then
+    # If no .env but .env.prod exists, assume production
+    env_from_file="prod"
   fi
   
   local current_env="${NSELF_ENV:-${ENV:-${env_from_file:-dev}}}"
