@@ -363,6 +363,13 @@ orchestrate_build() {
         ;;
     esac
 
+    # Load secrets file (contains passwords and API keys)
+    if [[ -f ".env.secrets" ]]; then
+      set -a
+      source ".env.secrets" 2>/dev/null || true
+      set +a
+    fi
+
     # Load local overrides last
     if [[ -f ".env" ]]; then
       set -a
