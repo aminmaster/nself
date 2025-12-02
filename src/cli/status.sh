@@ -261,7 +261,7 @@ show_service_overview() {
   fi
 
   # Load environment
-  if [[ -f ".env" ]] || [[ -f ".env.local" ]] || [[ -f ".env.dev" ]]; then
+  if [[ -f ".env" ]] || [[ -f ".env.local" ]] || [[ -f ".env.dev" ]] || [[ -f ".env.prod" ]]; then
     load_env_with_priority
   fi
 
@@ -652,7 +652,7 @@ main() {
   fi
 
   # Load environment
-  if [[ -f ".env" ]] || [[ -f ".env.local" ]] || [[ -f ".env.dev" ]]; then
+  if [[ -f ".env" ]] || [[ -f ".env.local" ]] || [[ -f ".env.dev" ]] || [[ -f ".env.prod" ]]; then
     load_env_with_priority
   fi
 
