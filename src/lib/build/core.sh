@@ -659,8 +659,13 @@ orchestrate_build() {
 
   # Explicitly load frontend routes module if not already loaded
   local module_dir="$(dirname "${BASH_SOURCE[0]}")/core-modules"
+  echo "DEBUG: BASH_SOURCE=${BASH_SOURCE[0]}" >&2
+  echo "DEBUG: module_dir=$module_dir" >&2
   if [[ -f "$module_dir/frontend-routes.sh" ]]; then
+    echo "DEBUG: Sourcing $module_dir/frontend-routes.sh" >&2
     source "$module_dir/frontend-routes.sh"
+  else
+    echo "DEBUG: Module not found at $module_dir/frontend-routes.sh" >&2
   fi
 
   # Use modular orchestration if available
@@ -688,18 +693,17 @@ orchestrate_build() {
     fi
 
     # Create routes directory for frontend apps (always check this)
-    echo "DEBUG: Checking for setup_frontend_routes..." >&2
+    # Ensure environment variables are loaded for frontend detection
+    if [[ -f ".env.prod" ]] && [[ "$env" == "prod" ]]; then
+      set -a
+      source ".env.prod" 2>/dev/null || true
+      set +a
+    fi
+    
     if command -v setup_frontend_routes >/dev/null 2>&1; then
-      echo "DEBUG: setup_frontend_routes found, calling it..." >&2
       if setup_frontend_routes "$project_name" "$env"; then
-        echo "DEBUG: setup_frontend_routes succeeded" >&2
-        # If we created routes, we might need to update other things, but usually not
-        :
-      else
-        echo "DEBUG: setup_frontend_routes failed" >&2
+        printf "\r${COLOR_GREEN}✓${COLOR_RESET} Frontend routes directory created            \n"
       fi
-    else
-      echo "DEBUG: setup_frontend_routes NOT found" >&2
     fi
 
     if check_build_requirements "$force_rebuild" "$env_file" || [[ "$needs_initial_build" == "true" ]]; then
