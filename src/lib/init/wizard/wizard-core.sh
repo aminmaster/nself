@@ -222,11 +222,22 @@ wizard_admin_dashboard() {
       admin_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$admin_password', bcrypt.gensalt()).decode())" 2>/dev/null || true)
     fi
     
+    
     # Fallback if python/bcrypt failed or returned empty
     if [[ -z "$admin_hash" ]]; then
-       # Simple fallback - the admin service should handle this or we warn
-       # Note: nself-admin expects bcrypt, but for now we'll use a placeholder
-       admin_hash="$admin_password"
+       # Try htpasswd with bcrypt (available on most systems)
+       if command -v htpasswd >/dev/null 2>&1; then
+         admin_hash=$(htpasswd -bnBC 10 "" "$admin_password" | tr -d ':\n' | sed 's/^//')
+       # Try openssl with SHA-512 crypt as second fallback (nself-admin should support this)
+       elif command -v openssl >/dev/null 2>&1; then
+         admin_hash=$(openssl passwd -6 "$admin_password")
+       else
+         # Last resort: warn user and use plaintext (nself-admin will prompt for password reset)
+         echo ""
+         echo "⚠️  Warning: Could not generate password hash (bcrypt/htpasswd/openssl unavailable)"
+         echo "   You'll need to set the admin password on first login"
+         admin_hash="$admin_password"
+       fi
     fi
     
     add_wizard_secret "$config_array_name" "ADMIN_PASSWORD_HASH" "$admin_hash"
