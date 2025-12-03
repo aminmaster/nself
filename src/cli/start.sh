@@ -487,8 +487,10 @@ start_services() {
       sleep 0.1  # Faster updates for smoother animation
     done
 
+    echo "DEBUG: Compose process completed, waiting for exit code..." >&2
     wait $compose_pid
     local exit_code=$?
+    echo "DEBUG: Compose exit code: $exit_code" >&2
 
     # Clear the spinner line
     printf "\r%-60s\r" " "
@@ -618,12 +620,6 @@ start_services() {
     return 1
   fi
 
-  # 10.5 Initialize frontend apps (if configured)
-  if [[ -f "$LIB_DIR/start/frontend-init.sh" ]]; then
-    source "$LIB_DIR/start/frontend-init.sh"
-    # Run scaffolding - errors are non-fatal
-    scaffold_frontend_apps || true
-  fi
 
   # 11. Check for SSL setup
   if [[ $exit_code -eq 0 ]]; then
@@ -675,6 +671,14 @@ start_services() {
         fi
       fi
     fi
+  fi
+
+  # Initialize frontend apps (if configured)
+  # This runs LAST to ensure clean terminal state for interactive prompts
+  if [[ -f "$LIB_DIR/start/frontend-init.sh" ]]; then
+    source "$LIB_DIR/start/frontend-init.sh"
+    # Run scaffolding - errors are non-fatal
+    scaffold_frontend_apps || true
   fi
 
   # Clean up temp files
