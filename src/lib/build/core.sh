@@ -346,6 +346,9 @@ orchestrate_build() {
     local env="${ENV:-dev}"
 
     # Load files in cascade order for proper detection
+    # Disable error checking during source to prevent crashes on special chars in env files
+    set +ue
+    
     if [[ -f ".env.dev" ]]; then
       set -a
       source ".env.dev" 2>/dev/null || true
@@ -383,6 +386,9 @@ orchestrate_build() {
       source ".env" 2>/dev/null || true
       set +a
     fi
+    
+    # Re-enable error checking
+    set -ue
   }
 
   # Load env for detection
