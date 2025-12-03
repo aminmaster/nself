@@ -112,6 +112,15 @@ scaffold_frontend_apps() {
     return 1
   fi
   
+  # Check if npm/npx is available
+  if ! command -v npx >/dev/null 2>&1 && ! command -v npm >/dev/null 2>&1; then
+    printf "\n${COLOR_YELLOW}⚠${COLOR_RESET}  Node.js/npm not found - frontend scaffolding skipped\n"
+    printf "   ${COLOR_DIM}To initialize frontend apps, install Node.js from:${COLOR_RESET}\n"
+    printf "   ${COLOR_CYAN}https://nodejs.org${COLOR_RESET} or use your package manager\n"
+    printf "   ${COLOR_DIM}Then run 'nself start' again to scaffold the apps${COLOR_RESET}\n\n"
+    return 0  # Non-fatal - return success
+  fi
+  
   printf "\n${COLOR_BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}\n"
   printf "${COLOR_BOLD} Frontend App Initialization${COLOR_RESET}\n"
   printf "${COLOR_BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}\n"
