@@ -127,7 +127,7 @@ wizard_service_passwords() {
     local hasura_secret
     if confirm_action "Use auto-generated secure password?"; then
       hasura_secret=$(generate_password 32)
-      echo "Generated: $hasura_secret"
+      echo "Generated: [hidden for security]"
     else
       prompt_password "Admin secret" hasura_secret
     fi
@@ -167,7 +167,7 @@ wizard_service_passwords() {
     prompt_input "Access key" "minioadmin" storage_access_key
     if confirm_action "Use auto-generated secret key?"; then
       storage_secret_key=$(generate_password 40)
-      echo "Generated: $storage_secret_key"
+      echo "Generated: [hidden for security]"
     else
       prompt_password "Secret key" storage_secret_key
     fi
@@ -312,7 +312,7 @@ wizard_custom_services() {
         
         if confirm_action "Use auto-generated password?"; then
           neo4j_password=$(generate_password 24)
-          echo "Generated: $neo4j_password"
+          echo "Generated: [hidden for security]"
         else
           prompt_password "Neo4j password" neo4j_password
         fi
