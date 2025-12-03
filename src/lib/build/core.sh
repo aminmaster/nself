@@ -681,6 +681,14 @@ orchestrate_build() {
       export NEEDS_COMPOSE=true
     fi
 
+    # Create routes directory for frontend apps (always check this)
+    if command -v setup_frontend_routes >/dev/null 2>&1; then
+      if setup_frontend_routes "$project_name" "$env"; then
+        # If we created routes, we might need to update other things, but usually not
+        :
+      fi
+    fi
+
     if check_build_requirements "$force_rebuild" "$env_file" || [[ "$needs_initial_build" == "true" ]]; then
       # Execute build steps with proper output
 
@@ -695,12 +703,7 @@ orchestrate_build() {
         fi
       fi
 
-      # Create routes directory for frontend apps if needed
-      if command -v setup_frontend_routes >/dev/null 2>&1; then
-        if setup_frontend_routes "$project_name" "$env"; then
-          printf "\r${COLOR_GREEN}✓${COLOR_RESET} Frontend routes directory created            \n"
-        fi
-      fi
+
       # Generate SSL certificates if needed
       if [[ "$NEEDS_SSL" == "true" ]]; then
         printf "${COLOR_BLUE}⠋${COLOR_RESET} Setting up SSL..."
