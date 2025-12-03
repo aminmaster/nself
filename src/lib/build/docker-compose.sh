@@ -36,19 +36,13 @@ add_nginx_service() {
     image: nginx:alpine
     container_name: \${PROJECT_NAME}_nginx
     restart: unless-stopped
-    ports:
-      - "\${NGINX_PORT:-80}:80"
-      - "\${NGINX_SSL_PORT:-443}:443"
+    network_mode: host
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/sites:/etc/nginx/sites:ro
       - ./ssl/certificates:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - nself_network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s

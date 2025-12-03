@@ -537,8 +537,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
-        # Proxy to external frontend app running on host
-        proxy_pass http://host.docker.internal:${app_port};
+        # Proxy to frontend app running on host (nginx uses network_mode: host)
+        proxy_pass http://localhost:${app_port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -574,8 +574,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
 
     location / {
-        # Proxy to frontend's API endpoint
-        proxy_pass http://host.docker.internal:${api_port};
+        # Proxy to frontend's API endpoint (nginx uses network_mode: host)
+        proxy_pass http://localhost:${api_port};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
