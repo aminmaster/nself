@@ -695,6 +695,12 @@ orchestrate_build() {
         fi
       fi
 
+      # Create routes directory for frontend apps if needed
+      if command -v setup_frontend_routes >/dev/null 2>&1; then
+        if setup_frontend_routes "$project_name" "$env"; then
+          printf "\r${COLOR_GREEN}✓${COLOR_RESET} Frontend routes directory created            \n"
+        fi
+      fi
       # Generate SSL certificates if needed
       if [[ "$NEEDS_SSL" == "true" ]]; then
         printf "${COLOR_BLUE}⠋${COLOR_RESET} Setting up SSL..."
