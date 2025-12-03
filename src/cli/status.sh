@@ -663,7 +663,7 @@ main() {
   fi
 
   # Handle watch mode
-  if [[ "$WATCH_MODE" == "true" ]]; then
+  if [[ "${WATCH_MODE:-false}" == "true" ]]; then
     watch_status
     exit 0
   fi
