@@ -334,6 +334,13 @@ orchestrate_build() {
       if [[ -n "$env_from_file" ]]; then
         export ENV="$env_from_file"
       fi
+    # If no .env, check if we have environment specific files that imply the environment
+    elif [[ -z "${ENV:-}" ]]; then
+      if [[ -f ".env.prod" ]]; then
+        export ENV="prod"
+      elif [[ -f ".env.staging" ]]; then
+        export ENV="staging"
+      fi
     fi
 
     local env="${ENV:-dev}"
