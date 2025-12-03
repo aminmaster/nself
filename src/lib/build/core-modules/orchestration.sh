@@ -13,7 +13,7 @@ load_core_modules() {
   fi
 
   # Source each module if it exists
-  for module in directory-setup.sh ssl-generation.sh nginx-setup.sh database-init.sh mlflow-setup.sh; do
+  for module in directory-setup.sh ssl-generation.sh nginx-setup.sh database-init.sh mlflow-setup.sh frontend-routes.sh; do
     if [[ -f "$module_dir/$module" ]]; then
       source "$module_dir/$module"
     fi
