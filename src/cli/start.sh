@@ -262,6 +262,9 @@ start_services() {
   local env_file=".env"
   if [[ -f ".env.runtime" ]]; then
     env_file=".env.runtime"
+    set +ue
+    source ".env.runtime"
+    set -ue
     # Update project_name from runtime file
     project_name=$(grep "^PROJECT_NAME=" .env.runtime 2>/dev/null | cut -d= -f2- || echo "$project_name")
   fi
@@ -619,9 +622,11 @@ start_services() {
   if [[ $exit_code -eq 0 ]]; then
     # Source runtime environment to get correct SSL_PROVIDER
     if [[ -f ".env.runtime" ]]; then
+      set +ue
       set -a
       source ".env.runtime"
       set +a
+      set -ue
     fi
 
     local ssl_provider="${SSL_PROVIDER:-selfsigned}"

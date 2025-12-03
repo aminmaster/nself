@@ -82,9 +82,11 @@ cascade_env_vars() {
 
   for file in $files; do
     if [[ -f "$file" ]]; then
+      set +ue
       set -a
       source "$file" 2>/dev/null || true
       set +a
+      set -ue
       loaded=true
     fi
   done

@@ -92,11 +92,29 @@ load_env_with_priority() {
   # STEP 3: Load environment-specific overrides based on ENV
   case "$current_env" in
     staging|stage)
-      # For staging: .env.dev -> .env.staging
+      # For production: .env.staging -> .env.prod -> .env.secrets
       if [[ -f ".env.staging" ]]; then
+        set +ue
         set -a
         source ".env.staging" 2>/dev/null
         set +a
+        set -ue
+        loaded=true
+      fi
+      if [[ -f ".env.prod" ]]; then
+        set +ue
+        set -a
+        source ".env.prod" 2>/dev/null
+        set +a
+        set -ue
+        loaded=true
+      fi
+      if [[ -f ".env.secrets" ]]; then
+        set +ue
+        set -a
+        source ".env.secrets" 2>/dev/null
+        set +a
+        set -ue
         loaded=true
       fi
       ;;
