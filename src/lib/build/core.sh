@@ -682,11 +682,18 @@ orchestrate_build() {
     fi
 
     # Create routes directory for frontend apps (always check this)
+    echo "DEBUG: Checking for setup_frontend_routes..." >&2
     if command -v setup_frontend_routes >/dev/null 2>&1; then
+      echo "DEBUG: setup_frontend_routes found, calling it..." >&2
       if setup_frontend_routes "$project_name" "$env"; then
+        echo "DEBUG: setup_frontend_routes succeeded" >&2
         # If we created routes, we might need to update other things, but usually not
         :
+      else
+        echo "DEBUG: setup_frontend_routes failed" >&2
       fi
+    else
+      echo "DEBUG: setup_frontend_routes NOT found" >&2
     fi
 
     if check_build_requirements "$force_rebuild" "$env_file" || [[ "$needs_initial_build" == "true" ]]; then
