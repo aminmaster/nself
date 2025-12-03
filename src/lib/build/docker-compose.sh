@@ -45,6 +45,8 @@ add_nginx_service() {
       - ./nginx/sites:/etc/nginx/sites:ro
       - ./ssl/certificates:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - nself_network
     healthcheck:
