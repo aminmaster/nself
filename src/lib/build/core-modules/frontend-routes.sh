@@ -8,6 +8,7 @@ setup_frontend_routes() {
   
   # Check if any frontend apps are configured
   local frontend_count="${FRONTEND_APP_COUNT:-0}"
+  echo "DEBUG: FRONTEND_APP_COUNT=$frontend_count" >&2
   
   if [[ "$frontend_count" -eq 0 ]]; then
     return 0
