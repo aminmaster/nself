@@ -129,6 +129,13 @@ execute_build_steps() {
     fi
   fi
 
+  # Create routes directory for frontend apps if needed
+  if command -v setup_frontend_routes >/dev/null 2>&1; then
+    if setup_frontend_routes "$PROJECT_NAME" "$ENV"; then
+      steps_completed=$((steps_completed + 1))
+    fi
+  fi
+
   # Generate SSL certificates if needed
   if [[ "$NEEDS_SSL" == "true" ]]; then
     if command -v setup_ssl_certificates >/dev/null 2>&1; then
