@@ -659,13 +659,8 @@ orchestrate_build() {
 
   # Explicitly load frontend routes module if not already loaded
   local module_dir="$(dirname "${BASH_SOURCE[0]}")/core-modules"
-  echo "DEBUG: BASH_SOURCE=${BASH_SOURCE[0]}" >&2
-  echo "DEBUG: module_dir=$module_dir" >&2
   if [[ -f "$module_dir/frontend-routes.sh" ]]; then
-    echo "DEBUG: Sourcing $module_dir/frontend-routes.sh" >&2
     source "$module_dir/frontend-routes.sh"
-  else
-    echo "DEBUG: Module not found at $module_dir/frontend-routes.sh" >&2
   fi
 
   # Use modular orchestration if available
