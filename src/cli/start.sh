@@ -618,6 +618,13 @@ start_services() {
     return 1
   fi
 
+  # 10.5 Initialize frontend apps (if configured)
+  if [[ -f "$LIB_DIR/start/frontend-init.sh" ]]; then
+    source "$LIB_DIR/start/frontend-init.sh"
+    # Run scaffolding - errors are non-fatal
+    scaffold_frontend_apps || true
+  fi
+
   # 11. Check for SSL setup
   if [[ $exit_code -eq 0 ]]; then
     # Source runtime environment to get correct SSL_PROVIDER
