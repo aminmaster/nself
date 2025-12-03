@@ -487,10 +487,8 @@ start_services() {
       sleep 0.1  # Faster updates for smoother animation
     done
 
-    echo "DEBUG: Compose process completed, waiting for exit code..." >&2
     wait $compose_pid
     local exit_code=$?
-    echo "DEBUG: Compose exit code: $exit_code" >&2
 
     # Clear the spinner line
     printf "\r%-60s\r" " "
@@ -683,6 +681,18 @@ start_services() {
 
   # Clean up temp files
   rm -f "$start_output" "$error_output"
+  
+  # Auto-run status and urls to show immediate feedback
+  printf "\n"
+  if [[ -f "$SCRIPT_DIR/status.sh" ]]; then
+    bash "$SCRIPT_DIR/status.sh"
+  fi
+  
+  if [[ -f "$SCRIPT_DIR/urls.sh" ]]; then
+    printf "\n"
+    bash "$SCRIPT_DIR/urls.sh"
+  fi
+  
   return 0
 }
 

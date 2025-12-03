@@ -169,6 +169,13 @@ scaffold_frontend_apps() {
     return 1
   fi
   
+  # Get domain and protocol for URL display
+  local base_domain="${BASE_DOMAIN:-localhost}"
+  local protocol="http"
+  if [[ "${SSL_ENABLED:-false}" == "true" ]]; then
+    protocol="https"
+  fi
+  
   printf "\n${COLOR_DIM}💡 Access your apps at:${COLOR_RESET}\n"
   for i in $(seq 1 "$frontend_count"); do
     local app_name_var="FRONTEND_APP_${i}_NAME"
@@ -177,7 +184,13 @@ scaffold_frontend_apps() {
     local port="${!port_var:-3000}"
     
     if [[ -n "$app_name" ]]; then
-      printf "   ${COLOR_CYAN}${app_name}${COLOR_RESET}: http://localhost:${port}\n"
+      # Construct URL based on environment
+      if [[ "$base_domain" == "localhost" ]]; then
+        printf "   ${COLOR_CYAN}${app_name}${COLOR_RESET}: ${protocol}://localhost:${port}\n"
+      else
+        # Use subdomain pattern: app.domain.com
+        printf "   ${COLOR_CYAN}${app_name}${COLOR_RESET}: ${protocol}://${app_name}.${base_domain}\n"
+      fi
     fi
   done
   printf "\n"
