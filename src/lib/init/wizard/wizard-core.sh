@@ -205,8 +205,7 @@ wizard_admin_dashboard() {
     prompt_input "Admin username" "admin" admin_user
     if confirm_action "Use auto-generated password?"; then
       admin_password=$(generate_password 16)
-      echo "Generated password: $admin_password"
-      echo "(Save this password - you'll need it to login)"
+      echo "Generated: [hidden for security]"
     else
       prompt_password "Admin password" admin_password
     fi

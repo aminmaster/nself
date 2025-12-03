@@ -69,7 +69,7 @@ wizard_core_services() {
     
     if confirm_action "Use auto-generated secure password for MinIO?"; then
       minio_pass=$(generate_password 24)
-      echo "Generated password: $minio_pass"
+      echo "Generated: [hidden for security]"
       echo "(This will be saved in .env.secrets file)"
     else
       prompt_input "MinIO root password" "minioadmin" minio_pass

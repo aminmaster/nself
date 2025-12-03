@@ -31,7 +31,7 @@ wizard_database_config() {
   local postgres_password
   if confirm_action "Use auto-generated secure password for database?"; then
     postgres_password=$(generate_password 24)
-    echo "Generated password: $postgres_password"
+    echo "Generated: [hidden for security]"
     echo "(This will be saved in .env file)"
   else
     prompt_password "Database password" postgres_password
