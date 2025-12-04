@@ -21,7 +21,6 @@ node_modules/
 .DS_Store
 .idea/
 .vscode/
-.claude
 *.swp
 *.swo
 *~
@@ -40,8 +39,7 @@ dist/
 # But DO include env templates
 
 !src/templates/demo/.env*
-# Git config fixed
 
-
-equilibriaorg_review/
+# Test directories
 test-project/
+*_review/
