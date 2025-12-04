@@ -52,21 +52,20 @@ configure_vite_host() {
       if [[ -n "$vite_config" ]]; then
         printf "   ${COLOR_DIM}Configuring Vite allowed hosts...${COLOR_RESET}\n"
         
+        # Determine the hostname
+        local hostname="${app_name}.${BASE_DOMAIN:-localhost}"
+        
         # Check if server block exists
         if grep -q "server:" "$vite_config"; then
           # Add allowedHosts to existing server block
-          # This is a simple sed replacement, might be brittle for complex configs
-          # but sufficient for fresh scaffolds
-          sed -i '/server:/a \    allowedHosts: ["all"],' "$vite_config"
+          sed -i "/server:/a \    allowedHosts: [\"${hostname}\"]," "$vite_config"
         else
           # Add server block to defineConfig
-          # Look for plugins array end or similar anchor
           if grep -q "plugins: \[" "$vite_config"; then
-             sed -i '/plugins: \[/i \  server: {\n    allowedHosts: ["all"],\n  },' "$vite_config"
+             sed -i "/plugins: \[/i \  server: {\n    allowedHosts: [\"${hostname}\"],\n  }," "$vite_config"
           else
-             # Fallback: append to end of object (before last closing brace)
-             # This is risky, so we'll try to insert before the last closing brace of defineConfig
-             sed -i '$s/^}/  server: {\n    allowedHosts: ["all"],\n  },\n}/' "$vite_config"
+             # Fallback: append to end of object
+             sed -i "\$s/^}/  server: {\n    allowedHosts: [\"${hostname}\"],\n  },\n}/" "$vite_config"
           fi
         fi
       fi
