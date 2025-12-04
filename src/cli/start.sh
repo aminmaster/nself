@@ -360,6 +360,12 @@ start_services() {
     echo ""
   fi
 
+  # Save terminal state before docker operations (for later restoration)
+  local saved_tty_settings=""
+  if [[ -t 0 ]]; then
+    saved_tty_settings=$(stty -g 2>/dev/null || true)
+  fi
+
   # Show initial preparing message
   printf "${COLOR_BLUE}⠋${COLOR_RESET} Analyzing Docker configuration..."
 
@@ -736,6 +742,20 @@ start_services() {
   # Initialize frontend apps (if configured)
   # This runs LAST to ensure clean terminal state for interactive prompts
   if [[ -f "$LIB_DIR/start/frontend-init.sh" ]]; then
+    # Restore terminal to clean state for interactive scaffolding
+    if [[ -t 0 ]]; then
+      # Restore saved TTY settings
+      if [[ -n "$saved_tty_settings" ]]; then
+        stty "$saved_tty_settings" 2>/dev/null || true
+      fi
+      
+      # Reset terminal to sane state
+      stty sane 2>/dev/null || true
+      
+      # Re-attach to controlling terminal
+      exec </dev/tty >/dev/tty 2>&1
+    fi
+    
     source "$LIB_DIR/start/frontend-init.sh"
     # Run scaffolding - errors are non-fatal
     scaffold_frontend_apps || true
