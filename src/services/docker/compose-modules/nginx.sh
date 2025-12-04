@@ -13,10 +13,7 @@ generate_nginx_service() {
     image: nginx:alpine
     container_name: \${PROJECT_NAME:-myproject}_nginx
     restart: unless-stopped
-    ports:
-      - "\${NGINX_PORT:-80}:80"
-      - "\${NGINX_SSL_PORT:-443}:443"
-      - "7687:7687"
+    network_mode: host
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
@@ -29,10 +26,6 @@ generate_nginx_service() {
       - BASE_DOMAIN=\${BASE_DOMAIN:-localhost}
       - PROJECT_NAME=\${PROJECT_NAME:-myproject}
       - ENV=\${ENV:-dev}
-    networks:
-      - \${PROJECT_NAME:-myproject}_network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
 EOF
 
