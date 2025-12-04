@@ -145,7 +145,7 @@ generate_stream_routes() {
 # Stream config for ${cs_name} (Bolt)
 server {
     listen 7687 ssl;
-    proxy_pass ${cs_name}:7687;
+    proxy_pass localhost:7687;
     
     ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
