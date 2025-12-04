@@ -143,6 +143,68 @@ update_progress() {
   fi
 }
 
+# Check firewall configuration
+check_firewall_rules() {
+  # Skip if UFW not installed
+  command -v ufw >/dev/null 2>&1 || return 0
+  
+  # Load environment variables
+  if [[ -f ".env.prod" ]]; then
+    source .env.prod
+  elif [[ -f ".env" ]]; then
+    source .env
+  fi
+  
+  local missing_rules=()
+  local missing_commands=()
+  
+  # Check essential nginx ports (80, 443)
+  if ! sudo ufw status 2>/dev/null | grep -q "80/tcp.*ALLOW.*Anywhere"; then
+    missing_rules+=("HTTP (port 80)")
+    missing_commands+=("sudo ufw allow 80/tcp comment 'HTTP (redirect to HTTPS)'")
+  fi
+  
+  if ! sudo ufw status 2>/dev/null | grep -q "443/tcp.*ALLOW.*Anywhere"; then
+    missing_rules+=("HTTPS (port 443)")
+    missing_commands+=("sudo ufw allow 443/tcp comment 'HTTPS'")
+  fi
+  
+  # Check frontend app ports (if any)
+  local frontend_count="${FRONTEND_APP_COUNT:-0}"
+  if [[ "$frontend_count" -gt 0 ]]; then
+    for i in $(seq 1 "$frontend_count"); do
+      local port_var="FRONTEND_APP_${i}_PORT"
+      local port="${!port_var:-$((3000 + i - 1))}"
+      local app_name_var="FRONTEND_APP_${i}_NAME"
+      local app_name="${!app_name_var:-app${i}}"
+      
+      if ! sudo ufw status 2>/dev/null | grep -q "172.30.0.0/16.*$port"; then
+        missing_rules+=("Frontend app '$app_name' (port $port)")
+        missing_commands+=("sudo ufw allow from 172.30.0.0/16 to any port $port comment 'nself frontend: $app_name'")
+      fi
+    done
+  fi
+  
+  # Display missing rules if any
+  if [[ ${#missing_rules[@]} -gt 0 ]]; then
+    printf "\n${COLOR_YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}\n"
+    printf "${COLOR_YELLOW}⚠  Firewall Configuration Required${COLOR_RESET}\n"
+    printf "${COLOR_YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}\n\n"
+    printf "Missing UFW rules detected:\n"
+    for rule in "${missing_rules[@]}"; do
+      printf "  • %s\n" "$rule"
+    done
+    printf "\nPlease run the following commands:\n\n"
+    
+    for cmd in "${missing_commands[@]}"; do
+      printf "  ${COLOR_CYAN}%s${COLOR_RESET}\n" "$cmd"
+    done
+    
+    printf "\nThen reload UFW:\n"
+    printf "  ${COLOR_CYAN}sudo ufw reload${COLOR_RESET}\n\n"
+  fi
+}
+
 # Start services function
 start_services() {
   # 1. Detect environment and project
@@ -680,7 +742,10 @@ start_services() {
   fi
 
   # Clean up temp files
-  rm -f "$start_output" "$error_output"
+  fi
+  
+  # Check firewall configuration
+  check_firewall_rules
   
   # Auto-run status and urls to show immediate feedback
   printf "\n"

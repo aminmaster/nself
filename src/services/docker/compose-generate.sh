@@ -319,6 +319,19 @@ main() {
     export DOCKER_COMPOSE_CHANGED="true"
   fi
 
+  # ============================================
+  # Network Configuration (Fixed Subnet)
+  # ============================================
+  echo "" >> docker-compose.yml
+  echo "networks:" >> docker-compose.yml
+  echo "  ${PROJECT_NAME}_network:" >> docker-compose.yml
+  echo "    driver: bridge" >> docker-compose.yml
+  echo "    ipam:" >> docker-compose.yml
+  echo "      config:" >> docker-compose.yml
+  echo "        - subnet: 172.30.0.0/16" >> docker-compose.yml
+  echo "          gateway: 172.30.0.1" >> docker-compose.yml
+
+
   # Validate the generated file (skip if docker not available)
   if command -v docker >/dev/null 2>&1; then
     if [[ "${VERBOSE:-false}" == "true" ]]; then
