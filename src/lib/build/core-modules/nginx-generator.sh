@@ -228,7 +228,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://hasura:8080;
+        proxy_pass http://localhost:8080;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -266,7 +266,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://auth:4000;
+        proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -294,7 +294,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://minio:9001;
+        proxy_pass http://localhost:9001;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -317,7 +317,7 @@ server {
     client_max_body_size 1000M;
 
     location / {
-        proxy_pass http://minio:9000;
+        proxy_pass http://localhost:9000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -346,7 +346,7 @@ server {
     client_max_body_size 100M;
 
     location / {
-        proxy_pass http://${project_name}_meilisearch:7700;
+        proxy_pass http://localhost:7700;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -373,7 +373,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://rabbitmq:15672;
+        proxy_pass http://localhost:15672;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -405,7 +405,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://functions:3000;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -431,7 +431,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://nself-admin:3021;
+        proxy_pass http://localhost:3021;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -458,7 +458,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://grafana:3000;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -501,7 +501,7 @@ server {
     ${auth_config}
 
     location / {
-        proxy_pass http://prometheus:9090;
+        proxy_pass http://localhost:9090;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
