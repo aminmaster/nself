@@ -32,7 +32,7 @@ get_framework_command() {
   esac
 }
 
-}
+
 
 # Configure Vite to allow host access
 configure_vite_host() {
