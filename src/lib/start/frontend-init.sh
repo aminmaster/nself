@@ -32,6 +32,48 @@ get_framework_command() {
   esac
 }
 
+}
+
+# Configure Vite to allow host access
+configure_vite_host() {
+  local app_name="$1"
+  local framework="$2"
+  
+  # Only applies to Vite-based frameworks
+  case "${framework,,}" in
+    sveltekit|svelte|react|vue|vuejs)
+      local vite_config=""
+      if [[ -f "${app_name}/vite.config.ts" ]]; then
+        vite_config="${app_name}/vite.config.ts"
+      elif [[ -f "${app_name}/vite.config.js" ]]; then
+        vite_config="${app_name}/vite.config.js"
+      fi
+      
+      if [[ -n "$vite_config" ]]; then
+        printf "   ${COLOR_DIM}Configuring Vite allowed hosts...${COLOR_RESET}\n"
+        
+        # Check if server block exists
+        if grep -q "server:" "$vite_config"; then
+          # Add allowedHosts to existing server block
+          # This is a simple sed replacement, might be brittle for complex configs
+          # but sufficient for fresh scaffolds
+          sed -i '/server:/a \    allowedHosts: ["all"],' "$vite_config"
+        else
+          # Add server block to defineConfig
+          # Look for plugins array end or similar anchor
+          if grep -q "plugins: \[" "$vite_config"; then
+             sed -i '/plugins: \[/i \  server: {\n    allowedHosts: ["all"],\n  },' "$vite_config"
+          else
+             # Fallback: append to end of object (before last closing brace)
+             # This is risky, so we'll try to insert before the last closing brace of defineConfig
+             sed -i '$s/^}/  server: {\n    allowedHosts: ["all"],\n  },\n}/' "$vite_config"
+          fi
+        fi
+      fi
+      ;;
+  esac
+}
+
 # Initialize a single frontend app
 init_frontend_app() {
   local app_name="$1"
@@ -41,6 +83,10 @@ init_frontend_app() {
   # Check if app already exists
   if [[ -f "routes/${app_name}/package.json" ]] || [[ -d "routes/${app_name}/src" ]]; then
     printf "   ${COLOR_DIM}Frontend app '${app_name}' already initialized, skipping${COLOR_RESET}\n"
+    # Still try to configure vite host if it's missing
+    cd routes || return 1
+    configure_vite_host "$app_name" "$framework"
+    cd ..
     return 0
   fi
   
@@ -87,6 +133,9 @@ EOF
   printf "   ${COLOR_DIM}Running: ${cmd}${COLOR_RESET}\n\n"
   
   if eval "$cmd"; then
+    # Configure Vite to allow host access
+    configure_vite_host "$app_name" "$framework"
+    
     cd ..
     printf "\n   ${COLOR_GREEN}✓${COLOR_RESET} Frontend app '${app_name}' initialized successfully\n"
     printf "   ${COLOR_DIM}Location: routes/${app_name}${COLOR_RESET}\n"
