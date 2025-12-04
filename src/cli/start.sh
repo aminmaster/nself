@@ -742,7 +742,7 @@ start_services() {
   fi
 
   # Clean up temp files
-  fi
+  rm -f "$start_output" "$error_output"
   
   # Check firewall configuration
   check_firewall_rules
