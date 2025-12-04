@@ -405,7 +405,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3008;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -458,7 +458,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3002;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
