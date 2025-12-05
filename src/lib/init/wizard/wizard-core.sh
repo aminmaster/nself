@@ -554,7 +554,10 @@ wizard_review_generate() {
           if [[ "$type" == "$content" ]]; then type="CONF"; fi
           
           if [[ "$type" == "SECR" ]]; then
-            echo "$content"
+            # Escape $ as $$ for docker-compose variable interpolation
+            # This prevents hashes like $6$salt$hash or $2a$... from being corrupted
+            local escaped_content="${content//\$/\$\$}"
+            echo "$escaped_content"
           fi
         done
       } > ".env.secrets"
