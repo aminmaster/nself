@@ -73,6 +73,8 @@ EOF
       - ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY}
       - COHERE_API_KEY=\${COHERE_API_KEY}
       - HUGGINGFACE_API_KEY=\${HUGGINGFACE_API_KEY}
+      - OPENROUTER_API_KEY=\${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=\${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
 EOF
 
   # Add Neo4j-specific vars for Neo4j itself
