@@ -334,18 +334,31 @@ wizard_custom_services() {
         echo "LlamaIndex Configuration:"
         # Check if OPENAI_API_KEY is already set
         local openai_key_set=false
+        local openrouter_key_set=false
         eval "local config_values=(\"\${${config_array_name}[@]}\")"
         for cfg_item in "${config_values[@]}"; do
           if [[ "$cfg_item" == "SECR:OPENAI_API_KEY="* ]]; then
             openai_key_set=true
-            break
+          fi
+          if [[ "$cfg_item" == "SECR:OPENROUTER_API_KEY="* ]]; then
+            openrouter_key_set=true
           fi
         done
         
         if [[ "$openai_key_set" == "false" ]]; then
           local openai_key
-          prompt_password "OpenAI API Key" openai_key
-          add_wizard_secret "$config_array_name" "OPENAI_API_KEY" "$openai_key"
+          prompt_password "OpenAI API Key (optional, press Enter to skip)" openai_key
+          if [[ -n "$openai_key" ]]; then
+            add_wizard_secret "$config_array_name" "OPENAI_API_KEY" "$openai_key"
+          fi
+        fi
+        
+        if [[ "$openrouter_key_set" == "false" ]]; then
+          local openrouter_key
+          prompt_password "OpenRouter API Key (recommended for multi-model access)" openrouter_key
+          if [[ -n "$openrouter_key" ]]; then
+            add_wizard_secret "$config_array_name" "OPENROUTER_API_KEY" "$openrouter_key"
+          fi
         fi
       fi
 

@@ -74,7 +74,7 @@ EOF
       - COHERE_API_KEY=\${COHERE_API_KEY}
       - HUGGINGFACE_API_KEY=\${HUGGINGFACE_API_KEY}
       - OPENROUTER_API_KEY=\${OPENROUTER_API_KEY}
-      - OPENROUTER_MODEL=\${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+      - OPENROUTER_MODEL=\${OPENROUTER_MODEL:-x-ai/grok-4.1-fast}
 EOF
 
   # Add Neo4j-specific vars for Neo4j itself
