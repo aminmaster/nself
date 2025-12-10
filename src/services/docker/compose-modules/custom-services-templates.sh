@@ -28,13 +28,36 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
       ;;
-    graphrag|llm-graph-builder|graph-builder)
+    llm-graph-builder)
       cat <<EOF
-    image: docker.io/neo4jlabs/llm-graph-builder:latest
-    container_name: \${PROJECT_NAME}_${service_name}
+    build:
+      context: ./services/${service_name}/backend
+      dockerfile: Dockerfile
+    container_name: \${PROJECT_NAME}_${service_name}_backend
+    restart: unless-stopped
+    environment:
+      - NEO4J_URI=\${NEO4J_URI:-neo4j://neo4j:7687}
+      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
+      - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
+      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      - DIFFBOT_API_KEY=\${DIFFBOT_API_KEY}
+      - EMBEDDING_MODEL=\${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+    networks:
+      - \${DOCKER_NETWORK}
+
+  ${service_name}_frontend:
+    build:
+      context: ./services/${service_name}/frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_API_URL=http://${service_name}:8000
+        - VITE_REACT_APP_SOURCES=local,wiki,s3
+    container_name: \${PROJECT_NAME}_${service_name}_frontend
     restart: unless-stopped
     networks:
       - \${DOCKER_NETWORK}
+    depends_on:
+      - ${service_name}
 EOF
       ;;
     *)
@@ -108,7 +131,7 @@ EOF
   fi
 
   # Add GraphRAG-specific environment variables
-  if [[ "$template_type" == "graphrag" ]] || [[ "$template_type" == "llm-graph-builder" ]] || [[ "$template_type" == "graph-builder" ]]; then
+  if [[ "$template_type" == "graphrag" ]] || [[ "$template_type" == "graph-builder" ]]; then
     cat <<EOF
       - NLTK_DATA=/app/data/nltk
       - HF_HOME=/app/data/hf_cache
@@ -135,7 +158,7 @@ EOF
   
   case "$template_type" in
     # Pre-built AI service images - NO host /app mount
-    graphrag|llm-graph-builder|graph-builder)
+    graphrag|graph-builder)
       volume_mode="prebuilt"
       ;;
     # Database-like services with specific volume paths
@@ -275,15 +298,15 @@ EOF
       start_period: 60s
 EOF
         ;;
-      graphrag|llm-graph-builder|graph-builder)
-        # GraphRAG healthcheck
+      llm-graph-builder)
+        # Check backend health
         cat <<EOF
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 120s
+      retries: 5
+      start_period: 60s
 EOF
         ;;
       *)

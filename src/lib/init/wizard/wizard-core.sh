@@ -38,11 +38,75 @@ run_modular_wizard() {
   echo "Welcome to nself! Let's configure your project."
   echo "This wizard will walk you through the essential settings."
   echo ""
-  echo "📝 We'll configure:"
-  echo "  • Project name and domain"
-  echo "  • Database settings"
-  echo "  • Core services"
-  echo "  • Optional services"
+  # 4. Generate/copy custom services
+  local custom_service_items=()
+  # Use a temporary array to hold config values for iteration
+  local config_items=("${config[@]}")
+  for item in "${config_items[@]}"; do
+    if [[ "$item" == CUSTOM_SERVICE_* ]]; then
+      custom_service_items+=("$item")
+    fi
+  done
+
+  # Process custom services
+  if [[ ${#custom_service_items[@]} -gt 0 ]]; then
+    echo "Processing custom services..."
+    mkdir -p "services"
+    
+    for item in "${custom_service_items[@]}"; do
+      # Parse item format: CUSTOM_SERVICE_N=name:type:port
+      local value="${item#*=}"
+      local s_name s_type s_port
+      
+      IFS=':' read -r s_name s_type s_port <<< "$value"
+      
+      if [[ -n "$s_name" && -n "$s_type" ]]; then
+        # Check if service directory exists
+        if [[ ! -d "services/$s_name" ]]; then
+          echo "  - Generating service: $s_name ($s_type)"
+          
+          # Special handling for LLM Graph Builder - Clone from source
+          if [[ "$s_type" == "llm-graph-builder" ]]; then
+             echo "    > Cloning neo4j-labs/llm-graph-builder..."
+             if git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$s_name" 2>/dev/null; then
+               echo "    ✓ Cloned successfully"
+               # Create .env.template from example if exists
+               if [[ -f "services/$s_name/.env.example" ]]; then
+                 cp "services/$s_name/.env.example" "services/$s_name/.env"
+               fi
+             else
+               echo "    ⚠️  Failed to clone repo. Service may not work correctly."
+             fi
+          # Standard template approach
+          elif [[ -d "src/templates/services/$s_type" ]]; then
+            cp -r "src/templates/services/$s_type" "services/$s_name"
+            # Render templates
+            render_service_templates "services/$s_name" "$s_name" "$s_port"
+          elif [[ -d "src/templates/services/py/$s_type" ]]; then
+             cp -r "src/templates/services/py/$s_type" "services/$s_name"
+             render_service_templates "services/$s_name" "$s_name" "$s_port"
+          elif [[ -d "src/templates/services/js/$s_type" ]]; then
+             cp -r "src/templates/services/js/$s_type" "services/$s_name"
+             render_service_templates "services/$s_name" "$s_name" "$s_port"
+          elif [[ -d "src/templates/services/db/$s_type" ]]; then
+             cp -r "src/templates/services/db/$s_type" "services/$s_name"
+             render_service_templates "services/$s_name" "$s_name" "$s_port"
+          else
+             # Default generic template
+             mkdir -p "services/$s_name"
+             cat > "services/$s_name/Dockerfile" <<EOF
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+CMD ["npm", "start"]
+EOF
+          fi
+        else
+          echo "  - Service directory services/$s_name already exists (skipping)"
+        fi
+      fi
+    done
+  fi
   echo "  • Frontend applications"
   echo ""
   echo "(Press Ctrl+C anytime to exit)"
@@ -300,7 +364,7 @@ wizard_custom_services() {
         "grpc - gRPC service"
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
-        "graphrag - LLM Graph Builder (Neo4j)"
+        "llm-graph-builder - LLM Graph Builder (Neo4j)"
         "graphiti - Temporal Knowledge Graph (Zep)"
         "Custom Docker image"
       )
@@ -314,7 +378,7 @@ wizard_custom_services() {
         3) service_type="grpc" ;;
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
-        6) service_type="graphrag" ;;
+        6) service_type="llm-graph-builder" ;;
         7) service_type="graphiti" ;;
         8)
           echo ""
@@ -351,13 +415,13 @@ wizard_custom_services() {
         echo "  • API keys will be prompted in Model Providers step"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "graphrag" ]]; then
+      elif [[ "$service_type" == "llm-graph-builder" ]]; then
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "LLM Graph Builder Configuration:"
         echo "  • Requires Neo4j database"
         echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
-        echo "  • Pre-built Docker image will be used"
+        echo "  • Will clone source from official repo and build images"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         # Check if Neo4j is already selected
         local has_neo4j=false
@@ -370,7 +434,7 @@ wizard_custom_services() {
         done
         if [[ "$has_neo4j" == "false" ]]; then
           echo ""
-          echo "⚠️  Neo4j not yet configured. GraphRAG requires Neo4j."
+          echo "⚠️  Neo4j not yet configured. LLM Graph Builder requires Neo4j."
           if confirm_action "Add Neo4j service automatically?"; then
             local neo4j_password
             neo4j_password=$(generate_password 24)
@@ -417,7 +481,7 @@ wizard_custom_services() {
       local default_port
       case "$service_type" in
         neo4j) default_port=7474 ;;
-        graphrag) default_port=11434 ;;
+        llm-graph-builder) default_port=8080 ;; # Frontend port
         graphiti) default_port=8000 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;
