@@ -399,8 +399,8 @@ wizard_custom_services() {
         echo "  • Artifacts stored in /mlflow/artifacts volume"
         echo "  • Pre-built Docker image will be used"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        # MLflow doesn't require API keys but could benefit from them
-        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+        # Note: MLflow is handled by custom-services-templates.sh
+        # Do NOT set MLFLOW_ENABLED=true as that triggers utility-services.sh generation
       fi
 
       # Service-specific default ports
