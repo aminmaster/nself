@@ -250,6 +250,21 @@ wizard_optional_services() {
     add_wizard_config "$config_array_name" "MONITORING_ENABLED" "false"
   fi
 
+  echo ""
+
+  # MLflow - ML Experiment Tracking
+  echo "🧪 MLflow - ML Experiment Tracking"
+  echo "  Track experiments, models, and artifacts"
+  if confirm_action "Enable MLflow?"; then
+    add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+    echo ""
+    echo "  • Requires PostgreSQL (already enabled)"
+    echo "  • Access at: http://localhost:5000"
+    echo "  • Use: nself mlflow status/logs/test"
+  else
+    add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "false"
+  fi
+
   return 0
 }
 
