@@ -300,6 +300,9 @@ wizard_custom_services() {
         "grpc - gRPC service"
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
+        "memobase - Memobase AI Memory"
+        "graphrag - LLM Graph Builder (Neo4j)"
+        "mlflow - MLflow Experiment Tracking"
         "Custom Docker image"
       )
       local selected_type
@@ -312,7 +315,10 @@ wizard_custom_services() {
         3) service_type="grpc" ;;
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
-        6)
+        6) service_type="memobase" ;;
+        7) service_type="graphrag" ;;
+        8) service_type="mlflow" ;;
+        9)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -365,6 +371,54 @@ wizard_custom_services() {
             add_wizard_secret "$config_array_name" "OPENROUTER_API_KEY" "$openrouter_key"
           fi
         fi
+      elif [[ "$service_type" == "memobase" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Memobase Configuration:"
+        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
+        echo "  • Pre-built Docker image will be used"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+      elif [[ "$service_type" == "graphrag" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "LLM Graph Builder Configuration:"
+        echo "  • Requires Neo4j database"
+        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
+        echo "  • Pre-built Docker image will be used"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        # Check if Neo4j is already selected
+        local has_neo4j=false
+        eval "local cfg_items=(\"\${${config_array_name}[@]}\")"
+        for cfg_item in "${cfg_items[@]}"; do
+          if [[ "$cfg_item" == *":neo4j:"* ]]; then
+            has_neo4j=true
+            break
+          fi
+        done
+        if [[ "$has_neo4j" == "false" ]]; then
+          echo ""
+          echo "⚠️  Neo4j not yet configured. GraphRAG requires Neo4j."
+          if confirm_action "Add Neo4j service automatically?"; then
+            local neo4j_password
+            neo4j_password=$(generate_password 24)
+            add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
+            add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+            add_wizard_config "$config_array_name" "CUSTOM_SERVICE_$((service_count + 1))" "graph:neo4j:7474"
+            echo "✓ Neo4j added as 'graph' service"
+          fi
+        fi
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+      elif [[ "$service_type" == "mlflow" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "MLflow Configuration:"
+        echo "  • Requires PostgreSQL (already enabled)"
+        echo "  • Artifacts stored in /mlflow/artifacts volume"
+        echo "  • Pre-built Docker image will be used"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        # MLflow doesn't require API keys but could benefit from them
+        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
       fi
 
       echo ""

@@ -7,20 +7,20 @@ has_ai_services_selected() {
   local config_array_name="$1"
   local -n config_ref=$config_array_name
   
-  # Check for AI service template types in custom services
+  # Check for AI_SERVICES_SELECTED flag (set when Memobase or GraphRAG selected)
+  for item in "${config_ref[@]}"; do
+    if [[ "$item" == *"AI_SERVICES_SELECTED=true"* ]]; then
+      return 0
+    fi
+  done
+  
+  # Also check for specific AI service template types in custom services
   for item in "${config_ref[@]}"; do
     case "$item" in
-      *memobase*|*graphrag*|*graph-builder*|*llm-graph*|*llamaindex*)
+      *:memobase:*|*:graphrag:*|*:llm-graph-builder:*|*:llamaindex:*)
         return 0
         ;;
     esac
-  done
-  
-  # Check for MLflow (enabled via optional services)
-  for item in "${config_ref[@]}"; do
-    if [[ "$item" == *"MLFLOW_ENABLED=true"* ]]; then
-      return 0
-    fi
   done
   
   return 1
