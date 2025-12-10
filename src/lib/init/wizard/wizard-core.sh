@@ -300,7 +300,6 @@ wizard_custom_services() {
         "grpc - gRPC service"
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
-        "memobase - Memobase AI Memory"
         "graphrag - LLM Graph Builder (Neo4j)"
         "Custom Docker image"
       )
@@ -314,9 +313,8 @@ wizard_custom_services() {
         3) service_type="grpc" ;;
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
-        6) service_type="memobase" ;;
-        7) service_type="graphrag" ;;
-        8)
+        6) service_type="graphrag" ;;
+        7)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -349,14 +347,6 @@ wizard_custom_services() {
         echo "LlamaIndex Configuration:"
         echo "  • RAG API for document Q&A"
         echo "  • API keys will be prompted in Model Providers step"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "memobase" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Memobase Configuration:"
-        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
-        echo "  • Pre-built Docker image will be used"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "graphrag" ]]; then
@@ -395,7 +385,6 @@ wizard_custom_services() {
       local default_port
       case "$service_type" in
         neo4j) default_port=7474 ;;
-        memobase) default_port=8019 ;;
         graphrag) default_port=11434 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;

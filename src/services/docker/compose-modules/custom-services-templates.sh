@@ -28,15 +28,6 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
       ;;
-    memobase|memobase-server)
-      cat <<EOF
-    image: memobase/memobase-server:latest
-    container_name: \${PROJECT_NAME}_${service_name}
-    restart: unless-stopped
-    networks:
-      - \${DOCKER_NETWORK}
-EOF
-      ;;
     graphrag|llm-graph-builder|graph-builder)
       cat <<EOF
     image: docker.io/neo4jlabs/llm-graph-builder:latest
@@ -116,16 +107,6 @@ EOF
 EOF
   fi
 
-  # Add Memobase-specific environment variables
-  if [[ "$template_type" == "memobase" ]] || [[ "$template_type" == "memobase-server" ]]; then
-    cat <<EOF
-      - MEMOBASE_LLM_API_KEY=\${OPENAI_API_KEY}
-      - MEMOBASE_LLM_STYLE=openai
-      - MEMOBASE_LLM_BASE_URL=https://api.openai.com/v1
-      - MEMOBASE_BEST_LLM_MODEL=gpt-4o-mini
-EOF
-  fi
-
   # Add GraphRAG-specific environment variables
   if [[ "$template_type" == "graphrag" ]] || [[ "$template_type" == "llm-graph-builder" ]] || [[ "$template_type" == "graph-builder" ]]; then
     cat <<EOF
@@ -143,7 +124,7 @@ EOF
   
   case "$template_type" in
     # Pre-built AI service images - NO host /app mount
-    memobase|memobase-server|graphrag|llm-graph-builder|graph-builder)
+    graphrag|llm-graph-builder|graph-builder)
       volume_mode="prebuilt"
       ;;
     # Database-like services with specific volume paths
@@ -270,17 +251,6 @@ EOF
       timeout: 10s
       retries: 5
       start_period: 60s
-EOF
-        ;;
-      memobase|memobase-server)
-        # Memobase healthcheck
-        cat <<EOF
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
 EOF
         ;;
       graphrag|llm-graph-builder|graph-builder)
