@@ -225,6 +225,22 @@ EOF
   [[ "${PGADMIN_ENABLED:-false}" == "true" ]] && echo "  pgadmin_data:" >> docker-compose.yml
   [[ "${PORTAINER_ENABLED:-false}" == "true" ]] && echo "  portainer_data:" >> docker-compose.yml
 
+  # Add volumes for custom services with pre-built templates
+  # These need named volumes since they don't use host mounts
+  for i in $(seq 1 ${CUSTOM_SERVICE_COUNT:-0}); do
+    local type_var="CS_${i}_TYPE"
+    local name_var="CS_${i}_NAME"
+    local template_type="${!type_var:-}"
+    local service_name="${!name_var:-}"
+    
+    # Pre-built AI service templates need data volumes
+    case "$template_type" in
+      memobase|memobase-server|graphrag|llm-graph-builder|graph-builder|mlflow)
+        [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
+        ;;
+    esac
+  done
+
   # Start services section
   echo "" >> docker-compose.yml
   echo "services:" >> docker-compose.yml

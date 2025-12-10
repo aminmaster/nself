@@ -95,48 +95,78 @@ EOF
 EOF
   fi
 
-  # Add volumes
-  if [[ "$template_type" == "neo4j" ]]; then
-    cat <<EOF
+  # Auto-detect volume mode by template type
+  # Pre-built images: named data volume only (host mount would overwrite container code)
+  # Named volumes: database-like services need persistent storage in specific paths
+  # Host mount: development services (default) - enables live reload
+  
+  local volume_mode="host"  # Default for development services
+  
+  case "$template_type" in
+    # Pre-built AI service images - NO host /app mount
+    memobase|memobase-server|graphrag|llm-graph-builder|graph-builder|mlflow)
+      volume_mode="prebuilt"
+      ;;
+    # Database-like services with specific volume paths
+    neo4j|redis-stack)
+      volume_mode="named"
+      ;;
+  esac
+
+  # Add volumes based on detected mode
+  case "$volume_mode" in
+    prebuilt)
+      # Pre-built: only mount a data directory for persistence
+      cat <<EOF
+    volumes:
+      - ${service_name}_data:/app/data
+EOF
+      ;;
+    named)
+      # Neo4j and similar - specific paths
+      if [[ "$template_type" == "neo4j" ]]; then
+        cat <<EOF
     volumes:
       - ./.volumes/${service_name}/data:/data
       - ./.volumes/${service_name}/logs:/logs
       - ./.volumes/${service_name}/import:/var/lib/neo4j/import
       - ./.volumes/${service_name}/plugins:/plugins
 EOF
-  else
-    # Standard development volumes
-    cat <<EOF
+      fi
+      ;;
+    host|*)
+      # Standard development volumes with code mounting
+      cat <<EOF
     volumes:
       - ./services/${service_name}:/app
 EOF
-  fi
-
-  # Add language-specific volume exclusions based on template type
-  case "$template_type" in
-    *js|*ts|node*|express*|nest*|fastify*|hono*|bullmq*|bun|deno)
-      echo "      - /app/node_modules"
-      ;;
-    py*|fastapi|django*|flask|celery)
-      echo "      - /app/.venv"
-      echo "      - /app/__pycache__"
-      ;;
-    go|grpc|gin|echo|fiber)
-      echo "      - /app/vendor"
-      ;;
-    java*|spring*|kotlin*|ktor)
-      echo "      - /app/target"
-      echo "      - /app/.gradle"
-      ;;
-    rust*|actix*)
-      echo "      - /app/target"
-      echo "      - /app/Cargo.lock"
-      ;;
-    php*|laravel)
-      echo "      - /app/vendor"
-      ;;
-    ruby*|rails|sinatra)
-      echo "      - /app/vendor"
+      # Add language-specific volume exclusions
+      case "$template_type" in
+        *js|*ts|node*|express*|nest*|fastify*|hono*|bullmq*|bun|deno)
+          echo "      - /app/node_modules"
+          ;;
+        py*|fastapi|django*|flask|celery)
+          echo "      - /app/.venv"
+          echo "      - /app/__pycache__"
+          ;;
+        go|grpc|gin|echo|fiber)
+          echo "      - /app/vendor"
+          ;;
+        java*|spring*|kotlin*|ktor)
+          echo "      - /app/target"
+          echo "      - /app/.gradle"
+          ;;
+        rust*|actix*)
+          echo "      - /app/target"
+          echo "      - /app/Cargo.lock"
+          ;;
+        php*|laravel)
+          echo "      - /app/vendor"
+          ;;
+        ruby*|rails|sinatra)
+          echo "      - /app/vendor"
+          ;;
+      esac
       ;;
   esac
 
