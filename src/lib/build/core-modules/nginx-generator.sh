@@ -442,6 +442,32 @@ server {
 EOF
   fi
 
+  # MLflow Model Registry
+  if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+    local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
+    local base_domain="${BASE_DOMAIN:-localhost}"
+
+    cat > nginx/sites/mlflow.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${mlflow_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://mlflow:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
   # Monitoring routes
   if [[ "${MONITORING_ENABLED:-false}" == "true" ]]; then
     # Grafana
