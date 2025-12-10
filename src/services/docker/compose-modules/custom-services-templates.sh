@@ -17,18 +17,38 @@ generate_template_based_service() {
   ${service_name}:
 EOF
 
-  # Special handling for Neo4j
-  if [[ "$template_type" == "neo4j" ]]; then
-    cat <<EOF
+  # Special handling based on template type
+  case "$template_type" in
+    neo4j)
+      cat <<EOF
     image: neo4j:5.26
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
       - \${DOCKER_NETWORK}
 EOF
-  else
-    # Standard buildable service
-    cat <<EOF
+      ;;
+    memobase|memobase-server)
+      cat <<EOF
+    image: memobase/memobase-server:latest
+    container_name: \${PROJECT_NAME}_${service_name}
+    restart: unless-stopped
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+      ;;
+    graphrag|llm-graph-builder|graph-builder)
+      cat <<EOF
+    image: docker.io/neo4jlabs/llm-graph-builder:latest
+    container_name: \${PROJECT_NAME}_${service_name}
+    restart: unless-stopped
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+      ;;
+    *)
+      # Standard buildable service
+      cat <<EOF
     build:
       context: ./services/${service_name}
       dockerfile: Dockerfile
@@ -37,7 +57,8 @@ EOF
     networks:
       - \${DOCKER_NETWORK}
 EOF
-  fi
+      ;;
+  esac
 
   # Add ports if specified
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
@@ -92,6 +113,24 @@ EOF
       - NEO4J_URI=\${NEO4J_URI:-bolt://graph:7687}
       - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
+EOF
+  fi
+
+  # Add Memobase-specific environment variables
+  if [[ "$template_type" == "memobase" ]] || [[ "$template_type" == "memobase-server" ]]; then
+    cat <<EOF
+      - MEMOBASE_LLM_API_KEY=\${OPENAI_API_KEY}
+      - MEMOBASE_LLM_STYLE=openai
+      - MEMOBASE_LLM_BASE_URL=https://api.openai.com/v1
+      - MEMOBASE_BEST_LLM_MODEL=gpt-4o-mini
+EOF
+  fi
+
+  # Add GraphRAG-specific environment variables
+  if [[ "$template_type" == "graphrag" ]] || [[ "$template_type" == "llm-graph-builder" ]] || [[ "$template_type" == "graph-builder" ]]; then
+    cat <<EOF
+      - NLTK_DATA=/app/data/nltk
+      - HF_HOME=/app/data/hf_cache
 EOF
   fi
 
@@ -231,6 +270,28 @@ EOF
       timeout: 10s
       retries: 5
       start_period: 60s
+EOF
+        ;;
+      memobase|memobase-server)
+        # Memobase healthcheck
+        cat <<EOF
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+EOF
+        ;;
+      graphrag|llm-graph-builder|graph-builder)
+        # GraphRAG healthcheck
+        cat <<EOF
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 EOF
         ;;
       *)

@@ -85,6 +85,11 @@ run_modular_wizard() {
   # Step 8: Custom Backend Services
   wizard_custom_services config
 
+  # Step 8b: AI Model Providers (conditional - only if AI services selected)
+  if type has_ai_services_selected &>/dev/null && has_ai_services_selected config; then
+    wizard_model_providers config
+  fi
+
   # Step 9: Frontend Applications
   wizard_frontend_apps config
 
