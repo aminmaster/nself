@@ -28,7 +28,7 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
       ;;
-    llm-graph-builder)
+    llm-graph-builder*)
       cat <<EOF
     build:
       context: ./services/${service_name}/backend
@@ -248,7 +248,7 @@ EOF
   fi
 
   # Add dependencies (Postgres/Redis) - skip for llm-graph-builder (handles its own)
-  if [[ "$template_type" != "llm-graph-builder" ]]; then
+  if [[ "$template_type" != "llm-graph-builder"* ]]; then
     cat <<EOF
     depends_on:
       - postgres
@@ -308,7 +308,7 @@ EOF
         ;;
       *)
         # Most other containers should have curl or wget (skip for llm-graph-builder as it's handled above)
-        if [[ "$template_type" != "llm-graph-builder" ]]; then
+        if [[ "$template_type" != "llm-graph-builder"* ]]; then
         cat <<EOF
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${service_port}/health"]
