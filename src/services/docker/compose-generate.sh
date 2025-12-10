@@ -235,7 +235,7 @@ EOF
     
     # Pre-built AI service templates need data volumes
     case "$template_type" in
-      memobase|memobase-server|graphrag|llm-graph-builder|graph-builder|mlflow)
+      memobase|memobase-server|graphrag|llm-graph-builder|graph-builder)
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
     esac

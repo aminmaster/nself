@@ -143,7 +143,7 @@ EOF
   
   case "$template_type" in
     # Pre-built AI service images - NO host /app mount
-    memobase|memobase-server|graphrag|llm-graph-builder|graph-builder|mlflow)
+    memobase|memobase-server|graphrag|llm-graph-builder|graph-builder)
       volume_mode="prebuilt"
       ;;
     # Database-like services with specific volume paths

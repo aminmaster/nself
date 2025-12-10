@@ -302,7 +302,6 @@ wizard_custom_services() {
         "llamaindex - LlamaIndex RAG API"
         "memobase - Memobase AI Memory"
         "graphrag - LLM Graph Builder (Neo4j)"
-        "mlflow - MLflow Experiment Tracking"
         "Custom Docker image"
       )
       local selected_type
@@ -317,8 +316,7 @@ wizard_custom_services() {
         5) service_type="llamaindex" ;;
         6) service_type="memobase" ;;
         7) service_type="graphrag" ;;
-        8) service_type="mlflow" ;;
-        9)
+        8)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -391,16 +389,6 @@ wizard_custom_services() {
           fi
         fi
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "mlflow" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "MLflow Configuration:"
-        echo "  • Requires PostgreSQL (already enabled)"
-        echo "  • Artifacts stored in /mlflow/artifacts volume"
-        echo "  • Pre-built Docker image will be used"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        # Note: MLflow is handled by custom-services-templates.sh
-        # Do NOT set MLFLOW_ENABLED=true as that triggers utility-services.sh generation
       fi
 
       # Service-specific default ports
@@ -409,7 +397,6 @@ wizard_custom_services() {
         neo4j) default_port=7474 ;;
         memobase) default_port=8019 ;;
         graphrag) default_port=11434 ;;
-        mlflow) default_port=5000 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;
       esac
