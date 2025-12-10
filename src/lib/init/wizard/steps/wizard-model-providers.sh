@@ -51,7 +51,7 @@ wizard_model_providers() {
   echo "  Get key: https://platform.openai.com/api-keys"
   if confirm_action "Configure OpenAI API Key?"; then
     local openai_key
-    prompt_secret "OpenAI API Key" openai_key ""
+    prompt_password "OpenAI API Key" openai_key
     if [[ -n "$openai_key" ]]; then
       add_wizard_secret "$config_array_name" "OPENAI_API_KEY" "$openai_key"
       has_any_key=true
@@ -67,7 +67,7 @@ wizard_model_providers() {
   echo "  Get key: https://openrouter.ai/keys"
   if confirm_action "Configure OpenRouter API Key?"; then
     local openrouter_key
-    prompt_secret "OpenRouter API Key" openrouter_key ""
+    prompt_password "OpenRouter API Key" openrouter_key
     if [[ -n "$openrouter_key" ]]; then
       add_wizard_secret "$config_array_name" "OPENROUTER_API_KEY" "$openrouter_key"
       has_any_key=true
@@ -92,7 +92,7 @@ wizard_model_providers() {
   echo "  Get key: https://console.anthropic.com/"
   if confirm_action "Configure Anthropic API Key? (optional)"; then
     local anthropic_key
-    prompt_secret "Anthropic API Key" anthropic_key ""
+    prompt_password "Anthropic API Key" anthropic_key
     if [[ -n "$anthropic_key" ]]; then
       add_wizard_secret "$config_array_name" "ANTHROPIC_API_KEY" "$anthropic_key"
       has_any_key=true
@@ -107,7 +107,7 @@ wizard_model_providers() {
   echo "  Get key: https://dashboard.cohere.com/api-keys"
   if confirm_action "Configure Cohere API Key? (optional)"; then
     local cohere_key
-    prompt_secret "Cohere API Key" cohere_key ""
+    prompt_password "Cohere API Key" cohere_key
     if [[ -n "$cohere_key" ]]; then
       add_wizard_secret "$config_array_name" "COHERE_API_KEY" "$cohere_key"
       has_any_key=true
@@ -122,7 +122,7 @@ wizard_model_providers() {
   echo "  Get token: https://huggingface.co/settings/tokens"
   if confirm_action "Configure HuggingFace Token? (optional)"; then
     local hf_token
-    prompt_secret "HuggingFace Token" hf_token ""
+    prompt_password "HuggingFace Token" hf_token
     if [[ -n "$hf_token" ]]; then
       add_wizard_secret "$config_array_name" "HUGGINGFACE_API_KEY" "$hf_token"
       has_any_key=true

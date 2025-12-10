@@ -327,7 +327,11 @@ wizard_custom_services() {
       # Prompt for service-specific credentials
       if [[ "$service_type" == "neo4j" ]]; then
         echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "Neo4j Configuration:"
+        echo "  • Graph database for knowledge graphs"
+        echo "  • API keys will be prompted in Model Providers step"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         local neo4j_user neo4j_password
         prompt_input "Neo4j username" "neo4j" neo4j_user
         
@@ -340,37 +344,15 @@ wizard_custom_services() {
         
         add_wizard_config "$config_array_name" "NEO4J_USER" "$neo4j_user"
         add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "llamaindex" ]]; then
         echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "LlamaIndex Configuration:"
-        # Check if OPENAI_API_KEY is already set
-        local openai_key_set=false
-        local openrouter_key_set=false
-        eval "local config_values=(\"\${${config_array_name}[@]}\")"
-        for cfg_item in "${config_values[@]}"; do
-          if [[ "$cfg_item" == "SECR:OPENAI_API_KEY="* ]]; then
-            openai_key_set=true
-          fi
-          if [[ "$cfg_item" == "SECR:OPENROUTER_API_KEY="* ]]; then
-            openrouter_key_set=true
-          fi
-        done
-        
-        if [[ "$openai_key_set" == "false" ]]; then
-          local openai_key
-          prompt_password "OpenAI API Key (optional, press Enter to skip)" openai_key
-          if [[ -n "$openai_key" ]]; then
-            add_wizard_secret "$config_array_name" "OPENAI_API_KEY" "$openai_key"
-          fi
-        fi
-        
-        if [[ "$openrouter_key_set" == "false" ]]; then
-          local openrouter_key
-          prompt_password "OpenRouter API Key (recommended for multi-model access)" openrouter_key
-          if [[ -n "$openrouter_key" ]]; then
-            add_wizard_secret "$config_array_name" "OPENROUTER_API_KEY" "$openrouter_key"
-          fi
-        fi
+        echo "  • RAG API for document Q&A"
+        echo "  • API keys will be prompted in Model Providers step"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "memobase" ]]; then
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -421,8 +403,19 @@ wizard_custom_services() {
         add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
       fi
 
+      # Service-specific default ports
+      local default_port
+      case "$service_type" in
+        neo4j) default_port=7474 ;;
+        memobase) default_port=8019 ;;
+        graphrag) default_port=11434 ;;
+        mlflow) default_port=5000 ;;
+        llamaindex) default_port=8000 ;;
+        *) default_port=$((8000 + service_count)) ;;
+      esac
+
       echo ""
-      prompt_input "Service port" "$((8000 + service_count))" service_port "^[0-9][0-9]*$"
+      prompt_input "Service port" "$default_port" service_port "^[0-9][0-9]*$"
 
       add_wizard_config "$config_array_name" "CUSTOM_SERVICE_${service_count}" "${service_name}:${service_type}:${service_port}"
 
