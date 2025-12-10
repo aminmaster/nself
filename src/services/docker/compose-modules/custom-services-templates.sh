@@ -44,6 +44,12 @@ EOF
       - EMBEDDING_MODEL=\${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
     networks:
       - \${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   ${service_name}_frontend:
     build:
@@ -241,12 +247,14 @@ EOF
 EOF
   fi
 
-  # Add dependencies
-  cat <<EOF
+  # Add dependencies (Postgres/Redis) - skip for llm-graph-builder (handles its own)
+  if [[ "$template_type" != "llm-graph-builder" ]]; then
+    cat <<EOF
     depends_on:
       - postgres
       - redis
 EOF
+  fi
 
   [[ "${HASURA_ENABLED:-false}" == "true" ]] && echo "      - hasura"
 
@@ -298,19 +306,9 @@ EOF
       start_period: 60s
 EOF
         ;;
-      llm-graph-builder)
-        # Check backend health
-        cat <<EOF
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-EOF
-        ;;
       *)
-        # Most other containers should have curl or wget
+        # Most other containers should have curl or wget (skip for llm-graph-builder as it's handled above)
+        if [[ "$template_type" != "llm-graph-builder" ]]; then
         cat <<EOF
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${service_port}/health"]
@@ -319,6 +317,7 @@ EOF
       retries: 5
       start_period: 60s
 EOF
+        fi
         ;;
     esac
   fi
