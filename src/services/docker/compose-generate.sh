@@ -228,10 +228,20 @@ EOF
   # Add volumes for custom services with pre-built templates
   # These need named volumes since they don't use host mounts
   for i in $(seq 1 ${CUSTOM_SERVICE_COUNT:-0}); do
-    local type_var="CS_${i}_TYPE"
-    local name_var="CS_${i}_NAME"
-    local template_type="${!type_var:-}"
-    local service_name="${!name_var:-}"
+    # Try CS_N format first, then CUSTOM_SERVICE_N
+    local cs_var="CS_${i}"
+    local cs_value="${!cs_var:-}"
+    
+    if [[ -z "$cs_value" ]]; then
+      local custom_service_var="CUSTOM_SERVICE_${i}"
+      cs_value="${!custom_service_var:-}"
+    fi
+    
+    [[ -z "$cs_value" ]] && continue
+    
+    # Parse format: service_name:template_type:port
+    local service_name template_type
+    IFS=':' read -r service_name template_type _ <<< "$cs_value"
     
     # Pre-built AI service templates need data volumes
     case "$template_type" in
