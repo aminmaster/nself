@@ -1,0 +1,37 @@
+# {{SERVICE_NAME}} - MLflow Experiment Tracking
+
+Track ML experiments, models, and artifacts.
+
+## Features
+
+- Experiment tracking and comparison
+- Model registry and versioning
+- Artifact storage
+- Web UI for visualization
+
+## Requirements
+
+- PostgreSQL database (already enabled)
+
+## Usage
+
+### Python
+```python
+import mlflow
+
+mlflow.set_tracking_uri("http://localhost:{{SERVICE_PORT}}")
+
+with mlflow.start_run():
+    mlflow.log_param("param1", value1)
+    mlflow.log_metric("metric1", value1)
+    mlflow.log_model(model, "model")
+```
+
+### Environment Variable
+```bash
+export MLFLOW_TRACKING_URI=http://localhost:{{SERVICE_PORT}}
+```
+
+## Documentation
+
+https://mlflow.org/docs/latest/

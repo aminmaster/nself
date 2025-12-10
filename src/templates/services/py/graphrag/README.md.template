@@ -1,0 +1,29 @@
+# {{SERVICE_NAME}} - LLM Graph Builder
+
+Build knowledge graphs from documents using LLMs.
+
+## Features
+
+- Document ingestion and chunking
+- Entity and relationship extraction via LLMs
+- Neo4j graph storage
+- Natural language querying
+
+## Requirements
+
+- Neo4j database (added automatically if not present)
+- OpenAI or OpenRouter API key
+
+## Environment Variables
+
+Required (set in .env.secrets):
+- `OPENAI_API_KEY` or `OPENROUTER_API_KEY`
+- `NEO4J_PASSWORD`
+
+## Usage
+
+Access the web UI at: http://localhost:{{SERVICE_PORT}}
+
+## Documentation
+
+https://github.com/neo4j-labs/llm-graph-builder

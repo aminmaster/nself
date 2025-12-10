@@ -1,0 +1,30 @@
+# {{SERVICE_NAME}} - Memobase AI Memory
+
+Self-hosted AI memory service for persistent user profiles.
+
+## Features
+
+- User memory persistence for AI applications
+- LLM-based memory summarization
+- PostgreSQL backend storage
+- Redis caching
+
+## Environment Variables
+
+Required (set in .env.secrets):
+- `OPENAI_API_KEY` - OpenAI API key for LLM operations
+
+## Usage
+
+```python
+from memobase import MemobaseClient
+
+client = MemobaseClient(
+    project_url="http://localhost:{{SERVICE_PORT}}",
+    api_key="your-api-key"
+)
+```
+
+## Documentation
+
+https://docs.memobase.io/

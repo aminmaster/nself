@@ -1,0 +1,30 @@
+# MLflow - ML Experiment Tracking
+# Pre-built Docker image - no build required
+
+  {{SERVICE_NAME}}:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: ${PROJECT_NAME}_{{SERVICE_NAME}}
+    restart: unless-stopped
+    ports:
+      - "{{SERVICE_PORT}}:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+      - MLFLOW_HOST=0.0.0.0
+      - MLFLOW_PORT=5000
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        pip install psycopg2-binary &&
+        mlflow server \
+          --backend-store-uri $${MLFLOW_BACKEND_STORE_URI} \
+          --default-artifact-root $${MLFLOW_DEFAULT_ARTIFACT_ROOT} \
+          --host $${MLFLOW_HOST} \
+          --port $${MLFLOW_PORT} \
+          --serve-artifacts
+    volumes:
+      - ./services/{{SERVICE_NAME}}/artifacts:/mlflow/artifacts
+    networks:
+      - nself_network
+    depends_on:
+      - postgres
