@@ -301,6 +301,7 @@ wizard_custom_services() {
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
         "graphrag - LLM Graph Builder (Neo4j)"
+        "graphiti - Temporal Knowledge Graph (Zep)"
         "Custom Docker image"
       )
       local selected_type
@@ -314,7 +315,8 @@ wizard_custom_services() {
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
         6) service_type="graphrag" ;;
-        7)
+        7) service_type="graphiti" ;;
+        8)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -379,6 +381,36 @@ wizard_custom_services() {
           fi
         fi
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+      elif [[ "$service_type" == "graphiti" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Graphiti Configuration:"
+        echo "  • Requires Neo4j database"
+        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
+        echo "  • Will be built from custom template (FastAPI + Graphiti)"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        # Check if Neo4j is already selected
+        local has_neo4j=false
+        eval "local cfg_items=(\"\${${config_array_name}[@]}\")"
+        for cfg_item in "${cfg_items[@]}"; do
+          if [[ "$cfg_item" == *":neo4j:"* ]]; then
+            has_neo4j=true
+            break
+          fi
+        done
+        if [[ "$has_neo4j" == "false" ]]; then
+          echo ""
+          echo "⚠️  Neo4j not yet configured. Graphiti requires Neo4j."
+          if confirm_action "Add Neo4j service automatically?"; then
+            local neo4j_password
+            neo4j_password=$(generate_password 24)
+            add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
+            add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+            add_wizard_config "$config_array_name" "CUSTOM_SERVICE_$((service_count + 1))" "graph:neo4j:7474"
+            echo "✓ Neo4j added as 'graph' service"
+          fi
+        fi
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       fi
 
       # Service-specific default ports
@@ -386,6 +418,7 @@ wizard_custom_services() {
       case "$service_type" in
         neo4j) default_port=7474 ;;
         graphrag) default_port=11434 ;;
+        graphiti) default_port=8000 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;
       esac

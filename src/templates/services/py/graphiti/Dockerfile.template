@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install graphiti and server components
+# Installing 'python-multipart' is required for FastAPI form parsing if needed
+RUN pip install --no-cache-dir graphiti-core[anthropic,groq,ollama] fastapi uvicorn python-multipart
+
+# Copy custom server code
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

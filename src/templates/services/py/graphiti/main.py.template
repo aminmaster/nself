@@ -1,0 +1,60 @@
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from graphiti_core import Graphiti
+from graphiti_core.driver.neo4j_driver import Neo4jDriver
+
+# Configuration
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+GRAPHITI_DATABASE = os.getenv("GRAPHITI_DATABASE", "memory")
+
+# Global Graphiti instance
+graphiti_client = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global graphiti_client
+    try:
+        # Initialize driver
+        driver = Neo4jDriver(
+            uri=NEO4J_URI,
+            user=NEO4J_USER,
+            password=NEO4J_PASSWORD,
+            database=GRAPHITI_DATABASE
+        )
+        # Initialize Graphiti
+        graphiti_client = Graphiti(graph_driver=driver)
+        print(f"Graphiti initialized with database: {GRAPHITI_DATABASE}")
+    except Exception as e:
+        print(f"Failed to initialize Graphiti: {e}")
+        # In a real app we might want to crash, but for now we'll log it
+    
+    yield
+    
+    # Cleanup if needed
+    if graphiti_client:
+        # graphiti_client.close() # Implement if close method exists
+        pass
+
+app = FastAPI(lifespan=lifespan)
+
+class EpisodeRequest(BaseModel):
+    name: str
+    body: str
+    source: str = "text"
+    source_description: str
+    reference_time: Optional[str] = None
+
+@app.get("/healthz")
+async def healthz():
+    if not graphiti_client:
+        raise HTTPException(status_code=503, detail="Graphiti not initialized")
+    return {"status": "ok"}
+
+@app.get("/")
+async def root():
+    return {"message": "Graphiti Service Running"}

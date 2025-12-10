@@ -115,6 +115,17 @@ EOF
 EOF
   fi
 
+  # Add Graphiti-specific environment variables
+  if [[ "$template_type" == "graphiti" ]]; then
+    cat <<EOF
+      - NEO4J_URI=\${NEO4J_URI:-bolt://neo4j:7687}
+      - NEO4J_USER=\${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
+      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-memory}
+EOF
+  fi
+
   # Auto-detect volume mode by template type
   # Pre-built images: named data volume only (host mount would overwrite container code)
   # Named volumes: database-like services need persistent storage in specific paths
@@ -244,6 +255,17 @@ EOF
         ;;
       *llamaindex*)
         # LlamaIndex uses /healthz
+        cat <<EOF
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
+        ;;
+      graphiti)
+        # Graphiti uses /healthz
         cat <<EOF
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
