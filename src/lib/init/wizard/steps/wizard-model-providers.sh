@@ -77,8 +77,8 @@ wizard_model_providers() {
       echo "  Select default models for OpenRouter:"
       
       local txt_model emb_model
-      prompt_with_default "  Text Model" "x-ai/grok-4.1-fast" txt_model
-      prompt_with_default "  Embedding Model" "openai/text-embedding-3-large" emb_model
+      prompt_input "Text Model" "x-ai/grok-4.1-fast" txt_model
+      prompt_input "Embedding Model" "openai/text-embedding-3-large" emb_model
       
       add_wizard_config "$config_array_name" "OPENROUTER_MODEL_TXT" "$txt_model"
       add_wizard_config "$config_array_name" "OPENROUTER_MODEL_EMB" "$emb_model"
