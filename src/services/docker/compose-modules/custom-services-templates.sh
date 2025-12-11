@@ -90,10 +90,10 @@ EOF
   # Add ports if specified
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
     if [[ "$template_type" == "llm-graph-builder"* ]]; then
-      # llm-graph-builder backend listens on 8000 internally
+      # llm-graph-builder frontend listens on 8080 internally
       cat <<EOF
     ports:
-      - "${service_port}:8000"
+      - "${service_port}:8080"
 EOF
     else
       cat <<EOF
