@@ -8,6 +8,13 @@ generate_template_based_service() {
   local template_type="$3"
   local service_port="$4"
 
+  # Auto-clone llm-graph-builder if missing (ephemeral service support)
+  if [[ "$template_type" == "llm-graph-builder"* ]] && [[ ! -d "services/$service_name" ]]; then
+    echo "  • Cloning llm-graph-builder source for ${service_name}..." >&2
+    mkdir -p services
+    git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$service_name" >&2
+  fi
+
   # Skip if service directory doesn't exist (template not copied)
   [[ ! -d "services/$service_name" ]] && return 0
 
