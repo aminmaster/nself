@@ -178,7 +178,7 @@ check_firewall_rules() {
       local app_name_var="FRONTEND_APP_${i}_NAME"
       local app_name="${!app_name_var:-app${i}}"
       
-      if ! sudo ufw status 2>/dev/null | grep -q "172.30.0.0/16.*$port"; then
+      if ! sudo ufw status 2>/dev/null | grep -q "$port.*172.30.0.0/16"; then
         missing_rules+=("Frontend app '$app_name' (port $port)")
         missing_commands+=("sudo ufw allow from 172.30.0.0/16 to any port $port comment 'nself frontend: $app_name'")
       fi
