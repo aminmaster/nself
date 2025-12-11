@@ -658,16 +658,7 @@ server {
 
     location / {
         set \$upstream_${cs_name} ${cs_name};
-EOF
-        # Determine the correct upstream based on template type
-        local upstream_target
-        if [[ "$template" == "llm-graph-builder"* ]]; then
-           upstream_target="${cs_name}_frontend:8080"
-        else
-           upstream_target="\$upstream_${cs_name}:${cs_port}"
-        fi
-        echo "        proxy_pass http://${upstream_target};" >> "nginx/sites/custom-${cs_name}.conf"
-        cat >> "nginx/sites/custom-${cs_name}.conf" <<EOF
+        proxy_pass http://\$upstream_${cs_name}:${cs_port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;

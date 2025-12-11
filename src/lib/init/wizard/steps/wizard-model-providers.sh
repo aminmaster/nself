@@ -17,7 +17,7 @@ has_ai_services_selected() {
   # Also check for specific AI service template types in custom services
   for item in "${config_ref[@]}"; do
     case "$item" in
-      *:memobase:*|*:graphrag:*|*:llm-graph-builder:*|*:llamaindex:*)
+      *:memobase:*|*:graphrag:*|*:llamaindex:*)
         return 0
         ;;
     esac

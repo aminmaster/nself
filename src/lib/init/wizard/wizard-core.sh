@@ -65,20 +65,8 @@ run_modular_wizard() {
         if [[ ! -d "services/$s_name" ]]; then
           echo "  - Generating service: $s_name ($s_type)"
           
-          # Special handling for LLM Graph Builder - Clone from source
-          if [[ "$s_type" == "llm-graph-builder" ]]; then
-             echo "    > Cloning neo4j-labs/llm-graph-builder..."
-             if git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$s_name" 2>/dev/null; then
-               echo "    ✓ Cloned successfully"
-               # Create .env.template from example if exists
-               if [[ -f "services/$s_name/.env.example" ]]; then
-                 cp "services/$s_name/.env.example" "services/$s_name/.env"
-               fi
-             else
-               echo "    ⚠️  Failed to clone repo. Service may not work correctly."
-             fi
           # Standard template approach
-          elif [[ -d "src/templates/services/$s_type" ]]; then
+          if [[ -d "src/templates/services/$s_type" ]]; then
             cp -r "src/templates/services/$s_type" "services/$s_name"
             # Render templates
             render_service_templates "services/$s_name" "$s_name" "$s_port"
@@ -119,10 +107,10 @@ EOF
   # Extract project name for use in other steps
   local project_name=""
   for item in "${config[@]}"; do
-    if [[ "$item" == CONF:PROJECT_NAME=* ]]; then
+    if [[ "$item" == "CONF:PROJECT_NAME="* ]]; then
       project_name="${item#CONF:PROJECT_NAME=}"
       break
-    elif [[ "$item" == PROJECT_NAME=* ]]; then
+    elif [[ "$item" == "PROJECT_NAME="* ]]; then
       project_name="${item#PROJECT_NAME=}"
       break
     fi
@@ -364,7 +352,6 @@ wizard_custom_services() {
         "grpc - gRPC service"
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
-        "llm-graph-builder - LLM Graph Builder (Neo4j)"
         "graphiti - Temporal Knowledge Graph (Zep)"
         "Custom Docker image"
       )
@@ -378,9 +365,8 @@ wizard_custom_services() {
         3) service_type="grpc" ;;
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
-        6) service_type="llm-graph-builder" ;;
-        7) service_type="graphiti" ;;
-        8)
+        6) service_type="graphiti" ;;
+        7)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -415,13 +401,6 @@ wizard_custom_services() {
         echo "  • API keys will be prompted in Model Providers step"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "llm-graph-builder" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "LLM Graph Builder Configuration:"
-        echo "  • Requires Neo4j database"
-        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
-        echo "  • Will clone source from official repo and build images"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         # Check if Neo4j is already selected
         local has_neo4j=false
@@ -481,7 +460,7 @@ wizard_custom_services() {
       local default_port
       case "$service_type" in
         neo4j) default_port=7474 ;;
-        llm-graph-builder) default_port=8080 ;; # Frontend port
+
         graphiti) default_port=8000 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;

@@ -8,23 +8,6 @@ generate_template_based_service() {
   local template_type="$3"
   local service_port="$4"
 
-  # Auto-clone llm-graph-builder if missing (ephemeral service support)
-  if [[ "$template_type" == "llm-graph-builder"* ]]; then
-    if [[ ! -d "services/$service_name" ]]; then
-      echo "  • Cloning llm-graph-builder source for ${service_name}..." >&2
-      mkdir -p services
-      git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$service_name" >&2
-    fi
-    
-    # Patch Dockerfile for Debian Trixie/Bookworm compatibility (libgl1-mesa-glx is deprecated)
-    if [[ -f "services/$service_name/backend/Dockerfile" ]]; then
-      if grep -q "libgl1-mesa-glx" "services/$service_name/backend/Dockerfile"; then
-        echo "  • Patching deprecated libgl1-mesa-glx in ${service_name} Dockerfile..." >&2
-        sed -i 's/libgl1-mesa-glx/libgl1/g' "services/$service_name/backend/Dockerfile"
-      fi
-    fi
-  fi
-
   # Skip if service directory doesn't exist (template not copied)
   [[ ! -d "services/$service_name" ]] && return 0
 
@@ -45,44 +28,7 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
       ;;
-    llm-graph-builder*)
-      cat <<EOF
-    build:
-      context: ./services/${service_name}/backend
-      dockerfile: Dockerfile
-    container_name: \${PROJECT_NAME}_${service_name}_backend
-    restart: unless-stopped
-    environment:
-      - NEO4J_URI=\${NEO4J_URI:-neo4j://neo4j:7687}
-      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
-      - NEO4J_USERNAME=\${NEO4J_USER:-neo4j}
-      - OPENAI_API_KEY=\${OPENAI_API_KEY}
-      - DIFFBOT_API_KEY=\${DIFFBOT_API_KEY}
-      - EMBEDDING_MODEL=\${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
-    networks:
-      - \${DOCKER_NETWORK}
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
-  ${service_name}_frontend:
-    build:
-      context: ./services/${service_name}/frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_BACKEND_API_URL=http://${service_name}:8000
-        - VITE_REACT_APP_SOURCES=local,wiki,s3
-    container_name: \${PROJECT_NAME}_${service_name}_frontend
-    restart: unless-stopped
-    networks:
-      - \${DOCKER_NETWORK}
-    depends_on:
-      - ${service_name}
-EOF
-      ;;
     *)
       # Standard buildable service
       cat <<EOF
@@ -99,18 +45,10 @@ EOF
 
   # Add ports if specified
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
-    if [[ "$template_type" == "llm-graph-builder"* ]]; then
-      # llm-graph-builder frontend listens on 8080 internally
-      cat <<EOF
-    ports:
-      - "${service_port}:8080"
-EOF
-    else
-      cat <<EOF
+    cat <<EOF
     ports:
       - "${service_port}:${service_port}"
 EOF
-    fi
   fi
 
   # Add environment variables
@@ -221,12 +159,10 @@ EOF
       ;;
     host|*)
       # Standard development volumes with code mounting
-      if [[ "$template_type" != "llm-graph-builder"* ]]; then
-        cat <<EOF
+      cat <<EOF
     volumes:
       - ./services/${service_name}:/app
 EOF
-      fi
       # Add language-specific volume exclusions
       case "$template_type" in
         *js|*ts|node*|express*|nest*|fastify*|hono*|bullmq*|bun|deno)
@@ -274,16 +210,14 @@ EOF
 EOF
   fi
 
-  # Add dependencies (Postgres/Redis) - skip for llm-graph-builder (handles its own)
-  if [[ "$template_type" != "llm-graph-builder"* ]]; then
-    cat <<EOF
+  # Add dependencies (Postgres/Redis)
+  cat <<EOF
     depends_on:
       - postgres
       - redis
 EOF
-  fi
 
-  if [[ "${HASURA_ENABLED:-false}" == "true" ]] && [[ "$template_type" != "llm-graph-builder"* ]]; then
+  if [[ "${HASURA_ENABLED:-false}" == "true" ]]; then
      echo "      - hasura"
   fi
 
@@ -336,8 +270,7 @@ EOF
 EOF
         ;;
       *)
-        # Most other containers should have curl or wget (skip for llm-graph-builder as it's handled above)
-        if [[ "$template_type" != "llm-graph-builder"* ]]; then
+        # Most other containers should have curl or wget
         cat <<EOF
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${service_port}/health"]
@@ -346,7 +279,6 @@ EOF
       retries: 5
       start_period: 60s
 EOF
-        fi
         ;;
     esac
   fi
