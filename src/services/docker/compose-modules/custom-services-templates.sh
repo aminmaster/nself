@@ -203,10 +203,12 @@ EOF
       ;;
     host|*)
       # Standard development volumes with code mounting
-      cat <<EOF
+      if [[ "$template_type" != "llm-graph-builder"* ]]; then
+        cat <<EOF
     volumes:
       - ./services/${service_name}:/app
 EOF
+      fi
       # Add language-specific volume exclusions
       case "$template_type" in
         *js|*ts|node*|express*|nest*|fastify*|hono*|bullmq*|bun|deno)
@@ -263,7 +265,9 @@ EOF
 EOF
   fi
 
-  [[ "${HASURA_ENABLED:-false}" == "true" ]] && echo "      - hasura"
+  if [[ "${HASURA_ENABLED:-false}" == "true" ]] && [[ "$template_type" != "llm-graph-builder"* ]]; then
+     echo "      - hasura"
+  fi
 
   # Add healthcheck if port is exposed
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
