@@ -9,10 +9,20 @@ generate_template_based_service() {
   local service_port="$4"
 
   # Auto-clone llm-graph-builder if missing (ephemeral service support)
-  if [[ "$template_type" == "llm-graph-builder"* ]] && [[ ! -d "services/$service_name" ]]; then
-    echo "  • Cloning llm-graph-builder source for ${service_name}..." >&2
-    mkdir -p services
-    git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$service_name" >&2
+  if [[ "$template_type" == "llm-graph-builder"* ]]; then
+    if [[ ! -d "services/$service_name" ]]; then
+      echo "  • Cloning llm-graph-builder source for ${service_name}..." >&2
+      mkdir -p services
+      git clone https://github.com/neo4j-labs/llm-graph-builder.git "services/$service_name" >&2
+    fi
+    
+    # Patch Dockerfile for Debian Trixie/Bookworm compatibility (libgl1-mesa-glx is deprecated)
+    if [[ -f "services/$service_name/backend/Dockerfile" ]]; then
+      if grep -q "libgl1-mesa-glx" "services/$service_name/backend/Dockerfile"; then
+        echo "  • Patching deprecated libgl1-mesa-glx in ${service_name} Dockerfile..." >&2
+        sed -i 's/libgl1-mesa-glx/libgl1/g' "services/$service_name/backend/Dockerfile"
+      fi
+    fi
   fi
 
   # Skip if service directory doesn't exist (template not copied)
