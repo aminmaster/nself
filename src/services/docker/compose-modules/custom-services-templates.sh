@@ -89,10 +89,18 @@ EOF
 
   # Add ports if specified
   if [[ -n "$service_port" && "$service_port" != "0" ]]; then
-    cat <<EOF
+    if [[ "$template_type" == "llm-graph-builder"* ]]; then
+      # llm-graph-builder backend listens on 8000 internally
+      cat <<EOF
+    ports:
+      - "${service_port}:8000"
+EOF
+    else
+      cat <<EOF
     ports:
       - "${service_port}:${service_port}"
 EOF
+    fi
   fi
 
   # Add environment variables
