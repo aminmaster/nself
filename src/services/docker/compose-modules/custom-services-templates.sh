@@ -62,7 +62,7 @@ EOF
     networks:
       - \${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/ready"]
       interval: 30s
       timeout: 10s
       retries: 5
