@@ -658,12 +658,13 @@ server {
 
     location / {
         set \$upstream_${cs_name} ${cs_name};
-        proxy_pass http://\$upstream_${cs_name}:${cs_port};
+EOF
         if [[ "$template" == "llm-graph-builder"* ]]; then
-           # Special case for llm-graph-builder: frontend is always internal 8080
-           # and service name has _frontend suffix
-           proxy_pass http://${cs_name}_frontend:8080;
+           echo "        proxy_pass http://${cs_name}_frontend:8080;" >> "nginx/sites/custom-${cs_name}.conf"
+        else
+           echo "        proxy_pass http://\$upstream_${cs_name}:${cs_port};" >> "nginx/sites/custom-${cs_name}.conf"
         fi
+        cat >> "nginx/sites/custom-${cs_name}.conf" <<EOF
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
