@@ -446,6 +446,21 @@ EOF
   if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
     local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
     local base_domain="${BASE_DOMAIN:-localhost}"
+    local auth_config=""
+
+    # Configure Basic Auth if enabled
+    if [[ -n "${MLFLOW_BASIC_AUTH_PASSWORD:-}" ]]; then
+      local auth_user="${MLFLOW_BASIC_AUTH_USERNAME:-admin}"
+      local auth_pass="${MLFLOW_BASIC_AUTH_PASSWORD}"
+      
+      # Generate htpasswd file
+      echo "${auth_user}:$(openssl passwd -apr1 "${auth_pass}")" > nginx/conf.d/mlflow.htpasswd
+      
+      auth_config="
+    auth_basic \"MLflow Protected Area\";
+    auth_basic_user_file /etc/nginx/conf.d/mlflow.htpasswd;
+"
+    fi
 
     cat > nginx/sites/mlflow.conf <<EOF
 server {
@@ -457,6 +472,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
+        ${auth_config}
         proxy_pass http://mlflow:5005;
         proxy_http_version 1.1;
         proxy_set_header Host localhost;
