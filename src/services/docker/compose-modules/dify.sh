@@ -11,6 +11,7 @@ generate_dify_stack() {
   local version="${DIFY_VERSION:-1.11.1}"
   local subdomain="${DIFY_SUBDOMAIN:-dify}"
   local secret_key="${DIFY_SECRET_KEY:-$(openssl rand -base64 32)}"
+  local redis_password="${DIFY_REDIS_PASSWORD:-difyredispass}"
   local api_url="https://${subdomain}.${BASE_DOMAIN}/api"
   local web_url="https://${subdomain}.${BASE_DOMAIN}"
   
@@ -63,9 +64,9 @@ EOF
       - DB_DATABASE=dify
       - REDIS_HOST=dify-redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=\${DIFY_REDIS_PASSWORD:-}
+      - REDIS_PASSWORD=${redis_password}
       - REDIS_DB=1
-      - CELERY_BROKER_URL=redis://:\${DIFY_REDIS_PASSWORD:-}@dify-redis:6379/1
+      - CELERY_BROKER_URL=redis://:${redis_password}@dify-redis:6379/1
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
       - VECTOR_STORE=weaviate
@@ -103,9 +104,9 @@ EOF
       - DB_DATABASE=dify
       - REDIS_HOST=dify-redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=\${DIFY_REDIS_PASSWORD:-}
+      - REDIS_PASSWORD=${redis_password}
       - REDIS_DB=1
-      - CELERY_BROKER_URL=redis://:\${DIFY_REDIS_PASSWORD:-}@dify-redis:6379/1
+      - CELERY_BROKER_URL=redis://:${redis_password}@dify-redis:6379/1
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
       - VECTOR_STORE=weaviate
@@ -183,7 +184,7 @@ EOF
     image: redis:6-alpine
     container_name: \${PROJECT_NAME}_dify_redis
     restart: unless-stopped
-    command: redis-server --requirepass \${DIFY_REDIS_PASSWORD:-}
+    command: redis-server --requirepass "${redis_password}"
     volumes:
       - ./.volumes/dify/redis:/data
     networks:
@@ -219,10 +220,18 @@ EOF
     image: ubuntu/squid:latest
     container_name: \${PROJECT_NAME}_dify_ssrf
     restart: unless-stopped
+    environment:
+      - HTTP_PORT=3128
+      - COREDUMP_DIR=/var/spool/squid
+      - REVERSE_PROXY_PORT=8194
+      - SANDBOX_HOST=dify-sandbox
+      - SANDBOX_PORT=8194
     volumes:
       - ./services/dify/ssrf/squid.conf.template:/etc/squid/squid.conf.template
       - ./services/dify/ssrf/docker-entrypoint.sh:/docker-entrypoint-mount.sh
     entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
+    depends_on:
+      - dify-sandbox
     networks:
       - \${DOCKER_NETWORK}
 EOF
