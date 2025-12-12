@@ -58,49 +58,49 @@ DOCKERFILE
 
         echo "Waiting for PostgreSQL to be ready..."
         python -c "
-import time, psycopg2, os
-while True:
-    try:
-        psycopg2.connect(
-            host='postgres',
-            port=5432,
-            user=os.environ['POSTGRES_USER'],
-            password=os.environ['POSTGRES_PASSWORD'],
-            dbname='postgres'
-        )
-        print('PostgreSQL is ready.')
-        break
-    except Exception as e:
-        print(f'Waiting for database... ({e})')
-        time.sleep(2)
-"
+        import time, psycopg2, os
+        while True:
+            try:
+                psycopg2.connect(
+                    host='postgres',
+                    port=5432,
+                    user=os.environ['POSTGRES_USER'],
+                    password=os.environ['POSTGRES_PASSWORD'],
+                    dbname='postgres'
+                )
+                print('PostgreSQL is ready.')
+                break
+            except Exception as e:
+                print(f'Waiting for database... ({e})')
+                time.sleep(2)
+        "
 
         echo "Ensuring MLflow database exists..."
         python -c "
-import psycopg2, os
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-try:
-    conn = psycopg2.connect(
-        host='postgres',
-        port=5432,
-        user=os.environ['POSTGRES_USER'],
-        password=os.environ['POSTGRES_PASSWORD'],
-        dbname='postgres'
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor()
-    cur.execute(\"SELECT 1 FROM pg_database WHERE datname = 'mlflow'\")
-    if not cur.fetchone():
-        print('Creating mlflow database...')
-        cur.execute('CREATE DATABASE mlflow')
-    else:
-        print('Database mlflow already exists.')
-    cur.close()
-    conn.close()
-except Exception as e:
-    print(f'Database check failed: {e}')
-    exit(1)
-"
+        import psycopg2, os
+        from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+        try:
+            conn = psycopg2.connect(
+                host='postgres',
+                port=5432,
+                user=os.environ['POSTGRES_USER'],
+                password=os.environ['POSTGRES_PASSWORD'],
+                dbname='postgres'
+            )
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cur = conn.cursor()
+            cur.execute(\"SELECT 1 FROM pg_database WHERE datname = 'mlflow'\")
+            if not cur.fetchone():
+                print('Creating mlflow database...')
+                cur.execute('CREATE DATABASE mlflow')
+            else:
+                print('Database mlflow already exists.')
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f'Database check failed: {e}')
+            exit(1)
+        "
 
         echo "Running MLflow database migrations..."
         mlflow db upgrade \$\${MLFLOW_BACKEND_STORE_URI}
