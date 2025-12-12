@@ -73,7 +73,8 @@ configure_vite_host() {
           fi
         fi
       fi
-      ;;
+    fi
+    ;;
   esac
 }
 
