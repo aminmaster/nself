@@ -532,7 +532,19 @@ EOF
         fi
     fi
 
-    # 2. Generate External Nginx Proxy
+    # 2. Ensure SSRF Proxy Templates (Strict Compliance)
+    local dify_ssrf_dir="services/dify/ssrf"
+    if [[ ! -f "${dify_ssrf_dir}/squid.conf.template" ]]; then
+        echo "  - Downloading official Dify SSRF templates..."
+        mkdir -p "${dify_ssrf_dir}"
+        local ssrf_base_url="https://raw.githubusercontent.com/langgenius/dify/${dify_version}/docker/ssrf_proxy"
+        
+        curl -s -o "${dify_ssrf_dir}/squid.conf.template" "${ssrf_base_url}/squid.conf.template"
+        curl -s -o "${dify_ssrf_dir}/docker-entrypoint.sh" "${ssrf_base_url}/docker-entrypoint.sh"
+        chmod +x "${dify_ssrf_dir}/docker-entrypoint.sh"
+    fi
+
+    # 3. Generate External Nginx Proxy
     cat > nginx/sites/dify.conf <<EOF
 server {
     listen 443 ssl;

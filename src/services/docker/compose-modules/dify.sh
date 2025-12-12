@@ -220,7 +220,9 @@ EOF
     container_name: \${PROJECT_NAME}_dify_ssrf
     restart: unless-stopped
     volumes:
-      - ./.volumes/dify/ssrf/squid.conf:/etc/squid/squid.conf
+      - ./services/dify/ssrf/squid.conf.template:/etc/squid/squid.conf.template
+      - ./services/dify/ssrf/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+    entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
     networks:
       - \${DOCKER_NETWORK}
 EOF
