@@ -102,9 +102,6 @@ DOCKERFILE
             exit(1)
         "
 
-        echo "Running MLflow database migrations..."
-        mlflow db upgrade \$\${MLFLOW_BACKEND_STORE_URI}
-
         echo "Starting MLflow server..."
         exec mlflow server \
           --backend-store-uri \$\${MLFLOW_BACKEND_STORE_URI} \
