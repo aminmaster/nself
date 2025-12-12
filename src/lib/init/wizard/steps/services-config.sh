@@ -220,6 +220,7 @@ wizard_optional_services() {
       add_wizard_secret "$config_array_name" "PROMETHEUS_BASIC_AUTH_PASSWORD" "$prom_pass"
     fi
 
+    echo ""
     if confirm_action "Enable Grafana dashboards?"; then
       monitoring_services+=("grafana")
       add_wizard_config "$config_array_name" "GRAFANA_ENABLED" "true"
@@ -236,6 +237,7 @@ wizard_optional_services() {
       add_wizard_secret "$config_array_name" "GRAFANA_ADMIN_PASSWORD" "$grafana_pass"
     fi
 
+    echo ""
     if confirm_action "Enable Jaeger tracing?"; then
       monitoring_services+=("jaeger")
       add_wizard_config "$config_array_name" "JAEGER_ENABLED" "true"
