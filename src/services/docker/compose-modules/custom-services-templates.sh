@@ -11,6 +11,12 @@ generate_template_based_service() {
   # Skip if service directory doesn't exist (template not copied)
   [[ ! -d "services/$service_name" ]] && return 0
 
+  # Special handling for multi-container stacks (like Dify) that generate their own headers
+  if [[ "$template_type" == "dify" ]]; then
+      generate_dify_stack "$index" "$service_name" "$service_port"
+      return 0
+  fi
+
   cat <<EOF
 
   # Custom Service ${index}: ${service_name}
@@ -19,10 +25,6 @@ EOF
 
   # Special handling based on template type
   case "$template_type" in
-    dify)
-      generate_dify_stack "$index" "$service_name" "$service_port"
-      return 0
-      ;;
     neo4j)
       cat <<EOF
     image: neo4j:5.26
