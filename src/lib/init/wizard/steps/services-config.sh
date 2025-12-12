@@ -257,6 +257,22 @@ wizard_optional_services() {
   echo "  Track experiments, models, and artifacts"
   if confirm_action "Enable MLflow?"; then
     add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+    
+    echo ""
+    local mlflow_user
+    prompt_input "MLflow Basic Auth User" "admin" mlflow_user
+    add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_USERNAME" "$mlflow_user"
+
+    local mlflow_pass
+    if confirm_action "Use auto-generated password for MLflow?"; then
+      mlflow_pass=$(generate_password 24)
+      echo "Generated: [hidden for security]"
+      echo "(This will be saved in .env.secrets file)"
+    else
+      prompt_password_secret "MLflow Basic Auth Password" mlflow_pass
+    fi
+    add_wizard_secret "$config_array_name" "MLFLOW_BASIC_AUTH_PASSWORD" "$mlflow_pass"
+
     echo ""
     echo "  • Requires PostgreSQL (already enabled)"
     echo "  • Access at: http://localhost:5000"

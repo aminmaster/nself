@@ -63,6 +63,7 @@ run_modular_wizard() {
       if [[ -n "$s_name" && -n "$s_type" ]]; then
         # Check if service directory exists
         if [[ ! -d "services/$s_name" ]]; then
+          echo ""
           echo "  - Generating service: $s_name ($s_type)"
           
           # Standard template approach

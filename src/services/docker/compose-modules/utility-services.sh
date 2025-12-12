@@ -323,7 +323,7 @@ generate_utility_services() {
   generate_functions_service
   generate_mailpit_service
   generate_search_services
-  generate_mlflow_service
+  # generate_mlflow_service # Replaced by generate_mlflow_service_improved
   generate_certbot_service
 }
 

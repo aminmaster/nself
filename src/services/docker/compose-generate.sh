@@ -285,6 +285,7 @@ EOF
     echo "  # Optional Services" >> docker-compose.yml
     echo "  # ============================================" >> docker-compose.yml
     generate_utility_services >> docker-compose.yml
+    generate_mlflow_service_improved >> docker-compose.yml
   fi
 
   # ============================================

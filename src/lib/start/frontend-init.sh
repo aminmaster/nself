@@ -50,13 +50,17 @@ configure_vite_host() {
       fi
       
       if [[ -n "$vite_config" ]]; then
-        printf "   ${COLOR_DIM}Configuring Vite allowed hosts...${COLOR_RESET}\n"
-        
-        # Determine the hostname
-        local hostname="${app_name}.${BASE_DOMAIN:-localhost}"
-        
-        # Check if server block exists
-        if grep -q "server:" "$vite_config"; then
+        # Check if allowedHosts is already configured
+        if grep -q "allowedHosts" "$vite_config"; then
+          printf "   ${COLOR_DIM}Vite allowedHosts already configured, skipping${COLOR_RESET}\n"
+        else
+          printf "   ${COLOR_DIM}Configuring Vite allowed hosts...${COLOR_RESET}\n"
+          
+          # Determine the hostname
+          local hostname="${app_name}.${BASE_DOMAIN:-localhost}"
+          
+          # Check if server block exists
+          if grep -q "server:" "$vite_config"; then
           # Add allowedHosts to existing server block
           sed -i "/server:/a \    allowedHosts: [\"${hostname}\"]," "$vite_config"
         else
