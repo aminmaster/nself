@@ -354,6 +354,7 @@ wizard_custom_services() {
         "neo4j - Neo4j Graph Database"
         "llamaindex - LlamaIndex RAG API"
         "graphiti - Temporal Knowledge Graph (Zep)"
+        "dify - Dify.ai LLM App Platform (Full Stack)"
         "Custom Docker image"
       )
       local selected_type
@@ -367,7 +368,8 @@ wizard_custom_services() {
         4) service_type="neo4j" ;;
         5) service_type="llamaindex" ;;
         6) service_type="graphiti" ;;
-        7)
+        7) service_type="dify" ;;
+        8)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -375,6 +377,7 @@ wizard_custom_services() {
 
       # Prompt for service-specific credentials
       if [[ "$service_type" == "neo4j" ]]; then
+        # ... (neo4j logic unchanged) ...
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "Neo4j Configuration:"
@@ -394,7 +397,28 @@ wizard_custom_services() {
         add_wizard_config "$config_array_name" "NEO4J_USER" "$neo4j_user"
         add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+      elif [[ "$service_type" == "dify" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Dify.ai Configuration (Full Stack):"
+        echo "  • Deploys 11 containers (API, Web, Worker, DB, Redis, Weaviate...)"
+        echo "  • Uses dedicated Postgres 15 and Redis 6"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        
+        local dify_version dify_subdomain dify_secret
+        prompt_input "Dify Version" "1.11.1" dify_version
+        add_wizard_config "$config_array_name" "DIFY_VERSION" "$dify_version"
+
+        prompt_input "Subdomain" "dify" dify_subdomain
+        add_wizard_config "$config_array_name" "DIFY_SUBDOMAIN" "$dify_subdomain"
+
+        # Generate Secret Key
+        dify_secret=$(generate_password 32)
+        add_wizard_secret "$config_array_name" "DIFY_SECRET_KEY" "$dify_secret"
+        
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "llamaindex" ]]; then
+        # ... (rest of logic) ...
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "LlamaIndex Configuration:"

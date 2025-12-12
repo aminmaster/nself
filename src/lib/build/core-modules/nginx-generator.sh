@@ -484,6 +484,82 @@ server {
 EOF
   fi
 
+  # Dify Full Stack Integration
+  # Check for Dify custom service
+  local dify_subdomain=""
+  local dify_version="${DIFY_VERSION:-1.11.1}"
+  
+  if [[ "${DIFY_SUBDOMAIN:-}" ]]; then
+     dify_subdomain="${DIFY_SUBDOMAIN}"
+  fi
+
+  # If not set explicitly, check custom services for type 'dify' to enable it
+  for i in {1..20}; do
+      local cs_var="CUSTOM_SERVICE_${i}"
+      local cs_val="${!cs_var:-}"
+      if [[ "$cs_val" == *":dify"* ]]; then
+          if [[ -z "$dify_subdomain" ]]; then
+              dify_subdomain="dify"
+          fi
+          break
+      fi
+  done
+
+  if [[ -n "$dify_subdomain" ]]; then
+    local base_domain="${BASE_DOMAIN:-localhost}"
+    local dify_service_dir="services/dify/nginx"
+    
+    # 1. Ensure Official Nginx Templates are present (Strict Compliance)
+    if [[ ! -f "${dify_service_dir}/nginx.conf.template" ]]; then
+        echo "  - Downloading official Dify Nginx templates (v${dify_version})..."
+        mkdir -p "${dify_service_dir}/conf.d"
+        local base_url="https://raw.githubusercontent.com/langgenius/dify/${dify_version}/docker/nginx"
+        
+        # Download core templates
+        curl -s -o "${dify_service_dir}/nginx.conf.template" "${base_url}/nginx.conf.template" || echo "Warning: Failed to download nginx.conf.template"
+        curl -s -o "${dify_service_dir}/proxy.conf.template" "${base_url}/proxy.conf.template"
+        curl -s -o "${dify_service_dir}/https.conf.template" "${base_url}/https.conf.template"
+        curl -s -o "${dify_service_dir}/docker-entrypoint.sh" "${base_url}/docker-entrypoint.sh"
+        chmod +x "${dify_service_dir}/docker-entrypoint.sh"
+        
+        # Download conf.d default template configuration
+        curl -s -o "${dify_service_dir}/conf.d/default.conf.template" "${base_url}/conf.d/default.conf.template" || echo "Note: No default.conf.template found, checking default.conf"
+        
+        # Some versions use default.conf directly or different structure.
+        # Let's ensure we have a valid config. If the download failed (404), create a minimal proxy to internal
+        if [[ ! -s "${dify_service_dir}/nginx.conf.template" ]]; then
+             echo "Error: Could not download Dify templates. Falling back to simple proxy mode?"
+        fi
+    fi
+
+    # 2. Generate External Nginx Proxy
+    cat > nginx/sites/dify.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${dify_subdomain}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    # Proxy everything to Dify Internal Nginx
+    location / {
+        proxy_pass http://dify-nginx:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # WebSocket support (for Dify real-time features)
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+  fi
+
   # Monitoring routes
   if [[ "${MONITORING_ENABLED:-false}" == "true" ]]; then
     # Grafana

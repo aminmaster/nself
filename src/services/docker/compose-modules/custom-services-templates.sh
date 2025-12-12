@@ -19,6 +19,10 @@ EOF
 
   # Special handling based on template type
   case "$template_type" in
+    dify)
+      generate_dify_stack "$index" "$service_name" "$service_port"
+      return 0
+      ;;
     neo4j)
       cat <<EOF
     image: neo4j:5.26
