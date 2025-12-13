@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # dify.sh - Dify.ai Full Stack Service Generator
 
-# Generate Dify Stack (11 Containers)
+# Generate Dify Stack (11 Containers -> now 12 with plugin_daemon)
+# Updated to match Dify v1.11.1 Strict Compliance
 generate_dify_stack() {
   local index="$1"
   local service_name="$2" # usually "dify"
@@ -21,6 +22,7 @@ generate_dify_stack() {
   echo "  # ============================================"
 
   # 1. Internal Nginx (Entrypoint)
+  # Needs complete environment variables to avoid syntax errors in templates
   cat <<EOF
   dify-nginx:
     image: nginx:latest
@@ -31,6 +33,11 @@ generate_dify_stack() {
       - NGINX_SSL_PORT=443
       - NGINX_SERVER_NAME=_
       - NGINX_HTTPS_ENABLED=false
+      - NGINX_CLIENT_MAX_BODY_SIZE=100M
+      - NGINX_KEEPALIVE_TIMEOUT=65
+      - NGINX_PROXY_READ_TIMEOUT=3600s
+      - NGINX_PROXY_SEND_TIMEOUT=3600s
+      - NGINX_WORKER_PROCESSES=auto
       - CONSOLE_API_URL=${api_url}
       - APP_API_URL=${api_url}
     volumes:
@@ -44,8 +51,11 @@ generate_dify_stack() {
     depends_on:
       - dify-api
       - dify-web
+      - dify-plugin-daemon
     networks:
-      - \${DOCKER_NETWORK}
+      \${DOCKER_NETWORK}:
+        aliases:
+          - nginx
 EOF
 
   # 2. Dify API
@@ -85,7 +95,9 @@ EOF
       - dify-redis
       - dify-weaviate
     networks:
-      - \${DOCKER_NETWORK}
+      \${DOCKER_NETWORK}:
+        aliases:
+          - api
 EOF
 
   # 3. Dify Worker
@@ -137,7 +149,9 @@ EOF
     depends_on:
       - dify-api
     networks:
-      - \${DOCKER_NETWORK}
+      \${DOCKER_NETWORK}:
+        aliases:
+          - web
 EOF
 
   # 5. Dify Sandbox (Code Execution)
@@ -155,7 +169,38 @@ EOF
       - HTTPS_PROXY=http://dify-ssrf:3128
       - SANDBOX_PORT=8194
     networks:
-      - \${DOCKER_NETWORK}
+      \${DOCKER_NETWORK}:
+        aliases:
+          - sandbox
+EOF
+
+  # NEW: Dify Plugin Daemon (Required for 1.11.x)
+  # Uses shared env vars similar to API
+  cat <<EOF
+  dify-plugin-daemon:
+    image: langgenius/dify-plugin-daemon:0.5.1-local
+    container_name: \${PROJECT_NAME}_dify_plugin_daemon
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=INFO
+      - SECRET_KEY=${secret_key}
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
+      - DB_HOST=dify-db
+      - DB_PORT=5432
+      - DB_DATABASE=dify
+      - SERVER_PORT=5002
+      - PLUGIN_MAX_PACKAGE_SIZE=52428800
+      - PLUGIN_DEBUGGING_HOST=0.0.0.0
+      - PLUGIN_DEBUGGING_PORT=5003
+    volumes:
+      - ./.volumes/dify/plugin_daemon:/app/storage
+    depends_on:
+      - dify-db
+    networks:
+      \${DOCKER_NETWORK}:
+        aliases:
+          - plugin_daemon
 EOF
 
   # 6. Dify DB (Postgres 15 with pgvector)
