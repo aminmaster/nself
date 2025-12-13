@@ -523,10 +523,9 @@ EOF
         chmod +x "${dify_service_dir}/docker-entrypoint.sh"
         
         # Download conf.d default template configuration
-        curl -s -o "${dify_service_dir}/conf.d/default.conf.template" "${base_url}/conf.d/default.conf.template" || echo "Note: No default.conf.template found, checking default.conf"
+        curl -s -o "${dify_service_dir}/conf.d/default.conf.template" "${base_url}/conf.d/default.conf.template"
         
-        # Some versions use default.conf directly or different structure.
-        # Let's ensure we have a valid config. If the download failed (404), create a minimal proxy to internal
+        # Verify core config exists
         if [[ ! -s "${dify_service_dir}/nginx.conf.template" ]]; then
              echo "Error: Could not download Dify templates. Falling back to simple proxy mode?"
         fi
