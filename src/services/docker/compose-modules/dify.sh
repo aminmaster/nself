@@ -198,6 +198,8 @@ EOF
       - PLUGIN_MAX_PACKAGE_SIZE=52428800
       - PLUGIN_DEBUGGING_HOST=0.0.0.0
       - PLUGIN_DEBUGGING_PORT=5003
+      - PLUGIN_REMOTE_INSTALLING_HOST=0.0.0.0
+      - PLUGIN_REMOTE_INSTALLING_PORT=5003
       - FORCE_VERIFYING_SIGNATURE=false
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
