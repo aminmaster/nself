@@ -53,7 +53,7 @@ generate_dify_stack() {
       - dify-web
       - dify-plugin-daemon
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK}:
         aliases:
           - nginx
 EOF
@@ -95,7 +95,7 @@ EOF
       - dify-redis
       - dify-weaviate
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK}:
         aliases:
           - api
 EOF
@@ -149,7 +149,7 @@ EOF
     depends_on:
       - dify-api
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK}:
         aliases:
           - web
 EOF
@@ -169,7 +169,7 @@ EOF
       - HTTPS_PROXY=http://dify-ssrf:3128
       - SANDBOX_PORT=8194
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK}:
         aliases:
           - sandbox
 EOF
@@ -198,7 +198,7 @@ EOF
     depends_on:
       - dify-db
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK}:
         aliases:
           - plugin_daemon
 EOF
