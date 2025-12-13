@@ -200,6 +200,7 @@ EOF
       - PLUGIN_DEBUGGING_PORT=5003
       - PLUGIN_REMOTE_INSTALLING_HOST=0.0.0.0
       - PLUGIN_REMOTE_INSTALLING_PORT=5003
+      - PLUGIN_WORKING_PATH=/app/storage/cwd
       - FORCE_VERIFYING_SIGNATURE=false
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
