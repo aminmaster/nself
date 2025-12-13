@@ -13,6 +13,8 @@ generate_dify_stack() {
   local subdomain="${DIFY_SUBDOMAIN:-dify}"
   local secret_key="${DIFY_SECRET_KEY:-$(openssl rand -base64 32)}"
   local redis_password="${DIFY_REDIS_PASSWORD:-difyredispass}"
+  local plugin_daemon_key="${DIFY_PLUGIN_DAEMON_KEY:-$(openssl rand -base64 32)}"
+  local inner_api_key="${DIFY_INNER_API_KEY:-$(openssl rand -base64 32)}"
   local api_url="https://${subdomain}.${BASE_DOMAIN}/api"
   local web_url="https://${subdomain}.${BASE_DOMAIN}"
   
@@ -190,9 +192,13 @@ EOF
       - DB_PORT=5432
       - DB_DATABASE=dify
       - SERVER_PORT=5002
+      - SERVER_KEY=${plugin_daemon_key}
+      - DIFY_INNER_API_URL=http://dify-api:5001
+      - DIFY_INNER_API_KEY=${inner_api_key}
       - PLUGIN_MAX_PACKAGE_SIZE=52428800
       - PLUGIN_DEBUGGING_HOST=0.0.0.0
       - PLUGIN_DEBUGGING_PORT=5003
+      - FORCE_VERIFYING_SIGNATURE=false
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
     depends_on:
