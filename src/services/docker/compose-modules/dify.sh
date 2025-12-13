@@ -37,9 +37,10 @@ generate_dify_stack() {
       # Mount official templates downloaded by Init script
       - ./services/dify/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
       - ./services/dify/nginx/proxy.conf.template:/etc/nginx/proxy.conf.template
-      - ./services/dify/nginx/docker-entrypoint.sh:/docker-entrypoint.sh
+      - ./services/dify/nginx/https.conf.template:/etc/nginx/https.conf.template
+      - ./services/dify/nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh
       - ./services/dify/nginx/conf.d:/etc/nginx/conf.d
-    entrypoint: [ "sh", "-c", "chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
+    entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
     depends_on:
       - dify-api
       - dify-web
