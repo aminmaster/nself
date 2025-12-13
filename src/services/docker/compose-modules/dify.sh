@@ -191,6 +191,10 @@ EOF
       - DB_HOST=dify-db
       - DB_PORT=5432
       - DB_DATABASE=dify
+      - REDIS_HOST=dify-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${redis_password}
+      - REDIS_DB=1
       - SERVER_PORT=5002
       - SERVER_KEY=${plugin_daemon_key}
       - DIFY_INNER_API_URL=http://dify-api:5001
