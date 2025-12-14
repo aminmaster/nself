@@ -60,6 +60,17 @@ generate_dify_stack() {
           - nginx
 EOF
 
+  # 1.5 Dify Permissions Init (Fix volume ownership)
+  cat <<EOF
+  dify-permissions-init:
+    image: alpine:latest
+    container_name: \${PROJECT_NAME}_dify_permissions_init
+    command: sh -c "mkdir -p /app/api/storage && chown -R 1001:1001 /app/api/storage"
+    volumes:
+      - ./.volumes/dify/storage:/app/api/storage
+    network_mode: none
+EOF
+
   # 2. Dify API
   cat <<EOF
   dify-api:
@@ -99,6 +110,8 @@ EOF
         condition: service_started
       dify-weaviate:
         condition: service_started
+      dify-permissions-init:
+        condition: service_completed_successfully
     networks:
       ${DOCKER_NETWORK}:
         aliases:
@@ -142,6 +155,8 @@ EOF
       - dify-db
       - dify-redis
       - dify-weaviate
+      dify-permissions-init:
+        condition: service_completed_successfully
     networks:
       - \${DOCKER_NETWORK}
 EOF
