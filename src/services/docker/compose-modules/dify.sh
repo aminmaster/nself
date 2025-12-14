@@ -54,7 +54,6 @@ generate_dify_stack() {
       - dify-api
       - dify-web
       - dify-plugin-daemon
-      - dify-plugin-daemon
     networks:
       ${DOCKER_NETWORK}:
         aliases:
