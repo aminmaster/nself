@@ -84,6 +84,8 @@ EOF
       - DB_HOST=dify-db
       - DB_PORT=5432
       - DB_DATABASE=dify
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/api/storage
     command: flask db upgrade
     depends_on:
       dify-db:
