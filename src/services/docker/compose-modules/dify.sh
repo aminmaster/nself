@@ -93,9 +93,12 @@ EOF
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     depends_on:
-      - dify-db
-      - dify-redis
-      - dify-weaviate
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_started
+      dify-weaviate:
+        condition: service_started
     networks:
       ${DOCKER_NETWORK}:
         aliases:
