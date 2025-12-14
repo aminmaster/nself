@@ -152,9 +152,12 @@ EOF
       - ./.volumes/dify/storage:/app/api/storage
     command: /bin/bash /entrypoint.sh python -m celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO
     depends_on:
-      - dify-db
-      - dify-redis
-      - dify-weaviate
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_started
+      dify-weaviate:
+        condition: service_started
       dify-permissions-init:
         condition: service_completed_successfully
     networks:
