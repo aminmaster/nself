@@ -727,6 +727,7 @@ generate_custom_routes() {
     local cs_port="${!cs_port_var:-}"
     local cs_route_var="CS_${i}_ROUTE"
     local cs_route="${!cs_route_var:-}"
+    local template=""
 
     # Fallback to CUSTOM_SERVICE_N parsing
     if [[ -z "$cs_name" ]]; then
