@@ -135,6 +135,8 @@ EOF
         condition: service_started
       dify-permissions-init:
         condition: service_completed_successfully
+      dify-db-migrate:
+        condition: service_completed_successfully
     networks:
       ${DOCKER_NETWORK}:
         aliases:
@@ -184,6 +186,8 @@ EOF
       dify-weaviate:
         condition: service_started
       dify-permissions-init:
+        condition: service_completed_successfully
+      dify-db-migrate:
         condition: service_completed_successfully
     networks:
       - \${DOCKER_NETWORK}
