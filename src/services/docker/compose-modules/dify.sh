@@ -71,6 +71,27 @@ EOF
     network_mode: none
 EOF
 
+  # 1.6 Dify Database Migration (Explicit Schema Init)
+  cat <<EOF
+  dify-db-migrate:
+    image: langgenius/dify-api:${version}
+    container_name: \${PROJECT_NAME}_dify_db_migrate
+    restart: "no"
+    environment:
+      - LOG_LEVEL=INFO
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
+      - DB_HOST=dify-db
+      - DB_PORT=5432
+      - DB_DATABASE=dify
+    command: flask db upgrade
+    depends_on:
+      dify-db:
+        condition: service_healthy
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+
   # 2. Dify API
   cat <<EOF
   dify-api:
