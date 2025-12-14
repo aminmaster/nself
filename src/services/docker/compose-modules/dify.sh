@@ -86,7 +86,7 @@ EOF
       - DB_DATABASE=dify
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
-    command: flask db upgrade
+    entrypoint: ["/bin/bash", "-c", "flask db upgrade"]
     depends_on:
       dify-db:
         condition: service_healthy
