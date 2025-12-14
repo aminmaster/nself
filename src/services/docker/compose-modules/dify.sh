@@ -153,6 +153,7 @@ EOF
       - CONSOLE_API_URL=${api_url}
       - APP_API_URL=${api_url}
       - SENTRY_DSN=
+      - HOSTNAME=0.0.0.0
     depends_on:
       - dify-api
     networks:
@@ -160,7 +161,7 @@ EOF
         aliases:
           - web
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 10s
       retries: 5
