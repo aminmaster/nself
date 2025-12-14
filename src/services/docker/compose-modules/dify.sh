@@ -15,7 +15,7 @@ generate_dify_stack() {
   local redis_password="${DIFY_REDIS_PASSWORD:-difyredispass}"
   local plugin_daemon_key="${DIFY_PLUGIN_DAEMON_KEY:-$(openssl rand -base64 32)}"
   local inner_api_key="${DIFY_INNER_API_KEY:-$(openssl rand -base64 32)}"
-  local api_url="https://${subdomain}.${BASE_DOMAIN}/api"
+  local api_url="https://${subdomain}.${BASE_DOMAIN}"
   local web_url="https://${subdomain}.${BASE_DOMAIN}"
   
   echo ""
