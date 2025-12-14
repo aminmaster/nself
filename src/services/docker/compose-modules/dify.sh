@@ -54,6 +54,7 @@ generate_dify_stack() {
       - dify-api
       - dify-web
       - dify-plugin-daemon
+      - dify-plugin-daemon
     networks:
       ${DOCKER_NETWORK}:
         aliases:
@@ -160,7 +161,7 @@ EOF
         aliases:
           - web
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://$(hostname -i):3000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
