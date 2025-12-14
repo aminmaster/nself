@@ -100,6 +100,11 @@ EOF
       ${DOCKER_NETWORK}:
         aliases:
           - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 EOF
 
   # 3. Dify Worker
@@ -154,6 +159,12 @@ EOF
       ${DOCKER_NETWORK}:
         aliases:
           - web
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 EOF
 
   # 5. Dify Sandbox (Code Execution)
