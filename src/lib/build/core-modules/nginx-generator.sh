@@ -738,6 +738,18 @@ generate_custom_routes() {
         cs_route="${cs_name}"
       fi
     fi
+    
+    # Get template from env var if not set by fallback
+    if [[ -z "$template" ]]; then
+      local template_var="CS_${i}_TEMPLATE"
+      template="${!template_var:-}"
+    fi
+
+    # Skip generic config generation for services that manage their own Nginx config (like Dify)
+    if [[ "$template" == "dify" ]]; then
+      rm -f "nginx/sites/custom-${cs_name}.conf" 2>/dev/null || true
+      continue
+    fi
 
     if [[ -n "$cs_name" ]]; then
       # Check if service is public
