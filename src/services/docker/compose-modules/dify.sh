@@ -270,6 +270,9 @@ EOF
       - PLUGIN_REMOTE_INSTALLING_PORT=5003
       - PLUGIN_WORKING_PATH=/app/storage/cwd
       - FORCE_VERIFYING_SIGNATURE=false
+      - PLUGIN_S3_USE_AWS=false
+      - PLUGIN_DAEMON_PORT=5002
+      - DIFY_BIND_ADDRESS=0.0.0.0
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
     depends_on:
