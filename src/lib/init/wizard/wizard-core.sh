@@ -422,6 +422,17 @@ wizard_custom_services() {
         add_wizard_secret "$config_array_name" "DIFY_REDIS_PASSWORD" "$dify_redis_password"
 
         
+        # Generate Plugin Daemon Key
+        local dify_plugin_key
+        dify_plugin_key=$(generate_password 32)
+        add_wizard_secret "$config_array_name" "DIFY_PLUGIN_DAEMON_KEY" "$dify_plugin_key"
+        add_wizard_secret "$config_array_name" "DIFY_PLUGIN_DAEMON_API_KEY" "$dify_plugin_key"
+        
+        # Generate Inner API Key
+        local dify_inner_key
+        dify_inner_key=$(generate_password 32)
+        add_wizard_secret "$config_array_name" "DIFY_INNER_API_KEY" "$dify_inner_key"
+        
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "llamaindex" ]]; then
         # ... (rest of logic) ...
