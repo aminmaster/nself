@@ -65,9 +65,10 @@ EOF
   dify-permissions-init:
     image: alpine:latest
     container_name: \${PROJECT_NAME}_dify_permissions_init
-    command: sh -c "mkdir -p /app/api/storage && chown -R 1001:1001 /app/api/storage"
+    command: sh -c "mkdir -p /app/api/storage /app/daemon_storage && chown -R 1001:1001 /app/api/storage /app/daemon_storage"
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
+      - ./.volumes/dify/plugin_daemon:/app/daemon_storage
     network_mode: none
 EOF
 
