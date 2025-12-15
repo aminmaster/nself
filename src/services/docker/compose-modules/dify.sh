@@ -123,9 +123,9 @@ EOF
       - CONSOLE_WEB_URL=${web_url}
       - SERVICE_API_URL=${api_url}
       - APP_API_URL=${api_url}
-      - APP_API_URL=${api_url}
       - APP_WEB_URL=${web_url}
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5003
+      - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     depends_on:
@@ -174,9 +174,9 @@ EOF
       - STORAGE_LOCAL_PATH=/app/api/storage
       - VECTOR_STORE=weaviate
       - WEAVIATE_ENDPOINT=http://dify-weaviate:8080
-      - WEAVIATE_ENDPOINT=http://dify-weaviate:8080
       - WEAVIATE_API_KEY=\${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5003
+      - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     command: /bin/bash /entrypoint.sh python -m celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO
