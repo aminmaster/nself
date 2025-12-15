@@ -416,6 +416,12 @@ wizard_custom_services() {
         dify_secret=$(generate_password 32)
         add_wizard_secret "$config_array_name" "DIFY_SECRET_KEY" "$dify_secret"
         
+        # Generate Redis Password
+        local dify_redis_password
+        dify_redis_password=$(generate_password 24)
+        add_wizard_secret "$config_array_name" "DIFY_REDIS_PASSWORD" "$dify_redis_password"
+
+        
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       elif [[ "$service_type" == "llamaindex" ]]; then
         # ... (rest of logic) ...
