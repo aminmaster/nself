@@ -128,6 +128,7 @@ EOF
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
+      - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     depends_on:
@@ -180,6 +181,7 @@ EOF
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
+      - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     command: /bin/bash /entrypoint.sh python -m celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO
