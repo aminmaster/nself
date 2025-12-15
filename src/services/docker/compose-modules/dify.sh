@@ -126,6 +126,7 @@ EOF
       - APP_API_URL=${api_url}
       - APP_WEB_URL=${web_url}
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
+      - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
@@ -177,6 +178,7 @@ EOF
       - WEAVIATE_ENDPOINT=http://dify-weaviate:8080
       - WEAVIATE_API_KEY=\${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
+      - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
