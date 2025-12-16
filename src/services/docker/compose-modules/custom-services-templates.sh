@@ -120,7 +120,7 @@ EOF
       - NEO4J_USER=\${NEO4J_USER:-neo4j}
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
       - OPENAI_API_KEY=\${OPENAI_API_KEY}
-      - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-memory}
+      - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-neo4j}
 EOF
   fi
 
@@ -133,7 +133,7 @@ EOF
   
   case "$template_type" in
     # Pre-built AI service images - NO host /app mount
-    graphrag|graph-builder)
+    graphrag|graph-builder|graphiti)
       volume_mode="prebuilt"
       ;;
     # Database-like services with specific volume paths
