@@ -355,6 +355,7 @@ wizard_custom_services() {
         "llamaindex - LlamaIndex RAG API"
         "graphiti - Temporal Knowledge Graph (Zep)"
         "dify - Dify.ai LLM App Platform (Full Stack)"
+        "mnemosyne - KBA Memory Engine (Zep-based)"
         "Custom Docker image"
       )
       local selected_type
@@ -369,7 +370,8 @@ wizard_custom_services() {
         5) service_type="llamaindex" ;;
         6) service_type="graphiti" ;;
         7) service_type="dify" ;;
-        8)
+        8) service_type="mnemosyne" ;;
+        9)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
@@ -496,6 +498,35 @@ wizard_custom_services() {
           fi
         fi
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+      elif [[ "$service_type" == "mnemosyne" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Mnemosyne Configuration:"
+        echo "  • Memory & Context Engine (replaces Zep)"
+        echo "  • Requires Neo4j and Redis"
+        echo "  • Will be built from 'src/templates/services/py/mnemosyne'"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        # Check Neo4j
+        local has_neo4j=false
+        eval "local cfg_items=(\"\${${config_array_name}[@]}\")"
+        for cfg_item in "${cfg_items[@]}"; do
+          if [[ "$cfg_item" == *":neo4j:"* ]]; then
+            has_neo4j=true
+            break
+          fi
+        done
+        if [[ "$has_neo4j" == "false" ]]; then
+          echo ""
+          echo "⚠️  Neo4j not yet configured. Mnemosyne requires Neo4j."
+          if confirm_action "Add Neo4j service automatically?"; then
+            local neo4j_password
+            neo4j_password=$(generate_password 24)
+            add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
+            add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+            add_wizard_config "$config_array_name" "CUSTOM_SERVICE_$((service_count + 1))" "graph:neo4j:7474"
+          fi
+        fi
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       fi
 
       # Service-specific default ports
@@ -505,6 +536,7 @@ wizard_custom_services() {
 
         graphiti) default_port=8000 ;;
         llamaindex) default_port=8000 ;;
+        mnemosyne) default_port=8090 ;;
         *) default_port=$((8000 + service_count)) ;;
       esac
 
