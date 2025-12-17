@@ -35,6 +35,16 @@ EOF
 EOF
       ;;
 
+    graphiti)
+      cat <<EOF
+    image: zepai/graphiti:latest
+    container_name: \${PROJECT_NAME}_${service_name}
+    restart: unless-stopped
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+      ;;
+
     *)
       # Standard buildable service
       cat <<EOF
