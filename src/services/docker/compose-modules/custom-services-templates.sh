@@ -131,6 +131,9 @@ EOF
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
       - OPENAI_API_KEY=\${OPENAI_API_KEY}
       - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-neo4j}
+      - GRAPH_DRIVER_TYPE=falkordb
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
 EOF
   fi
 
@@ -295,23 +298,11 @@ EOF
       start_period: 60s
 EOF
         ;;
-      graphiti)
-        # Graphiti uses /healthcheck
-        # Inject FalkorDB vars if needed (or just add them always as optional)
+      falkordb)
+        # FalkorDB Healthcheck (Redis Protocol)
         cat <<EOF
-    environment:
-      - NEO4J_URI=\${NEO4J_URI:-bolt://neo4j:7687}
-      - NEO4J_USER=\${NEO4J_USER:-neo4j}
-      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
-      - OPENAI_API_KEY=\${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY}
-      - GRAPH_DRIVER_TYPE=falkordb
-      - FALKORDB_HOST=falkordb
-      - FALKORDB_PORT=6379
-      - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-neo4j}
-      - PORT=\${service_port}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthcheck"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
