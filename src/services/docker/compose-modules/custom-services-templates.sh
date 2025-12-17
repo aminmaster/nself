@@ -143,8 +143,14 @@ EOF
   
   case "$template_type" in
     # Pre-built AI service images - NO host /app mount
-    graphrag|graph-builder|graphiti)
+    graphrag|graph-builder)
       volume_mode="prebuilt"
+      ;;
+    falkordb)
+      # FalkorDB is a database service using prebuilt image
+      image="falkordb/falkordb:latest"
+      volume_mode="prebuilt"
+      restart="always"
       ;;
     # Database-like services with specific volume paths
     neo4j|redis-stack)
@@ -277,6 +283,29 @@ EOF
       graphiti)
         # Graphiti uses /healthcheck
         cat <<EOF
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
+        ;;
+      graphiti)
+        # Graphiti uses /healthcheck
+        # Inject FalkorDB vars if needed (or just add them always as optional)
+        cat <<EOF
+    environment:
+      - NEO4J_URI=\${NEO4J_URI:-bolt://neo4j:7687}
+      - NEO4J_USER=\${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
+      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=\${ANTHROPIC_API_KEY}
+      - GRAPH_DRIVER_TYPE=falkordb
+      - FALKORDB_HOST=falkordb
+      - FALKORDB_PORT=6379
+      - GRAPHITI_DATABASE=\${GRAPHITI_DATABASE:-neo4j}
+      - PORT=\${service_port}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthcheck"]
       interval: 30s
