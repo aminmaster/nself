@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  ${SERVICE_NAME}:
+    container_name: ${PROJECT_NAME}_${SERVICE_NAME}
+    hostname: ${SERVICE_NAME}
+    restart: always
+    networks:
+      - default_network
+    ports:
+      - "${PORT}:6379"
