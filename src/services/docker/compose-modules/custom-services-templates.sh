@@ -152,6 +152,10 @@ EOF
       volume_mode="prebuilt"
       restart="always"
       ;;
+    graphiti)
+      # Build from source, but treat as prebuilt (no code mount)
+      volume_mode="prebuilt"
+      ;;
     # Database-like services with specific volume paths
     neo4j|redis-stack)
       volume_mode="named"

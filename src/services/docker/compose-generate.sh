@@ -245,7 +245,7 @@ EOF
     
     # Pre-built AI service templates need data volumes
     case "$template_type" in
-      graphrag|graph-builder|falkordb)
+      graphrag|graph-builder|falkordb|graphiti)
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
     esac
