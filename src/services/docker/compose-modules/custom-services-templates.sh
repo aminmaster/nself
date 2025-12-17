@@ -275,10 +275,10 @@ EOF
 EOF
         ;;
       graphiti)
-        # Graphiti uses /healthz
+        # Graphiti uses /healthcheck
         cat <<EOF
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:${service_port}/healthcheck"]
       interval: 30s
       timeout: 10s
       retries: 5
