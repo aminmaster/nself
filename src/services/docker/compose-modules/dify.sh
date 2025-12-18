@@ -366,7 +366,7 @@ EOF
     networks:
       - \${DOCKER_NETWORK}
 EOF
-}
+
   # 10. Graphiti (Knowledge Graph API)
   cat <<EOF
   dify-graphiti:
