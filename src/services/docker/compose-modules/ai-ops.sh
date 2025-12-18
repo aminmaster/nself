@@ -97,6 +97,22 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
 
+  # 1.7 Create MLflow Database
+  cat <<EOF
+  aio-db-init-mlflow:
+    image: postgres:15-alpine
+    container_name: \${PROJECT_NAME}_aio_db_init_mlflow
+    restart: "no"
+    environment:
+      - PGPASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
+    command: psql -h aio-db -U postgres -d postgres -c "SELECT 'CREATE DATABASE mlflow' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mlflow')\gexec"
+    depends_on:
+      aio-db:
+        condition: service_healthy
+    networks:
+      - \${DOCKER_NETWORK}
+EOF
+
   # 2. Dify API
   cat <<EOF
   aio-dify-api:
@@ -461,16 +477,18 @@ EOF
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
     environment:
-      - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:\${POSTGRES_PASSWORD}@aio-db:5432/mlflow
+      - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}@aio-db:5432/mlflow
       - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
       - MLFLOW_HOST=0.0.0.0
       - MLFLOW_PORT=5000
-    command: mlflow server --backend-store-uri postgresql://postgres:\${POSTGRES_PASSWORD}@aio-db:5432/mlflow --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000 --serve-artifacts
+    command: mlflow server --backend-store-uri postgresql://postgres:\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}@aio-db:5432/mlflow --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000 --serve-artifacts
     volumes:
       - ./.volumes/${service_name}/mlflow/artifacts:/mlflow/artifacts
     depends_on:
       aio-db:
         condition: service_healthy
+      aio-db-init-mlflow:
+        condition: service_completed_successfully
     networks:
       ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
