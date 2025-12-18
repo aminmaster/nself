@@ -90,41 +90,41 @@ EOF
       - DB_DATABASE=dify
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
-    command: >
-      /bin/bash -c "
-        echo '1. Setting Permissions...' &&
-        mkdir -p /app/api/storage /app/daemon_storage/cwd /app/daemon_storage/archives &&
-        chown -R 1001:1001 /app/api/storage /app/daemon_storage &&
-        
-        echo '2. Waiting for Database...' &&
-        while ! nc -z aio-db 5432; do sleep 1; done &&
-        
-        echo '3. Initializing MLFlow Database...' &&
-        python3 -c \\\"
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-try:
-    conn = psycopg2.connect(dbname='postgres', user='postgres', password='\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}', host='aio-db', port=5432)
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor()
-    cur.execute('SELECT 1 FROM pg_database WHERE datname=\\\\\\'mlflow\\\\\\'')
-    if not cur.fetchone():
-        print('Creating database mlflow...')
-        cur.execute('CREATE DATABASE mlflow')
-    else:
-        print('Database mlflow already exists.')
-    cur.close()
-    conn.close()
-except Exception as e:
-    print(f'Error initializing MLFlow DB: {e}')
-    exit(1)
-        \\\" &&
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        echo "1. Setting Permissions..."
+        mkdir -p /app/api/storage /app/daemon_storage/cwd /app/daemon_storage/archives
+        chown -R 1001:1001 /app/api/storage /app/daemon_storage
 
-        echo '4. Running Dify Migrations...' &&
-        flask db upgrade &&
-        
-        echo 'All initialization tasks completed.'
-      "
+        echo "2. Waiting for Database..."
+        while ! nc -z aio-db 5432; do sleep 1; done
+
+        echo "3. Initializing MLFlow Database..."
+        python3 -c 'import psycopg2; from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT;
+        try:
+            conn = psycopg2.connect(dbname="postgres", user="postgres", password="\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}", host="aio-db", port=5432);
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT);
+            cur = conn.cursor();
+            cur.execute("SELECT 1 FROM pg_database WHERE datnameStr = \"mlflow\"");
+            cur.execute("SELECT 1 FROM pg_database WHERE datname = \"mlflow\"");
+            if not cur.fetchone():
+                print("Creating database mlflow...");
+                cur.execute("CREATE DATABASE mlflow");
+            else:
+                print("Database mlflow already exists.");
+            cur.close();
+            conn.close();
+        except Exception as e:
+            print(f"Error initializing MLFlow DB: {e}");
+            exit(1);'
+
+        echo "4. Running Dify Migrations..."
+        flask db upgrade
+
+        echo "All initialization tasks completed."
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
       - ./.volumes/${service_name}/plugin_daemon:/app/daemon_storage
