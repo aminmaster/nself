@@ -508,7 +508,7 @@ EOF
           - mlflow
           - dify-mlflow
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health').raise_for_status()"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -984,7 +984,7 @@ EOF
         aliases:
           - mlflow
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health').raise_for_status()"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
       timeout: 10s
       retries: 5
