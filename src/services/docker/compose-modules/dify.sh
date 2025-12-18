@@ -443,6 +443,36 @@ EOF
       retries: 10
       start_period: 60s
 EOF
+
+  # 13. MLFlow (Model Lifecycle)
+  # Uses the standard MLFlow image but mounts volume for artifacts
+  cat <<EOF
+  dify-mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: \${PROJECT_NAME}_dify_mlflow
+    restart: unless-stopped
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:\${POSTGRES_PASSWORD}@dify-db:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+      - MLFLOW_HOST=0.0.0.0
+      - MLFLOW_PORT=5000
+    command: mlflow server --backend-store-uri postgresql://postgres:\${POSTGRES_PASSWORD}@dify-db:5432/mlflow --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000 --serve-artifacts
+    volumes:
+      - ./.volumes/dify/mlflow/artifacts:/mlflow/artifacts
+    depends_on:
+      dify-db:
+        condition: service_healthy
+    networks:
+      ${DOCKER_NETWORK}:
+        aliases:
+          - mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
 }
 
 

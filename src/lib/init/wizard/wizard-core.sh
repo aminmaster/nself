@@ -351,10 +351,7 @@ wizard_custom_services() {
         "fastapi - Python FastAPI"
         "bullmq-js - BullMQ job processor"
         "grpc - gRPC service"
-        "neo4j - Neo4j Graph Database"
-        "llamaindex - LlamaIndex RAG API"
-        "graphiti - Temporal Knowledge Graph (Zep)"
-        "dify - Dify.ai LLM App Platform (Full Stack)"
+        "ai-ops - AI Operating System (Dify + Graphiti + Knowledge Graph)"
         "Custom Docker image"
       )
       local selected_type
@@ -365,44 +362,23 @@ wizard_custom_services() {
         1) service_type="fastapi" ;;
         2) service_type="bullmq-js" ;;
         3) service_type="grpc" ;;
-        4) service_type="neo4j" ;;
-        5) service_type="llamaindex" ;;
-        6) service_type="graphiti" ;;
-        7) service_type="dify" ;;
-        8)
+        4) service_type="ai-ops" ;;
+        5)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
       esac
 
       # Prompt for service-specific credentials
-      if [[ "$service_type" == "neo4j" ]]; then
-        # ... (neo4j logic unchanged) ...
+      if [[ "$service_type" == "ai-ops" ]]; then
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Neo4j Configuration:"
-        echo "  • Graph database for knowledge graphs"
-        echo "  • API keys will be prompted in Model Providers step"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        local neo4j_user neo4j_password
-        prompt_input "Neo4j username" "neo4j" neo4j_user
-        
-        if confirm_action "Use auto-generated password?"; then
-          neo4j_password=$(generate_password 24)
-          echo "Generated: [hidden for security]"
-        else
-          prompt_password "Neo4j password" neo4j_password
-        fi
-        
-        add_wizard_config "$config_array_name" "NEO4J_USER" "$neo4j_user"
-        add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "dify" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Dify.ai Configuration (Full Stack):"
-        echo "  • Deploys 11 containers (API, Web, Worker, DB, Redis, Weaviate...)"
-        echo "  • Uses dedicated Postgres 15 and Redis 6"
+        echo "AI Operating System Configuration:"
+        echo "  • Core: Dify.ai (Agent Platform)"
+        echo "  • Memory: Graphiti + FalkorDB (Temporal Graph)"
+        echo "  • Knowledge: Neo4j (Static Graph)"
+        echo "  • Ops: MLFlow (Model Registry)"
+        echo "  • Deploys 16+ coordinated containers"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         
         local dify_version dify_subdomain dify_secret
@@ -420,7 +396,6 @@ wizard_custom_services() {
         local dify_redis_password
         dify_redis_password=$(generate_password 24)
         add_wizard_secret "$config_array_name" "DIFY_REDIS_PASSWORD" "$dify_redis_password"
-
         
         # Generate Plugin Daemon Key
         local dify_plugin_key
@@ -433,68 +408,16 @@ wizard_custom_services() {
         dify_inner_key=$(generate_password 32)
         add_wizard_secret "$config_array_name" "DIFY_INNER_API_KEY" "$dify_inner_key"
         
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "llamaindex" ]]; then
-        # ... (rest of logic) ...
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "LlamaIndex Configuration:"
-        echo "  • RAG API for document Q&A"
-        echo "  • API keys will be prompted in Model Providers step"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        # Check if Neo4j is already selected
-        local has_neo4j=false
-        eval "local cfg_items=(\"\${${config_array_name}[@]}\")"
-        for cfg_item in "${cfg_items[@]}"; do
-          if [[ "$cfg_item" == *":neo4j:"* ]]; then
-            has_neo4j=true
-            break
-          fi
-        done
-        if [[ "$has_neo4j" == "false" ]]; then
-          echo ""
-          echo "⚠️  Neo4j not yet configured. LLM Graph Builder requires Neo4j."
-          if confirm_action "Add Neo4j service automatically?"; then
-            local neo4j_password
-            neo4j_password=$(generate_password 24)
-            add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
-            add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
-            add_wizard_config "$config_array_name" "CUSTOM_SERVICE_$((service_count + 1))" "graph:neo4j:7474"
-            echo "✓ Neo4j added as 'graph' service"
-          fi
-        fi
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-      elif [[ "$service_type" == "graphiti" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Graphiti Configuration:"
-        echo "  • Requires Neo4j database"
-        echo "  • Requires OpenAI API key (will be prompted in Model Providers step)"
-        echo "  • Will be built from custom template (FastAPI + Graphiti)"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        # Check if Neo4j is already selected
-        local has_neo4j=false
-        eval "local cfg_items=(\"\${${config_array_name}[@]}\")"
-        for cfg_item in "${cfg_items[@]}"; do
-          if [[ "$cfg_item" == *":neo4j:"* ]]; then
-            has_neo4j=true
-            break
-          fi
-        done
-        if [[ "$has_neo4j" == "false" ]]; then
-          echo ""
-          echo "⚠️  Neo4j not yet configured. Graphiti requires Neo4j."
-          if confirm_action "Add Neo4j service automatically?"; then
-            local neo4j_password
-            neo4j_password=$(generate_password 24)
-            add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
-            add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
-            add_wizard_config "$config_array_name" "CUSTOM_SERVICE_$((service_count + 1))" "graph:neo4j:7474"
-            echo "✓ Neo4j added as 'graph' service"
-          fi
-        fi
+        # Neo4j Credentials
+        local neo4j_password
+        neo4j_password=$(generate_password 24)
+        add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
+        add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
+
+        # MLFlow Config (Auto-Enable)
+        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+        add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
+
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
       fi
 
