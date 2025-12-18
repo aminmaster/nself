@@ -367,5 +367,83 @@ EOF
       - \${DOCKER_NETWORK}
 EOF
 }
+  # 10. Graphiti (Knowledge Graph API)
+  cat <<EOF
+  dify-graphiti:
+    image: zepai/graphiti:latest
+    container_name: \${PROJECT_NAME}_dify_graphiti
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      - NEO4J_URI=bolt://dify-neo4j:7687
+      - NEO4J_USER=\${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=\${NEO4J_PASSWORD}
+      - GRAPHITI_DATABASE=neo4j
+      - GRAPH_DRIVER_TYPE=falkordb
+      - FALKORDB_HOST=dify-falkordb
+      - FALKORDB_PORT=6379
+    volumes:
+      - ./.volumes/dify/graphiti/data:/app/data
+    depends_on:
+      - dify-neo4j
+      - dify-falkordb
+    networks:
+      ${DOCKER_NETWORK}:
+        aliases:
+          - graphiti
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
+
+  # 11. FalkorDB (User Memory Graph)
+  cat <<EOF
+  dify-falkordb:
+    image: falkordb/falkordb:latest
+    container_name: \${PROJECT_NAME}_dify_falkordb
+    restart: unless-stopped
+    volumes:
+      - ./.volumes/dify/falkordb/data:/data
+    networks:
+      - \${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+EOF
+
+  # 12. Neo4j (Static Knowledge Graph)
+  cat <<EOF
+  dify-neo4j:
+    image: neo4j:5.26
+    container_name: \${PROJECT_NAME}_dify_neo4j
+    restart: unless-stopped
+    environment:
+      - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD}
+      - NEO4J_dbms_memory_pagecache_size=512m
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1G
+    volumes:
+      - ./.volumes/dify/neo4j/data:/data
+      - ./.volumes/dify/neo4j/logs:/logs
+      - ./.volumes/dify/neo4j/import:/var/lib/neo4j/import
+      - ./.volumes/dify/neo4j/plugins:/plugins
+    networks:
+      - \${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+EOF
+}
+
 
 export -f generate_dify_stack
