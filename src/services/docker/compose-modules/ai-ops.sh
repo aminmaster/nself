@@ -105,7 +105,7 @@ EOF
     restart: "no"
     environment:
       - PGPASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
-    command: psql -h aio-db -U postgres -d postgres -c "SELECT 'CREATE DATABASE mlflow' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mlflow')\gexec"
+    command: sh -c "createdb -h aio-db -U postgres mlflow || echo 'Database mlflow already exists or creation failed'"
     depends_on:
       aio-db:
         condition: service_healthy
