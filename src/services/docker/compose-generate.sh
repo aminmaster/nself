@@ -289,7 +289,11 @@ EOF
     echo "  # Optional Services" >> docker-compose.yml
     echo "  # ============================================" >> docker-compose.yml
     generate_utility_services >> docker-compose.yml
-    generate_mlflow_service_improved >> docker-compose.yml
+    
+    # Only generate standalone MLFlow if not part of Dify/AI-Ops stack
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "${DIFY_STACK_PRESENT:-false}" != "true" ]]; then
+      generate_mlflow_service_improved >> docker-compose.yml
+    fi
   fi
 
   # ============================================
