@@ -90,6 +90,7 @@ EOF
       - DB_DATABASE=dify
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
+    entrypoint: []
     command:
       - /bin/bash
       - -c
