@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     neo4j_password: str | None = Field(None)
     falkordb_host: str = 'falkordb'
     falkordb_port: int = 6379
-    graph_driver_type: str = 'neo4j'
+    graph_driver_type: str = 'falkordb'
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
