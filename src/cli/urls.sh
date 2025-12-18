@@ -157,7 +157,7 @@ check_route_conflicts() {
     fi
 
     if [[ "${MINIO_ENABLED:-false}" == "true" ]]; then
-        local route="${STORAGE_CONSOLE_ROUTE:-storage-console}"
+        local route="${STORAGE_CONSOLE_ROUTE:-minio}"
         route="${route%%.*}"
         add_route "$route" "MinIO Console"
     fi
@@ -368,7 +368,7 @@ output_table() {
     fi
 
     if [[ "${MINIO_ENABLED:-false}" == "true" ]]; then
-        local minio_console="${STORAGE_CONSOLE_ROUTE:-storage-console}"
+        local minio_console="${STORAGE_CONSOLE_ROUTE:-minio}"
         echo -e "  MinIO Console:  ${COLOR_GREEN}${protocol}://${minio_console}.${domain}${COLOR_RESET}"
         has_optional=true
     fi
@@ -420,7 +420,18 @@ output_table() {
     fi
 
     # ML
-    if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+    # ML (Skip if AI-OPS is present as it includes MLFlow)
+    local aio_present=false
+    for i in {1..10}; do
+        local cs_v="CS_${i}"
+        local cs_val="${!cs_v:-${!CUSTOM_SERVICE_${i}:-}}" # Fallback inline
+        if [[ "$cs_val" == *":ai-ops"* ]]; then
+            aio_present=true
+            break
+        fi
+    done
+
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$aio_present" == "false" ]]; then
         local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
         echo -e "  MLflow:         ${COLOR_GREEN}${protocol}://${mlflow_route}.${domain}${COLOR_RESET}"
         has_optional=true
@@ -491,6 +502,15 @@ output_table() {
                 # Pad service name for alignment
                 local padded_name=$(printf "%-15s" "$service_name:")
                 echo -e "  ${padded_name} ${COLOR_GREEN}${protocol}://${route}.${domain}${COLOR_RESET} ${COLOR_GRAY}(${template})${COLOR_RESET}"
+                
+                # Expand AI-OPS details
+                if [[ "$template" == "ai-ops" ]]; then
+                   local dify_sub="${DIFY_SUBDOMAIN:-dify}"
+                   echo -e "    ├─ Dify:       ${COLOR_GREEN}${protocol}://${dify_sub}.${domain}${COLOR_RESET}"
+                   echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
+                   echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
+                   echo -e "    └─ Neo4j:      ${COLOR_GREEN}${protocol}://neo4j.${domain}${COLOR_RESET}"
+                fi
             elif [[ "$show_all" == "true" ]]; then
                 local padded_name=$(printf "%-15s" "$service_name:")
                 echo -e "  ${padded_name} ${COLOR_GRAY}Internal only - port ${port}${COLOR_RESET}"

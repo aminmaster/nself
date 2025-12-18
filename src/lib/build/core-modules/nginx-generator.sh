@@ -283,7 +283,7 @@ EOF
   fi
 
   # Storage/MinIO route
-    local storage_console_route="${STORAGE_CONSOLE_ROUTE:-storage-console}"
+    local storage_console_route="${STORAGE_CONSOLE_ROUTE:-minio}"
     local storage_route="${STORAGE_ROUTE:-storage}"
     local base_domain="${BASE_DOMAIN:-localhost}"
 
@@ -492,9 +492,10 @@ server {
         ${auth_config}
         proxy_pass http://mlflow:5005;
         proxy_http_version 1.1;
-        proxy_set_header Host localhost;
+        proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
@@ -652,6 +653,7 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
@@ -834,8 +836,8 @@ generate_custom_routes() {
       template="${!template_var:-}"
     fi
 
-    # Skip generic config generation for services that manage their own Nginx config (like Dify)
-    if [[ "$template" == "dify" ]]; then
+    # Skip generic config generation for services that manage their own Nginx config
+    if [[ "$template" == "dify" ]] || [[ "$template" == "ai-ops" ]]; then
       rm -f "nginx/sites/custom-${cs_name}.conf" 2>/dev/null || true
       continue
     fi
