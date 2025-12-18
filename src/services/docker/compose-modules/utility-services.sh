@@ -179,7 +179,7 @@ generate_rabbitmq_service() {
       - "\${RABBITMQ_PORT:-5672}:5672"
       - "\${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
       interval: 30s
       timeout: 10s
       retries: 5

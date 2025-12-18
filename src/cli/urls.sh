@@ -424,7 +424,14 @@ output_table() {
     local aio_present=false
     for i in {1..10}; do
         local cs_v="CS_${i}"
-        local cs_val="${!cs_v:-${!CUSTOM_SERVICE_${i}:-}}" # Fallback inline
+        local cs_val="${!cs_v:-}"
+        
+        # Fallback to CUSTOM_SERVICE_N
+        if [[ -z "$cs_val" ]]; then
+            local custom_var="CUSTOM_SERVICE_${i}"
+            cs_val="${!custom_var:-}"
+        fi
+
         if [[ "$cs_val" == *":ai-ops"* ]]; then
             aio_present=true
             break
