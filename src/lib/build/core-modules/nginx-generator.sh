@@ -135,8 +135,8 @@ generate_stream_routes() {
     if [[ "$template_type" == "neo4j" ]] || [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
         # For ai-ops/dify, the service name for Neo4j is likely fixed or aliased, but we use the main service name for the stream file
         if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
-           # AI-OPS uses dify-neo4j container
-           cs_name="dify-neo4j"
+           # AI-OPS uses aio-neo4j container (updated from dify-neo4j)
+           cs_name="aio-neo4j"
         fi
         if [[ "$services_found" == "false" ]]; then
             echo "Generating Nginx stream routes..."
@@ -575,7 +575,7 @@ server {
 
     # Proxy everything to Dify Internal Nginx
     location / {
-        proxy_pass http://dify-nginx:80;
+        proxy_pass http://aio-dify-nginx:80;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -603,7 +603,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://dify-graphiti:8000;
+        proxy_pass http://aio-graphiti:8000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -624,7 +624,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://dify-neo4j:7474;
+        proxy_pass http://aio-neo4j:7474;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -647,7 +647,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://dify-mlflow:5000;
+        proxy_pass http://aio-mlflow:5000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
