@@ -22,7 +22,18 @@ generate_aio_stack() {
   echo "  # ============================================"
   echo "  # AI Operating System (AIO) Stack"
   echo "  # Includes: Dify v${version}, Graphiti, Neo4j, FalkorDB, MLFlow"
+  echo "  # Includes: Dify v${version}, Graphiti, Neo4j, FalkorDB, MLFlow"
   echo "  # ============================================"
+
+  # Ensure MLFlow Dockerfile exists (required for Postgres support)
+  local mlflow_dir="./services/${service_name}/mlflow"
+  mkdir -p "$mlflow_dir"
+  if [[ ! -f "$mlflow_dir/Dockerfile" ]]; then
+      cat > "$mlflow_dir/Dockerfile" <<DOCKERFILE
+FROM ghcr.io/mlflow/mlflow:latest
+RUN pip install psycopg2-binary
+DOCKERFILE
+  fi
 
   # 1. AIO Dify Nginx (Entrypoint/Gateway)
   cat <<EOF
@@ -473,7 +484,9 @@ EOF
   # 13. AIO MLFlow
   cat <<EOF
   aio-mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    build:
+      context: ./services/${service_name}/mlflow
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
     environment:
