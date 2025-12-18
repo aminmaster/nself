@@ -96,14 +96,17 @@ EOF
       - -c
       - |
         set -e
-        echo "1. Setting Permissions..."
+        echo "1. Installing Dependencies..."
+        apt-get update && apt-get install -y netcat-openbsd
+
+        echo "2. Setting Permissions..."
         mkdir -p /app/api/storage /app/daemon_storage/cwd /app/daemon_storage/archives
         chown -R 1001:1001 /app/api/storage /app/daemon_storage
 
-        echo "2. Waiting for Database..."
+        echo "3. Waiting for Database..."
         while ! nc -z aio-db 5432; do sleep 1; done
 
-        echo "3. Initializing MLFlow Database..."
+        echo "4. Initializing MLFlow Database..."
         python3 -c 'import psycopg2; from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT;
         try:
             conn = psycopg2.connect(dbname="postgres", user="postgres", password="\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}", host="aio-db", port=5432);
