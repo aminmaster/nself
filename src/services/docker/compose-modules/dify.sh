@@ -389,7 +389,7 @@ EOF
       - dify-neo4j
       - dify-falkordb
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - graphiti
     healthcheck:
@@ -463,7 +463,7 @@ EOF
       dify-db:
         condition: service_healthy
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - mlflow
     healthcheck:
