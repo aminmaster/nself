@@ -493,11 +493,14 @@ EOF
      dify_subdomain="${DIFY_SUBDOMAIN}"
   fi
 
-  # If not set explicitly, check custom services for type 'dify' to enable it
+  local dify_service_name="dify"
+  # If not set explicitly, check custom services for type 'dify' or 'ai-ops' to enable it
   for i in {1..20}; do
       local cs_var="CUSTOM_SERVICE_${i}"
       local cs_val="${!cs_var:-}"
-      if [[ "$cs_val" == *":dify"* ]]; then
+      if [[ "$cs_val" == *":dify"* ]] || [[ "$cs_val" == *":ai-ops"* ]]; then
+          IFS=':' read -r s_name s_type s_port <<< "$cs_val"
+          dify_service_name="$s_name"
           if [[ -z "$dify_subdomain" ]]; then
               dify_subdomain="dify"
           fi
@@ -507,7 +510,7 @@ EOF
 
   if [[ -n "$dify_subdomain" ]]; then
     local base_domain="${BASE_DOMAIN:-localhost}"
-    local dify_service_dir="services/dify/nginx"
+    local dify_service_dir="services/${dify_service_name}/nginx"
     
     # 1. Ensure Official Nginx Templates are present (Strict Compliance)
     if [[ ! -f "${dify_service_dir}/nginx.conf.template" ]]; then
@@ -532,7 +535,7 @@ EOF
     fi
 
     # 2. Ensure SSRF Proxy Templates (Strict Compliance)
-    local dify_ssrf_dir="services/dify/ssrf"
+    local dify_ssrf_dir="services/${dify_service_name}/ssrf"
     if [[ ! -f "${dify_ssrf_dir}/squid.conf.template" ]]; then
         echo "  - Downloading official Dify SSRF templates..."
         mkdir -p "${dify_ssrf_dir}"

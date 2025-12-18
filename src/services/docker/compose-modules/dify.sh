@@ -44,11 +44,11 @@ generate_dify_stack() {
       - APP_API_URL=${api_url}
     volumes:
       # Mount official templates downloaded by Init script
-      - ./services/dify/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
-      - ./services/dify/nginx/proxy.conf.template:/etc/nginx/proxy.conf.template
-      - ./services/dify/nginx/https.conf.template:/etc/nginx/https.conf.template
-      - ./services/dify/nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh
-      - ./services/dify/nginx/conf.d:/etc/nginx/conf.d
+      - ./services/${service_name}/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./services/${service_name}/nginx/proxy.conf.template:/etc/nginx/proxy.conf.template
+      - ./services/${service_name}/nginx/https.conf.template:/etc/nginx/https.conf.template
+      - ./services/${service_name}/nginx/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+      - ./services/${service_name}/nginx/conf.d:/etc/nginx/conf.d
     entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r\$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
     depends_on:
       - dify-api
@@ -358,8 +358,8 @@ EOF
       - SANDBOX_HOST=dify-sandbox
       - SANDBOX_PORT=8194
     volumes:
-      - ./services/dify/ssrf/squid.conf.template:/etc/squid/squid.conf.template
-      - ./services/dify/ssrf/docker-entrypoint.sh:/docker-entrypoint-mount.sh
+      - ./services/${service_name}/ssrf/squid.conf.template:/etc/squid/squid.conf.template
+      - ./services/${service_name}/ssrf/docker-entrypoint.sh:/docker-entrypoint-mount.sh
     entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
     depends_on:
       - dify-sandbox
