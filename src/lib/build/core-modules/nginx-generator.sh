@@ -130,9 +130,14 @@ generate_stream_routes() {
 
     # Parse CS_ format: service_name:template_type:port
     IFS=':' read -r cs_name template_type cs_port <<< "$cs_value"
-
-    # Only generate stream config for Neo4j services
-    if [[ "$template_type" == "neo4j" ]]; then
+    
+    # Only generate stream config for Neo4j services or AI-OPS/Dify (which has Neo4j)
+    if [[ "$template_type" == "neo4j" ]] || [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+        # For ai-ops/dify, the service name for Neo4j is likely fixed or aliased, but we use the main service name for the stream file
+        if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+           # AI-OPS uses dify-neo4j container
+           cs_name="dify-neo4j"
+        fi
         if [[ "$services_found" == "false" ]]; then
             echo "Generating Nginx stream routes..."
             mkdir -p nginx/streams
@@ -442,8 +447,20 @@ server {
 EOF
   fi
 
-  # MLflow Model Registry
-  if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+  # MLflow Model Registry (Standalone - Skip if Dify Stack is present as it has its own)
+  local dify_stack_exists=false
+  # Simple check if "dify" or "ai-ops" is in headers (detected earlier or re-detect here?)
+  # We reuse the logic from Dify section later, but we need to know NOW.
+  for i in {1..20}; do
+      local cs_var="CUSTOM_SERVICE_${i}"
+      local cs_val="${!cs_var:-}"
+      if [[ "$cs_val" == *":dify"* ]] || [[ "$cs_val" == *":ai-ops"* ]]; then
+          dify_stack_exists=true
+          break
+      fi
+  done
+
+  if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$dify_stack_exists" == "false" ]]; then
     local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
     local base_domain="${BASE_DOMAIN:-localhost}"
     local auth_config=""
@@ -572,6 +589,74 @@ server {
     }
 }
 EOF
+
+    # 4. Expose AI OPS Sub-services (Graphiti, Neo4j, MLFlow)
+    
+    # Graphiti
+    cat > nginx/sites/graphiti.conf <<GRAPHITI_CONF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name graphiti.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://dify-graphiti:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+GRAPHITI_CONF
+
+    # Neo4j Browser
+    cat > nginx/sites/neo4j.conf <<NEO4J_CONF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name neo4j.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://dify-neo4j:7474;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+NEO4J_CONF
+
+    # Dify MLFlow (Integrated)
+    cat > nginx/sites/mlflow.conf <<MLFLOW_CONF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name mlflow.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://dify-mlflow:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+MLFLOW_CONF
+
   fi
 
   # Monitoring routes
