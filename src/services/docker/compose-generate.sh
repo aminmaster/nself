@@ -248,6 +248,9 @@ EOF
       graphrag|graph-builder|falkordb|graphiti)
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
+      dify|ai-ops)
+        export DIFY_STACK_PRESENT="true"
+        ;;
     esac
   done
 
@@ -279,7 +282,8 @@ EOF
      [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]] || \
      [[ "${MAILPIT_ENABLED:-false}" == "true" ]] || \
      [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] || \
-     [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+     [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] || \
+     [[ "${MLFLOW_ENABLED:-false}" == "true" && "${DIFY_STACK_PRESENT:-false}" != "true" ]]; then
     echo "" >> docker-compose.yml
     echo "  # ============================================" >> docker-compose.yml
     echo "  # Optional Services" >> docker-compose.yml
