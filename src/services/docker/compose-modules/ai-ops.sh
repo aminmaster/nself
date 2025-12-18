@@ -100,17 +100,17 @@ EOF
         while ! nc -z aio-db 5432; do sleep 1; done &&
         
         echo '3. Initializing MLFlow Database...' &&
-        python3 -c \"
+        python3 -c \\\"
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 try:
     conn = psycopg2.connect(dbname='postgres', user='postgres', password='\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}', host='aio-db', port=5432)
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
-    cur.execute(\\\"SELECT 1 FROM pg_database WHERE datname = 'mlflow'\\\")
+    cur.execute('SELECT 1 FROM pg_database WHERE datname=\\\\\\'mlflow\\\\\\'')
     if not cur.fetchone():
         print('Creating database mlflow...')
-        cur.execute(\\\"CREATE DATABASE mlflow\\\")
+        cur.execute('CREATE DATABASE mlflow')
     else:
         print('Database mlflow already exists.')
     cur.close()
@@ -118,7 +118,7 @@ try:
 except Exception as e:
     print(f'Error initializing MLFlow DB: {e}')
     exit(1)
-        \" &&
+        \\\" &&
 
         echo '4. Running Dify Migrations...' &&
         flask db upgrade &&
