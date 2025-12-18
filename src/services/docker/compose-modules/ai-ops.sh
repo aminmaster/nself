@@ -112,8 +112,7 @@ EOF
             conn = psycopg2.connect(dbname="postgres", user="postgres", password="\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}", host="aio-db", port=5432);
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT);
             cur = conn.cursor();
-            cur.execute("SELECT 1 FROM pg_database WHERE datnameStr = \"mlflow\"");
-            cur.execute("SELECT 1 FROM pg_database WHERE datname = \"mlflow\"");
+            cur.execute("SELECT 1 FROM pg_database WHERE datname = 'mlflow'");
             if not cur.fetchone():
                 print("Creating database mlflow...");
                 cur.execute("CREATE DATABASE mlflow");
