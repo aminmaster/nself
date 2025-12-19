@@ -483,6 +483,15 @@ show_urls() {
     echo "Python API:     https://python.$base_domain"
   fi
 
+  # AI-Ops stack URLs
+  if [[ "${DIFY_STACK_PRESENT:-false}" == "true" ]]; then
+    echo "Dify UI:        https://dify.$base_domain"
+    echo "Graphiti API:   https://graphiti.$base_domain"
+    echo "Neo4j UI:       https://neo4j.$base_domain"
+    echo "MLFlow UI:      https://mlflow.$base_domain"
+    echo "FalkorDB UI:    https://falkordb.$base_domain"
+  fi
+
   # Development tools
   if [[ "$ENV" == "dev" ]] || [[ -z "$ENV" ]]; then
     if [[ "$MAILHOG_ENABLED" != "false" ]] && [[ -n "$(docker ps -q -f name=mailpit)" ]]; then

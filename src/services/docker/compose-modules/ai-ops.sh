@@ -460,6 +460,20 @@ EOF
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  # 11.5 AIO FalkorDB Browser
+  aio-falkordb-browser:
+    image: falkordb/falkordb-browser:latest
+    container_name: \${PROJECT_NAME}_aio_falkordb_browser
+    restart: unless-stopped
+    environment:
+      - FALKORDB_URL=redis://aio-falkordb:6379
+    networks:
+      - \${DOCKER_NETWORK}
+    depends_on:
+      aio-falkordb:
+        condition: service_healthy
+
 EOF
 
   # 12. AIO Neo4j

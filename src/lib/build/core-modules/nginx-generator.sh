@@ -466,10 +466,11 @@ EOF
     local auth_config=""
 
     # Configure Basic Auth if enabled
-    if [[ -n "${MLFLOW_BASIC_AUTH_PASSWORD:-}" ]]; then
-      local auth_user="${MLFLOW_BASIC_AUTH_USERNAME:-admin}"
-      local auth_pass="${MLFLOW_BASIC_AUTH_PASSWORD}"
+    if [[ "${MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+      local auth_user="${MLFLOW_BASIC_AUTH_USER:-admin}"
+      local auth_pass="${MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
       
+      echo "Generating Basic Auth for MLFlow..."
       # Generate htpasswd file
       echo "${auth_user}:$(openssl passwd -apr1 "${auth_pass}")" > nginx/conf.d/mlflow.htpasswd
       
@@ -639,6 +640,20 @@ server {
 NEO4J_CONF
 
     # Dify MLFlow (Integrated)
+    local mlflow_auth_config=""
+    if [[ "${MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+      local mlflow_user="${MLFLOW_BASIC_AUTH_USER:-admin}"
+      local mlflow_pass="${MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
+      
+      echo "Generating Basic Auth for MLFlow..."
+      echo "${mlflow_user}:$(openssl passwd -apr1 "${mlflow_pass}")" > nginx/conf.d/mlflow.htpasswd
+      
+      mlflow_auth_config="
+    auth_basic \"MLflow Protected Area\";
+    auth_basic_user_file /etc/nginx/conf.d/mlflow.htpasswd;
+"
+    fi
+
     cat > nginx/sites/mlflow.conf <<MLFLOW_CONF
 server {
     listen 443 ssl;
@@ -647,6 +662,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    ${mlflow_auth_config}
 
     location / {
         proxy_pass http://aio-mlflow:5000;
@@ -660,6 +677,43 @@ server {
     }
 }
 MLFLOW_CONF
+
+    # FalkorDB Browser (Integrated)
+    local falkordb_auth_config=""
+    if [[ "${FALKORDB_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+      local falkordb_user="${FALKORDB_BASIC_AUTH_USER:-admin}"
+      local falkordb_pass="${FALKORDB_BASIC_AUTH_PASSWORD:-admin}"
+      
+      echo "Generating Basic Auth for FalkorDB Browser..."
+      echo "${falkordb_user}:$(openssl passwd -apr1 "${falkordb_pass}")" > nginx/conf.d/falkordb.htpasswd
+      
+      falkordb_auth_config="
+    auth_basic \"FalkorDB Management UI\";
+    auth_basic_user_file /etc/nginx/conf.d/falkordb.htpasswd;
+"
+    fi
+
+    cat > nginx/sites/falkordb.conf <<FALKORDB_CONF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name falkordb.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    ${falkordb_auth_config}
+
+    location / {
+        proxy_pass http://aio-falkordb-browser:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+FALKORDB_CONF
 
   fi
 
