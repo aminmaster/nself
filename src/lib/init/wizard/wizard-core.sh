@@ -428,7 +428,8 @@ wizard_custom_services() {
         local falkordb_pass=$(generate_password 24)
         add_wizard_config "$config_array_name" "FALKORDB_USER" "$falkordb_user"
         add_wizard_secret "$config_array_name" "FALKORDB_PASSWORD" "$falkordb_pass"
-        add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://${falkordb_user}:${falkordb_pass}@aio-falkordb:6379"
+        # Provide URL without credentials for browser manual login
+        add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://aio-falkordb:6379"
 
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
         add_wizard_config "$config_array_name" "DIFY_STACK_PRESENT" "true"
