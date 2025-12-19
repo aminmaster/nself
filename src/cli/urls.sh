@@ -516,6 +516,7 @@ output_table() {
                    echo -e "    ├─ Dify:       ${COLOR_GREEN}${protocol}://${dify_sub}.${domain}${COLOR_RESET}"
                    echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
                    echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
+                   echo -e "    ├─ FalkorDB:   ${COLOR_GREEN}${protocol}://falkordb.${domain}${COLOR_RESET}"
                    echo -e "    └─ Neo4j:      ${COLOR_GREEN}${protocol}://neo4j.${domain}${COLOR_RESET}"
                 fi
             elif [[ "$show_all" == "true" ]]; then

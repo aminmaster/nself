@@ -467,7 +467,11 @@ EOF
     container_name: \${PROJECT_NAME}_aio_falkordb_browser
     restart: unless-stopped
     environment:
-      - FALKORDB_URL=redis://aio-falkordb:6379
+      - FALKORDB_URL=falkor://aio-falkordb:6379
+      - FALKORDB_HOST=aio-falkordb
+      - FALKORDB_PORT=6379
+      - REDIS_HOST=aio-falkordb
+      - REDIS_PORT=6379
     networks:
       - \${DOCKER_NETWORK}
     depends_on:
