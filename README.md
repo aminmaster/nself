@@ -44,6 +44,7 @@ nself is *the* CLI for Nhost self-hosted deployments - with extras and an opinio
 - **Microservices Ready**: Production-ready templates for JS/TS, Python, Go, Rust, Java, C#, Ruby, Elixir, PHP
 - **Serverless Functions**: Built-in functions runtime with hot reload and deployment
 - **ML Platform**: MLflow integration for experiment tracking and model registry
+- **AI-Ops Stack**: Unified AI Operating System with Dify, Graphiti (RAG), Neo4j & FalkorDB (Graphs)
 - **Enterprise Search**: 6 search engines (MeiliSearch, Typesense, Elasticsearch, OpenSearch, Zinc, Sonic)
 - **Production SSL**: Automatic trusted certificates (no browser warnings!)
 
@@ -407,11 +408,12 @@ All services communicate through:
 - **MailHog**: Email testing for development
 - **NestJS Run Service**: For constantly running microservices
 
-### Backend Services Framework
-- **NestJS Services**: TypeScript/JavaScript microservices for Hasura actions
-- **BullMQ Workers**: Queue workers for background job processing
-- **GoLang Services**: High-performance microservices
-- **Python Services**: ML/AI and data analysis services
+### AI-Ops & Graph Platform
+- **AI-Ops Bundle**: Unified stack containing Dify (LLM Ops), Graphiti (Dynamic RAG), and Knowledge Graphs
+- **Neo4j**: Native graph database for structured knowledge
+- **FalkorDB**: High-performance Redis-based graph database
+- **FalkorDB Browser**: Management UI for FalkorDB with manual login security
+- **MLFlow**: Model tracking and registry with integrated Nginx auth
 
 ## 🔐 SSL/TLS Configuration
 
