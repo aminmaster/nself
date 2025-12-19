@@ -484,7 +484,12 @@ show_urls() {
   fi
 
   # AI-Ops stack URLs
-  if [[ "${DIFY_STACK_PRESENT:-false}" == "true" ]]; then
+  local dify_stack_exists=false
+  if [[ "${DIFY_STACK_PRESENT:-false}" == "true" ]] || grep -q "aio-dify-nginx" docker-compose.yml 2>/dev/null; then
+    dify_stack_exists=true
+  fi
+
+  if [[ "$dify_stack_exists" == "true" ]]; then
     echo "Dify UI:        https://dify.$base_domain"
     echo "Graphiti API:   https://graphiti.$base_domain"
     echo "Neo4j UI:       https://neo4j.$base_domain"

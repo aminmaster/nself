@@ -417,8 +417,19 @@ wizard_custom_services() {
         # MLFlow Config (Auto-Enable)
         add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
         add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
+        
+        # New: MLFlow Basic Auth Credentials
+        add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_USER" "admin"
+        add_wizard_secret "$config_array_name" "MLFLOW_BASIC_AUTH_PASSWORD" "$(generate_password 16)"
+
+        # New: FalkorDB Basic Auth Credentials
+        add_wizard_config "$config_array_name" "FALKORDB_BASIC_AUTH_ENABLED" "true"
+        add_wizard_config "$config_array_name" "FALKORDB_BASIC_AUTH_USER" "admin"
+        add_wizard_secret "$config_array_name" "FALKORDB_BASIC_AUTH_PASSWORD" "$(generate_password 16)"
 
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+        add_wizard_config "$config_array_name" "DIFY_STACK_PRESENT" "true"
       fi
 
       # Service-specific default ports
