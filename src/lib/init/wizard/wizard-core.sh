@@ -418,15 +418,17 @@ wizard_custom_services() {
         add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
         add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
         
-        # New: MLFlow Basic Auth Credentials
+        # MLFlow Basic Auth Credentials (Nginx level)
         add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_ENABLED" "true"
         add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_USER" "admin"
         add_wizard_secret "$config_array_name" "MLFLOW_BASIC_AUTH_PASSWORD" "$(generate_password 16)"
 
-        # New: FalkorDB Basic Auth Credentials
-        add_wizard_config "$config_array_name" "FALKORDB_BASIC_AUTH_ENABLED" "true"
-        add_wizard_config "$config_array_name" "FALKORDB_BASIC_AUTH_USER" "admin"
-        add_wizard_secret "$config_array_name" "FALKORDB_BASIC_AUTH_PASSWORD" "$(generate_password 16)"
+        # FalkorDB Database Credentials (Internal Security)
+        local falkordb_user="falkor_admin"
+        local falkordb_pass=$(generate_password 24)
+        add_wizard_config "$config_array_name" "FALKORDB_USER" "$falkordb_user"
+        add_wizard_secret "$config_array_name" "FALKORDB_PASSWORD" "$falkordb_pass"
+        add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://${falkordb_user}:${falkordb_pass}@aio-falkordb:6379"
 
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
         add_wizard_config "$config_array_name" "DIFY_STACK_PRESENT" "true"

@@ -127,6 +127,22 @@ EOF
         echo "4. Running Dify Migrations..."
         flask db upgrade
 
+        echo "5. Initializing FalkorDB security..."
+        if [[ -n "${FALKORDB_PASSWORD:-}" ]]; then
+          echo "Setting up FalkorDB ACLs..."
+          # Install redis-tools if not present
+          apt-get install -y redis-tools
+          
+          # Wait for FalkorDB
+          while ! nc -z aio-falkordb 6379; do sleep 1; done
+          
+          # Set up the admin user
+          # Note: We use 'default' password too if FALKORDB_PASSWORD is provided to secure the instance fully
+          redis-cli -h aio-falkordb ACL SETUSER "${FALKORDB_USER:-falkor_admin}" on ">${FALKORDB_PASSWORD}" allkeys allchannels allcommands +@all
+          redis-cli -h aio-falkordb CONFIG SET requirepass "${FALKORDB_PASSWORD}"
+          echo "FalkorDB security initialized."
+        fi
+
         echo "All initialization tasks completed."
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
@@ -455,7 +471,7 @@ EOF
     networks:
       - \${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "\${FALKORDB_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -467,7 +483,7 @@ EOF
     container_name: \${PROJECT_NAME}_aio_falkordb_browser
     restart: unless-stopped
     environment:
-      - FALKORDB_URL=falkor://aio-falkordb:6379
+      - FALKORDB_URL=${FALKORDB_URL:-falkor://aio-falkordb:6379}
       - FALKORDB_HOST=aio-falkordb
       - FALKORDB_PORT=6379
       - REDIS_HOST=aio-falkordb

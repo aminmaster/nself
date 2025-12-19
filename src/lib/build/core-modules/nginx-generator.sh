@@ -679,20 +679,6 @@ server {
 MLFLOW_CONF
 
     # FalkorDB Browser (Integrated)
-    local falkordb_auth_config=""
-    if [[ "${FALKORDB_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-      local falkordb_user="${FALKORDB_BASIC_AUTH_USER:-admin}"
-      local falkordb_pass="${FALKORDB_BASIC_AUTH_PASSWORD:-admin}"
-      
-      echo "Generating Basic Auth for FalkorDB Browser..."
-      echo "${falkordb_user}:$(openssl passwd -apr1 "${falkordb_pass}")" > nginx/conf.d/falkordb.htpasswd
-      
-      falkordb_auth_config="
-    auth_basic \"FalkorDB Management UI\";
-    auth_basic_user_file /etc/nginx/conf.d/falkordb.htpasswd;
-"
-    fi
-
     cat > nginx/sites/falkordb.conf <<FALKORDB_CONF
 server {
     listen 443 ssl;
@@ -701,8 +687,6 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
-
-    ${falkordb_auth_config}
 
     location / {
         proxy_pass http://aio-falkordb-browser:3000;
