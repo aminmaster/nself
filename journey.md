@@ -35,9 +35,9 @@ As we reached the first major milestone, we shifted focus from "Make it work" to
 ## 6. The Pending Horizon
 While we have achieved a fully functional and secured AI-Ops stack, the KBA journey is far from over.
 
-### High Priority (Pending)
-- [ ] **KB Axon Portal**: Connecting the custom frontend portal to the Graphiti extraction API for real-time visualization.
-- [ ] **Semantic Search Tuning**: Refining the `OPENAI_API_KEY` propagation and adjusting extraction thresholds for the Equilibria domain.
+### High Priority (Completed)
+- [x] **KB Axon Portal**: Connected the custom frontend portal to the Graphiti extraction API for real-time visualization.
+- [x] **Semantic Search Tuning**: Refined the `OPENAI_API_KEY` propagation and adjusting extraction thresholds for the Equilibria domain.
 
 ### Deferred (v0.5.0+)
 - [ ] **Enterprise Search Expansion**: Full deep-dives into Elasticsearch and OpenSearch wizards.
