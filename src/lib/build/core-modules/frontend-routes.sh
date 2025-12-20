@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# frontend-routes.sh - Create routes directory for frontend apps
+# frontend-routes.sh - Create services directory for frontend apps
 
-# Create routes directory structure for frontend applications
+# Create services directory structure for frontend applications
 setup_frontend_routes() {
   local project_name="${1:-$(basename "$PWD")}"
   local env="${2:-dev}"
@@ -13,20 +13,20 @@ setup_frontend_routes() {
     return 0
   fi
   
-  # Create routes directory
-  if [[ ! -d "routes" ]]; then
-    mkdir -p routes
-    echo "✓ Created routes/ directory for frontend apps"
+  # Create services directory
+  if [[ ! -d "services" ]]; then
+    mkdir -p services
+    echo "✓ Created services/ directory for frontend apps"
   fi
   
   # Add .gitkeep to ensure directory is tracked
-  if [[ ! -f "routes/.gitkeep" ]]; then
-    touch routes/.gitkeep
+  if [[ ! -f "services/.gitkeep" ]]; then
+    touch services/.gitkeep
   fi
   
   # Create basic .gitignore for frontend apps
-  if [[ ! -f "routes/.gitignore" ]]; then
-    cat > routes/.gitignore <<'EOF'
+  if [[ ! -f "services/.gitignore" ]]; then
+    cat > services/.gitignore <<'EOF'
 # Frontend app dependencies
 node_modules/
 .pnpm-store/
@@ -48,7 +48,7 @@ build/
 # Frontend environment
 .env*.local
 EOF
-    echo "✓ Created routes/.gitignore"
+    echo "✓ Created services/.gitignore"
   fi
 }
 

@@ -85,10 +85,10 @@ init_frontend_app() {
   local port="$3"
   
   # Check if app already exists
-  if [[ -f "routes/${app_name}/package.json" ]] || [[ -d "routes/${app_name}/src" ]]; then
+  if [[ -f "services/${app_name}/package.json" ]] || [[ -d "services/${app_name}/src" ]]; then
     printf "   ${COLOR_DIM}Frontend app '${app_name}' already initialized, skipping${COLOR_RESET}\n"
     # Still try to configure vite host if it's missing
-    cd routes || return 1
+    cd services || return 1
     configure_vite_host "$app_name" "$framework"
     cd ..
     return 0
@@ -105,8 +105,8 @@ init_frontend_app() {
   printf "\n${COLOR_BOLD}🎨 Initializing ${framework} app '${app_name}'${COLOR_RESET}\n"
   printf "   ${COLOR_DIM}This will run interactively - please answer the prompts${COLOR_RESET}\n\n"
   
-  # Change to routes directory
-  cd routes || return 1
+  # Change to services directory
+  cd services || return 1
   
   # Handle static HTML specially
   if [[ "${framework,,}" == "static" ]] || [[ "${framework,,}" == "html" ]]; then
@@ -128,7 +128,7 @@ init_frontend_app() {
 EOF
     touch "${app_name}/src/style.css"
     touch "${app_name}/src/script.js"
-    printf "   ${COLOR_GREEN}✓${COLOR_RESET} Static HTML app created at routes/${app_name}\n"
+    printf "   ${COLOR_GREEN}✓${COLOR_RESET} Static HTML app created at services/${app_name}\n"
     cd ..
     return 0
   fi
@@ -142,7 +142,7 @@ EOF
     
     cd ..
     printf "\n   ${COLOR_GREEN}✓${COLOR_RESET} Frontend app '${app_name}' initialized successfully\n"
-    printf "   ${COLOR_DIM}Location: routes/${app_name}${COLOR_RESET}\n"
+    printf "   ${COLOR_DIM}Location: services/${app_name}${COLOR_RESET}\n"
     return 0
   else
     cd ..
@@ -159,9 +159,9 @@ scaffold_frontend_apps() {
     return 0
   fi
   
-  # Check if routes directory exists
-  if [[ ! -d "routes" ]]; then
-    printf "${COLOR_YELLOW}⚠${COLOR_RESET}  Routes directory not found. Run 'nself build' first.\n"
+  # Check if services directory exists
+  if [[ ! -d "services" ]]; then
+    printf "${COLOR_YELLOW}⚠${COLOR_RESET}  Services directory not found. Run 'nself build' first.\n"
     return 1
   fi
   
@@ -197,7 +197,7 @@ scaffold_frontend_apps() {
     fi
     
     if init_frontend_app "$app_name" "$framework" "$port"; then
-      if [[ -f "routes/${app_name}/package.json" ]] || [[ -d "routes/${app_name}/src" ]]; then
+      if [[ -f "services/${app_name}/package.json" ]] || [[ -d "services/${app_name}/src" ]]; then
         if [[ $? -eq 0 ]]; then
           ((initialized++))
         else
