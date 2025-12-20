@@ -477,6 +477,7 @@ wizard_frontend_apps() {
   if confirm_action "Add frontend applications?"; then
     local app_count=0
     local add_more=true
+    local primary_frontend_selected=false
 
     while [[ "$add_more" == "true" ]] && [[ $app_count -lt 10 ]]; do
       app_count=$((app_count + 1))
@@ -515,7 +516,16 @@ wizard_frontend_apps() {
       add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_NAME" "$app_name"
       add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_FRAMEWORK" "$app_framework"
       add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_PORT" "$app_port"
-      # Frontend apps are external - no DIR needed
+      
+      # Primary Frontend Logic
+      if [[ "$primary_frontend_selected" == "false" ]]; then
+        echo ""
+        if confirm_action "Make '$app_name' the primary frontend (accessible via the main domain)?"; then
+          add_wizard_config "$config_array_name" "PRIMARY_FRONTEND_PORT" "$app_port"
+          primary_frontend_selected=true
+          echo "  ✓ '$app_name' set as primary frontend."
+        fi
+      fi
 
       echo ""
       if ! confirm_action "Add another frontend app?"; then

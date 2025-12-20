@@ -142,6 +142,7 @@ prompt_custom_services_simple() {
 prompt_frontend_apps_simple() {
   local config_array_name="$1"
   local app_count=0
+  local primary_frontend_selected=false
 
   echo ""
   echo "Add frontend applications (they run outside Docker):"
@@ -161,6 +162,16 @@ prompt_frontend_apps_simple() {
     eval "$config_array_name+=('FRONTEND_APP_${app_count}_NAME=$app_name')"
     eval "$config_array_name+=('FRONTEND_APP_${app_count}_PORT=$app_port')"
     eval "$config_array_name+=('FRONTEND_APP_${app_count}_ROUTE=$app_name')"
+    
+    # Primary Frontend Logic
+    if [[ "$primary_frontend_selected" == "false" ]]; then
+      echo ""
+      if confirm_action "Make '$app_name' the primary frontend (accessible via the main domain)?" "n"; then
+        eval "$config_array_name+=('PRIMARY_FRONTEND_PORT=$app_port')"
+        primary_frontend_selected=true
+        echo "  ✓ '$app_name' set as primary frontend."
+      fi
+    fi
   done
 }
 
