@@ -37,7 +37,9 @@ EOF
 
     graphiti)
       cat <<EOF
-    image: zepai/graphiti:latest
+    build:
+      context: ./services/${service_name}
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:

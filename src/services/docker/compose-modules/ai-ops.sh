@@ -35,6 +35,18 @@ RUN pip install psycopg2-binary
 DOCKERFILE
   fi
 
+  # Ensure Graphiti source exists (for local builds from template)
+  local graphiti_dir="./services/${service_name}/graphiti"
+  if [[ ! -d "$graphiti_dir" ]]; then
+      # Attempt to find template root relative to this script
+      local nself_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
+      local template_src="$nself_root/templates/services/py/graphiti"
+      if [[ -d "$template_src" ]]; then
+          mkdir -p "$graphiti_dir"
+          cp -r "$template_src"/* "$graphiti_dir/"
+      fi
+  fi
+
   # 1. AIO Dify Nginx (Entrypoint/Gateway)
   cat <<EOF
   aio-dify-nginx:
@@ -429,7 +441,9 @@ EOF
   # 10. AIO Graphiti
   cat <<EOF
   aio-graphiti:
-    image: zepai/graphiti:latest
+    build:
+      context: ./services/${service_name}/graphiti
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
     environment:
