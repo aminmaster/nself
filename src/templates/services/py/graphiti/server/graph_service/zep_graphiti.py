@@ -52,7 +52,7 @@ async def get_graphiti(settings: ZepEnvDep):
                 host=parsed.hostname or 'localhost',
                 port=parsed.port or 6379,
                 username=parsed.username,
-                password=parsed.password
+                password=parsed.password or settings.falkordb_password
             )
         else:
             driver = FalkorDriver(
@@ -89,7 +89,7 @@ async def initialize_graphiti(settings: ZepEnvDep):
                 host=parsed.hostname or 'localhost',
                 port=parsed.port or 6379,
                 username=parsed.username,
-                password=parsed.password
+                password=parsed.password or settings.falkordb_password
             )
         else:
             driver = FalkorDriver(
