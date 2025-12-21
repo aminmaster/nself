@@ -206,6 +206,61 @@ wizard_service_passwords() {
 
   echo ""
 
+  # Redis Password
+  local redis_enabled=false
+  eval "local config_values=(\"\${${config_array_name}[@]}\")"
+  for cfg_item in "${config_values[@]}"; do
+    if [[ "$cfg_item" == "CONF:REDIS_ENABLED=true" ]] || [[ "$cfg_item" == "REDIS_ENABLED=true" ]]; then
+      redis_enabled=true
+      break
+    fi
+  done
+
+  if [[ "$redis_enabled" == "true" ]]; then
+    echo "Redis Authentication:"
+    local redis_password
+    if confirm_action "Use auto-generated secure password for Redis?"; then
+      redis_password=$(generate_password 32)
+      echo "Generated: [hidden for security]"
+    else
+      prompt_password "Redis password" redis_password
+    fi
+    add_wizard_secret "$config_array_name" "REDIS_PASSWORD" "$redis_password"
+    echo ""
+  fi
+
+  # Nhost Webhook Secret
+  if [[ "$hasura_enabled" == "true" ]]; then
+    echo "Nhost Webhook Secret:"
+    local nhost_secret
+    if confirm_action "Use auto-generated secure secret for webhooks?"; then
+      nhost_secret=$(generate_password 32)
+      echo "Generated: [hidden for security]"
+    else
+      prompt_password "Webhook secret" nhost_secret
+    fi
+    add_wizard_secret "$config_array_name" "NHOST_WEBHOOK_SECRET" "$nhost_secret"
+    echo ""
+  fi
+
+  # Superadmin Credentials
+  echo "👤 Application Superadmin (Mastery Account)"
+  echo "Setting up the initial superuser for the web application."
+  echo ""
+  local super_email super_pass
+  prompt_input "Superadmin Email" "admin@${BASE_DOMAIN:-localhost}" super_email
+  
+  if confirm_action "Use auto-generated password for Superadmin?"; then
+    super_pass=$(generate_password 16)
+    echo "Generated: $super_pass (MAKE A NOTE OF THIS!)"
+    press_any_key
+  else
+    prompt_password "Superadmin Password" super_pass
+  fi
+  
+  add_wizard_config "$config_array_name" "SUPERADMIN_EMAIL" "$super_email"
+  add_wizard_secret "$config_array_name" "SUPERADMIN_PASSWORD" "$super_pass"
+
   # Storage/MinIO credentials
   local storage_enabled=false
   # Storage/MinIO credentials

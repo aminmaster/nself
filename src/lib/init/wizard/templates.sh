@@ -407,6 +407,10 @@ SEARCH_API_KEY=CHANGE_ME_$(openssl rand -hex 32)
 ADMIN_PASSWORD_HASH=CHANGE_ME_$(openssl rand -hex 32)
 ADMIN_SECRET_KEY=CHANGE_ME_$(openssl rand -hex 32)
 
+# Application Superadmin
+SUPERADMIN_EMAIL=admin@${base_domain}
+SUPERADMIN_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
+
 # External services
 SMTP_PASSWORD=
 AWS_SECRET_ACCESS_KEY=
@@ -459,6 +463,12 @@ generate_production_secrets() {
   if grep -q "MEILISEARCH_MASTER_KEY=" .env.secrets; then
     local meilisearch_key=$(openssl rand -hex 32)
     sed -i.bak "s/MEILISEARCH_MASTER_KEY=.*/MEILISEARCH_MASTER_KEY=$meilisearch_key/" .env.secrets
+  fi
+  if grep -q "SUPERADMIN_EMAIL=" .env.secrets; then
+    sed -i.bak "s/SUPERADMIN_EMAIL=.*/SUPERADMIN_EMAIL=$super_email/" .env.secrets
+  fi
+  if grep -q "SUPERADMIN_PASSWORD=" .env.secrets; then
+    sed -i.bak "s/SUPERADMIN_PASSWORD=.*/SUPERADMIN_PASSWORD=$super_pass/" .env.secrets
   fi
   
   # Clean up backup files

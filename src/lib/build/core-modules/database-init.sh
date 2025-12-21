@@ -23,6 +23,7 @@ generate_postgres_init() {
   # Generate Hasura metadata if enabled
   if [[ "${HASURA_ENABLED:-false}" == "true" ]]; then
     generate_hasura_init_sql
+    generate_superadmin_seed_sql
   fi
 
   # Generate auth tables if enabled AND not using nHost auth
@@ -315,6 +316,26 @@ EOF
   return 0
 }
 
+# Generate Superadmin Seed
+generate_superadmin_seed_sql() {
+  local template="src/templates/hasura/seed_superadmin.sql.template"
+  local output="postgres/init/99-seed-superadmin.sql"
+
+  if [[ -f "$template" ]]; then
+    log_info "Generating superadmin seed script..."
+    cp "$template" "$output"
+    
+    # Render variables
+    sed -i "s/{{POSTGRES_DB}}/${POSTGRES_DB:-nself}/g" "$output"
+    sed -i "s/{{SUPERADMIN_EMAIL}}/${SUPERADMIN_EMAIL:-admin@localhost}/g" "$output"
+    sed -i "s/{{SUPERADMIN_PASSWORD}}/${SUPERADMIN_PASSWORD:-admin123}/g" "$output"
+  else
+    log_warning "Superadmin seed template not found at $template"
+  fi
+
+  return 0
+}
+
 # Export functions
 export -f generate_postgres_init
 export -f generate_init_sql
@@ -322,3 +343,4 @@ export -f generate_extensions_sql
 export -f generate_schemas_sql
 export -f generate_hasura_init_sql
 export -f generate_auth_init_sql
+export -f generate_superadmin_seed_sql
