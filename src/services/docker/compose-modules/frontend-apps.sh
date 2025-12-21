@@ -12,13 +12,13 @@ copy_frontend_templates() {
   # Copy Dockerfile if it exists in templates
   if [[ -f "$nself_templates_dir/Dockerfile" ]]; then
     cp "$nself_templates_dir/Dockerfile" "$web_service_dir/Dockerfile"
-    echo "✓ Copied Dockerfile to $web_service_dir"
+    echo "✓ Copied Dockerfile to $web_service_dir" >&2
   fi
   
   # Copy .dockerignore if it exists in templates
   if [[ -f "$nself_templates_dir/.dockerignore" ]]; then
     cp "$nself_templates_dir/.dockerignore" "$web_service_dir/.dockerignore"
-    echo "✓ Copied .dockerignore to $web_service_dir"
+    echo "✓ Copied .dockerignore to $web_service_dir" >&2
   fi
 }
 
