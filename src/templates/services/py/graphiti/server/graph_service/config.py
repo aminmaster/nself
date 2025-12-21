@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     falkordb_url: str | None = Field(None)
     falkordb_host: str = 'falkordb'
     falkordb_port: int = 6379
+    falkordb_password: str | None = Field(None, alias='REDIS_PASSWORD')
     graph_driver_type: str = 'falkordb'
+    nhost_webhook_secret: str = Field('nhost-webhook-secret', alias='NHOST_WEBHOOK_SECRET')
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 

@@ -57,7 +57,8 @@ async def get_graphiti(settings: ZepEnvDep):
         else:
             driver = FalkorDriver(
                 host=settings.falkordb_host,
-                port=settings.falkordb_port
+                port=settings.falkordb_port,
+                password=settings.falkordb_password
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
@@ -93,7 +94,8 @@ async def initialize_graphiti(settings: ZepEnvDep):
         else:
             driver = FalkorDriver(
                 host=settings.falkordb_host,
-                port=settings.falkordb_port
+                port=settings.falkordb_port,
+                password=settings.falkordb_password
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
