@@ -442,6 +442,7 @@ EOF
       - GRAPH_DRIVER_TYPE=falkordb
       - FALKORDB_HOST=aio-falkordb
       - FALKORDB_PORT=6379
+      - FALKORDB_URL=\${FALKORDB_URL:-falkor://aio-falkordb:6379}
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data
     depends_on:
