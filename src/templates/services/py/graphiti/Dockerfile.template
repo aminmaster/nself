@@ -32,6 +32,7 @@ WORKDIR /app/server
 # Install dependencies + local core
 RUN mkdir -p /app/.cache/uv && chown -R app:app /app/.cache
 RUN --mount=type=cache,target=/root/.cache/uv \
+    rm -f uv.lock && \
     uv sync --no-dev
 
 RUN chown -R app:app /app
