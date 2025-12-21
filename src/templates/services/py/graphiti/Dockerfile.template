@@ -32,8 +32,7 @@ WORKDIR /app/server
 # Install dependencies + local core
 RUN mkdir -p /app/.cache/uv && chown -R app:app /app/.cache
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-dev && \
-    uv pip install --system ../graphiti_core[falkordb]
+    uv sync --no-dev
 
 RUN chown -R app:app /app
 ENV PYTHONUNBUFFERED=1 PATH="/app/server/.venv/bin:$PATH"
