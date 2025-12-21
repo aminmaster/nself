@@ -398,6 +398,7 @@ REDIS_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 MINIO_ROOT_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 RABBITMQ_PASSWORD=CHANGE_ME_$(openssl rand -hex 16)
 MEILISEARCH_MASTER_KEY=CHANGE_ME_$(openssl rand -hex 32)
+NHOST_WEBHOOK_SECRET=CHANGE_ME_$(openssl rand -hex 32)
 
 # API Keys
 HASURA_GRAPHQL_ADMIN_SECRET=CHANGE_ME_$(openssl rand -hex 32)
@@ -434,6 +435,7 @@ generate_production_secrets() {
   local search_key=$(openssl rand -hex 32)
   local admin_pass=$(openssl rand -hex 32)
   local admin_key=$(openssl rand -hex 32)
+  local nhost_secret=$(openssl rand -hex 32)
   
   # Update .env.secrets with real passwords
   # Each password type needs its own replacement
@@ -445,6 +447,7 @@ generate_production_secrets() {
   sed -i.bak "s/SEARCH_API_KEY=.*/SEARCH_API_KEY=$search_key/" .env.secrets
   sed -i.bak "s/ADMIN_PASSWORD_HASH=.*/ADMIN_PASSWORD_HASH=$admin_pass/" .env.secrets
   sed -i.bak "s/ADMIN_SECRET_KEY=.*/ADMIN_SECRET_KEY=$admin_key/" .env.secrets
+  sed -i.bak "s/NHOST_WEBHOOK_SECRET=.*/NHOST_WEBHOOK_SECRET=$nhost_secret/" .env.secrets
   
   # Handle other common secrets
   if grep -q "REDIS_PASSWORD=" .env.secrets; then

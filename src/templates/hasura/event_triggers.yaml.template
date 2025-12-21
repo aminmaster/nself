@@ -127,4 +127,20 @@ event_triggers:
     headers:
       - name: X-Hasura-Event-Trigger
         value: data_cleanup
-    comment: "Trigger data cleanup jobs via BullMQ workers"
+    comment: "Trigger data cleanup jobs via BullMQ workers"  - name: graphiti_provisioning
+    definition:
+      enable_manual: true
+      insert:
+        columns: "*"
+      table:
+        name: users
+        schema: auth
+    retry_conf:
+      num_retries: 3
+      interval_sec: 10
+      timeout_sec: 60
+    webhook: https://graphiti.{{BASE_DOMAIN}}/webhooks/user-created
+    headers:
+      - name: nhost-webhook-secret
+        value_from_env: NHOST_WEBHOOK_SECRET
+    comment: "Trigger Graphiti provisioning when a new user is created"
