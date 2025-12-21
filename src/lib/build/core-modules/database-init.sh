@@ -318,7 +318,8 @@ EOF
 
 # Generate Superadmin Seed
 generate_superadmin_seed_sql() {
-  local template="src/templates/hasura/seed_superadmin.sql.template"
+  local nself_root="${NSELF_ROOT:-.}"
+  local template="$nself_root/src/templates/hasura/seed_superadmin.sql.template"
   local output="postgres/init/99-seed-superadmin.sql"
 
   if [[ -f "$template" ]]; then
