@@ -21,19 +21,22 @@ BEGIN
             password_hash, 
             default_role, 
             display_name,
+            locale,
             metadata
         )
         VALUES (
             '{{SUPERADMIN_EMAIL}}', 
             true, 
-            crypt('{{SUPERADMIN_PASSWORD}}', gen_salt('bf', 10)), 
+            public.crypt('{{SUPERADMIN_PASSWORD}}', public.gen_salt('bf', 10)), 
             'superadmin', 
             'Mastery Superadmin',
+            'en',
             '{"source": "nself_wizard"}'
         )
         ON CONFLICT (email) DO UPDATE SET
             default_role = 'superadmin',
-            display_name = EXCLUDED.display_name;
+            display_name = EXCLUDED.display_name,
+            locale = 'en';
 
         -- Ensure the user has the superadmin role in user_roles
         INSERT INTO auth.user_roles (user_id, role)
