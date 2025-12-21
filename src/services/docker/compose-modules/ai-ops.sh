@@ -167,7 +167,7 @@ EOF
       aio-db:
         condition: service_healthy
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 2. Dify API
@@ -269,7 +269,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 4. Dify Web
@@ -375,7 +375,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/db:/var/lib/postgresql/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 10s
@@ -393,7 +393,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 8. AIO Weaviate
@@ -416,7 +416,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/weaviate:/var/lib/weaviate
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 9. AIO SSRF
@@ -439,7 +439,7 @@ EOF
     depends_on:
       - aio-dify-sandbox
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 10. AIO Graphiti
@@ -488,7 +488,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "\${FALKORDB_PASSWORD}", "ping"]
       interval: 30s
@@ -508,7 +508,7 @@ EOF
       - REDIS_HOST=aio-falkordb
       - REDIS_PORT=6379
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     depends_on:
       aio-falkordb:
         condition: service_healthy
@@ -672,7 +672,7 @@ EOF
       dify-db:
         condition: service_healthy
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 2. Dify API
@@ -777,7 +777,7 @@ EOF
       dify-db-migrate:
         condition: service_completed_successfully
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 4. Dify Web
@@ -881,7 +881,7 @@ EOF
     volumes:
       - ./.volumes/dify/db:/var/lib/postgresql/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 10s
@@ -899,7 +899,7 @@ EOF
     volumes:
       - ./.volumes/dify/redis:/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 8. Dify Weaviate (Vector DB)
@@ -922,7 +922,7 @@ EOF
     volumes:
       - ./.volumes/dify/weaviate:/var/lib/weaviate
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 9. SSRF Proxy
@@ -944,7 +944,7 @@ EOF
     depends_on:
       - dify-sandbox
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 10. Graphiti (Knowledge Graph API)
@@ -989,7 +989,7 @@ EOF
     volumes:
       - ./.volumes/dify/falkordb/data:/data
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -1015,7 +1015,7 @@ EOF
       - ./.volumes/dify/neo4j/import:/var/lib/neo4j/import
       - ./.volumes/dify/neo4j/plugins:/plugins
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
       interval: 30s
