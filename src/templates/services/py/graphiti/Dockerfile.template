@@ -24,18 +24,19 @@ ENV UV_COMPILE_BYTECODE=1 \
 RUN groupadd -r app && useradd -r -d /app -g app app
 
 WORKDIR /app
-COPY ./server/pyproject.toml ./server/README.md ./server/uv.lock ./
 COPY ./graphiti_core ./graphiti_core
-COPY ./server/graph_service ./graph_service
+COPY ./server ./server
+
+WORKDIR /app/server
 
 # Install dependencies + local core
 RUN mkdir -p /app/.cache/uv && chown -R app:app /app/.cache
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev && \
-    uv pip install --system ./graphiti_core[falkordb]
+    uv pip install --system ../graphiti_core[falkordb]
 
 RUN chown -R app:app /app
-ENV PYTHONUNBUFFERED=1 PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1 PATH="/app/server/.venv/bin:$PATH"
 USER app
 ENV PORT=8000
 EXPOSE $PORT
