@@ -467,7 +467,7 @@ EOF
       - aio-neo4j
       - aio-falkordb
     networks:
-      \${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - graphiti
           - dify-graphiti
