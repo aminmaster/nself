@@ -216,7 +216,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - api
           - dify-api
@@ -286,7 +286,7 @@ EOF
     depends_on:
       - aio-dify-api
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - web
           - dify-web
@@ -313,7 +313,7 @@ EOF
       - HTTPS_PROXY=http://aio-ssrf:3128
       - SANDBOX_PORT=8194
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - sandbox
           - dify-sandbox
@@ -356,7 +356,7 @@ EOF
     depends_on:
       - aio-db
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - plugin_daemon
           - dify-plugin-daemon
@@ -635,7 +635,7 @@ generate_dify_stack() {
       - dify-web
       - dify-plugin-daemon
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - nginx
 EOF
@@ -723,7 +723,7 @@ EOF
       dify-db-migrate:
         condition: service_completed_successfully
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - api
     healthcheck:
@@ -794,7 +794,7 @@ EOF
     depends_on:
       - dify-api
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - web
     healthcheck:
@@ -820,7 +820,7 @@ EOF
       - HTTPS_PROXY=http://dify-ssrf:3128
       - SANDBOX_PORT=8194
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - sandbox
 EOF
@@ -863,7 +863,7 @@ EOF
     depends_on:
       - dify-db
     networks:
-      ${DOCKER_NETWORK}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - plugin_daemon
 EOF

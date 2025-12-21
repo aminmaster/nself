@@ -15,6 +15,9 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+[tool.uv.sources]
+graphiti-core = { path = "../graphiti_core" }
+
 [project.optional-dependencies]
 dev = [
     "pydantic>=2.8.2",

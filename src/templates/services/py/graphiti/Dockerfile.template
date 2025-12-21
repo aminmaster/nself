@@ -31,7 +31,7 @@ COPY ./server/graph_service ./graph_service
 # Install dependencies + local core
 RUN mkdir -p /app/.cache/uv && chown -R app:app /app/.cache
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev && \
+    uv sync --no-dev && \
     uv pip install --system ./graphiti_core[falkordb]
 
 RUN chown -R app:app /app
