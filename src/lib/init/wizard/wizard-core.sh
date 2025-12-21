@@ -105,15 +105,18 @@ EOF
   # Step 1: Core Settings
   wizard_core_settings config
 
-  # Extract project name for use in other steps
+  # Extract project name and base domain for use in other steps
   local project_name=""
+  local base_domain="localhost"
   for item in "${config[@]}"; do
     if [[ "$item" == "CONF:PROJECT_NAME="* ]]; then
       project_name="${item#CONF:PROJECT_NAME=}"
-      break
     elif [[ "$item" == "PROJECT_NAME="* ]]; then
       project_name="${item#PROJECT_NAME=}"
-      break
+    elif [[ "$item" == "CONF:BASE_DOMAIN="* ]]; then
+      base_domain="${item#CONF:BASE_DOMAIN=}"
+    elif [[ "$item" == "BASE_DOMAIN="* ]]; then
+      base_domain="${item#BASE_DOMAIN=}"
     fi
   done
 
@@ -124,7 +127,7 @@ EOF
   wizard_core_services config
 
   # Step 4: Service Passwords
-  wizard_service_passwords config
+  wizard_service_passwords config "$base_domain"
 
   # Step 5: Admin Dashboard
   wizard_admin_dashboard config
@@ -155,6 +158,7 @@ EOF
 # Configure service passwords
 wizard_service_passwords() {
   local config_array_name="$1"
+  local base_domain="${2:-localhost}"
 
   clear
   show_wizard_step 4 10 "Service Passwords"
@@ -248,7 +252,7 @@ wizard_service_passwords() {
   echo "Setting up the initial superuser for the web application."
   echo ""
   local super_email super_pass
-  prompt_input "Superadmin Email" "admin@${BASE_DOMAIN:-localhost}" super_email
+  prompt_input "Superadmin Email" "admin@$base_domain" super_email
   
   if confirm_action "Use auto-generated password for Superadmin?"; then
     super_pass=$(generate_password 16)
