@@ -44,6 +44,10 @@ DOCKERFILE
       if [[ -d "$template_src" ]]; then
           mkdir -p "$graphiti_dir"
           cp -r "$template_src"/* "$graphiti_dir/"
+          # Rename .template files to actual files for build
+          find "$graphiti_dir" -name "*.template" -type f | while read t; do
+              mv "$t" "${t%.template}"
+          done
       fi
   fi
 
