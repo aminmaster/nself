@@ -54,11 +54,6 @@ generate_frontend_app() {
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
-    depends_on:
-      ${project_name}_aio_falkordb:
-        condition: service_healthy
-      ${project_name}_aio_hasura:
-        condition: service_healthy
 
 EOF
 }
