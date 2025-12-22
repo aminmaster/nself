@@ -80,20 +80,31 @@ setup_web_app() {
 
 # Generate a single frontend app service
 generate_frontend_app() {
-  local service_name=${1:-web}
-  local project_name=${PROJECT_NAME:-equilibria}
-  
+  local target="production"
+  local port="3000"
+  local node_env="production"
+  local volumes_block=""
+
+  if [[ "${WEB_DEPLOY_MODE:-}" == "dev" ]]; then
+    target="development"
+    port="5173"
+    node_env="development"
+    volumes_block="    volumes:
+      - ./services/web:/app
+      - /app/node_modules"
+  fi
+
   cat <<EOF
   ${project_name}_web:
     build:
       context: ./services/web
       dockerfile: Dockerfile
-      target: production
+      target: $target
     container_name: ${project_name}_web
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3000
+      - NODE_ENV=$node_env
+      - PORT=$port
       - HOST=0.0.0.0
       - ORIGIN=https://equilibria.org
       # Backend service connections (internal Docker network)
@@ -110,9 +121,9 @@ generate_frontend_app() {
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.equilibria.org}
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
+$volumes_block
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
-
 EOF
 }
 
