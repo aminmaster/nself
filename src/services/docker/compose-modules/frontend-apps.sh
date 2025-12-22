@@ -81,13 +81,16 @@ generate_frontend_app() {
       context: ./services/web
       dockerfile: Dockerfile
       target: \${WEB_TARGET:-production}
+      args:
+        - PORT=\${PORT:-3000}
     container_name: ${project_name}_web
     restart: unless-stopped
     environment:
       - NODE_ENV=\${NODE_ENV:-production}
       - PORT=\${PORT:-3000}
       - HOST=0.0.0.0
-      - ORIGIN=https://equilibria.org
+      - ORIGIN=https://${BASE_DOMAIN:-equilibria.org}
+      - WEB_PORT=\${PORT:-3000}
       # Backend service connections (internal Docker network)
       # Neo4J for document knowledge graphs and system ontology
       - NEO4J_URI=${NEO4J_URI:-bolt://${project_name}_aio_neo4j:7687}
@@ -97,9 +100,9 @@ generate_frontend_app() {
       - FALKORDB_URI=${FALKORDB_URI:-bolt://${project_name}_aio_falkordb:6379}
       - FALKORDB_USER=${FALKORDB_USER:-falkor_admin}
       - FALKORDB_PASSWORD=${FALKORDB_PASSWORD:-}
-      - VITE_NHOST_AUTH_URL=\${NHOST_AUTH_URL:-https://auth.equilibria.org}
-      - VITE_HASURA_URL=\${HASURA_URL:-https://api.equilibria.org/v1/graphql}
-      - VITE_DIFY_URL=\${DIFY_URL:-https://dify.equilibria.org}
+      - VITE_NHOST_AUTH_URL=\${NHOST_AUTH_URL:-https://auth.${BASE_DOMAIN:-equilibria.org}}
+      - VITE_HASURA_URL=\${HASURA_URL:-https://api.${BASE_DOMAIN:-equilibria.org}/v1/graphql}
+      - VITE_DIFY_URL=\${DIFY_URL:-https://dify.${BASE_DOMAIN:-equilibria.org}}
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
     volumes:
