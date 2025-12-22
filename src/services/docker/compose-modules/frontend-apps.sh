@@ -97,12 +97,13 @@ generate_frontend_app() {
       - HOST=0.0.0.0
       - ORIGIN=https://equilibria.org
       # Backend service connections (internal Docker network)
-      - NEO4J_URI=bolt://${project_name}_aio_falkordb:6379
-      - VITE_NEO4J_URI=bolt://${project_name}_aio_falkordb:6379
-      - NEO4J_USER=\${NEO4J_USER:-}
+      # Neo4J for document knowledge graphs and system ontology
+      - NEO4J_URI=bolt://${project_name}_aio_neo4j:7687
+      - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD:-}
-      - VITE_NEO4J_USER=\${NEO4J_USER:-}
-      - VITE_NEO4J_PASSWORD=\${NEO4J_PASSWORD:-}
+      # FalkorDB for user conversations and context
+      - FALKORDB_URI=bolt://${project_name}_aio_falkordb:6379
+      - FALKORDB_PASSWORD=\${FALKORDB_PASSWORD:-}
       - VITE_NHOST_AUTH_URL=\${NHOST_AUTH_URL:-https://auth.equilibria.org}
       - VITE_HASURA_URL=\${HASURA_URL:-https://api.equilibria.org/v1/graphql}
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.equilibria.org}
