@@ -8,69 +8,65 @@ setup_web_app() {
   local repo_url="${WEB_REPO_URL:-}"
   local framework="${WEB_FRAMEWORK:-sveltekit}"
   
-  # Check if directory already exists with content
-  if [[ -d "$web_service_dir"  ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null | grep -v '^\.dockerignore$' | grep -v '^Dockerfile$')" ]]; then
-    echo "⚠ Web app directory already exists with content" >&2
+  # Check if directory already exists with content (excluding Docker files)
+  if [[ -d "$web_service_dir" ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null | grep -v '^\.dockerignore$' | grep -v '^Dockerfile$')" ]]; then
+    # Directory exists with code - skip clone/scaffold during build
+    echo "✓ Web app directory exists, skipping clone/scaffold" >&2
     
-    if [[ -n "$repo_url" ]]; then
+    # If repo URL is set and we're in interactive mode, offer to pull
+    if [[ -n "$repo_url" ]] && [[ -t 0 ]]; then
       echo "Repository: $repo_url" >&2
       echo "" >&2
-      read -p "Pull latest from remote? [y/N]: " -n 1 -r >&2
+      read -t 5 -p "Pull latest from remote? [y/N]: " -n 1 -r response >&2 2>/dev/null || response="n"
       echo "" >&2
       
-      if [[ $REPLY =~ ^[Yy]$ ]]; then
+      if [[ "$response" =~ ^[Yy]$ ]]; then
         cd "$web_service_dir"
-        git pull origin main >&2
+        git pull origin main >&2 2>&1 || echo "⚠ Git pull failed" >&2
         cd - > /dev/null
         echo "✓ Pulled latest code" >&2
-      else
-        echo "✓ Skipping update, using existing code" >&2
       fi
-    else
-      echo "✓ Skipping - using existing code" >&2
     fi
   else
-    # Directory doesn't exist or is empty - need to create it
+    # Directory doesn't exist or is empty - create it
     mkdir -p "$web_service_dir"
     
     if [[ -n "$repo_url" ]]; then
-      # Clone from repository
+      # Clone from repository (non-interactive)
       echo "Cloning from $repo_url..." >&2
-      if git clone "$repo_url" "$web_service_dir" >&2; then
+      if git clone "$repo_url" "$web_service_dir" >&2 2>&1; then
         echo "✓ Cloned repository successfully" >&2
       else
-        echo "✗ Failed to clone repository" >&2
-        exit 1
+        echo "✗ Failed to clone repository - skipping" >&2
+        # Don't exit, just skip - Dockerfile will still be copied
       fi
-    else
-      # Scaffold new app based on framework
+    elif [[ -n "$framework" ]] && [[ "$framework" != "sveltekit" ]] ; then
+      # Only scaffold non-sveltekit frameworks automatically
+      # For sveltekit, we assume the repo exists
       echo "Scaffolding new $framework app..." >&2
       
       case "$framework" in
-        sveltekit)
-          # Use npm create with non-interactive flags
-          npx -y create-svelte@latest "$web_service_dir" -- --template skeleton --types typescript --no-prettier --no-eslint --no-playwright >&2
-          ;;
         nextjs)
-          npx -y create-next-app@latest "$web_service_dir" --typescript --tailwind --app --no-src-dir --import-alias "@/*" >&2
+          npx -y create-next-app@latest "$web_service_dir" --typescript --tailwind --app --no-src-dir --import-alias "@/*" >&2 2>&1 || echo "✗ Scaffold failed" >&2
           ;;
         nuxtjs)
-          npx -y nuxi@latest init "$web_service_dir" >&2
+          npx -y nuxi@latest init "$web_service_dir" >&2 2>&1 || echo "✗ Scaffold failed" >&2
           ;;
         react-vite)
-          npm create vite@latest "$web_service_dir" -- --template react-ts >&2
-          ;;
-        *)
-          echo "✗ Unknown framework: $framework" >&2
-          exit 1
+          npm create vite@latest "$web_service_dir" -- --template react-ts >&2 2>&1 || echo "✗ Scaffold failed" >&2
           ;;
       esac
       
-      echo "✓ Scaffolded new $framework app" >&2
+      if [[ -d "$web_service_dir" ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null)" ]]; then
+        echo "✓ Scaffolded new $framework app" >&2
+      fi
+    else
+      # SvelteKit or no framework - just note it
+      echo "⚠ Web app directory is empty - you'll need to clone your repo manually" >&2
     fi
   fi
   
-  # Now copy Docker configuration files (after app exists)
+  # Always copy Docker configuration files (whether app exists or not)
   if [[ -f "$nself_templates_dir/Dockerfile" ]]; then
     cp "$nself_templates_dir/Dockerfile" "$web_service_dir/Dockerfile"
     echo "✓ Copied Dockerfile to $web_service_dir" >&2
