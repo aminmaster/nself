@@ -18,9 +18,16 @@ source_wizard_steps() {
   done
 }
 
-# Run the configuration wizard
+# Main modular wizard flow
 run_modular_wizard() {
-  local output_file="${1:-.env}"
+  # Use environment-specific file: .env.prod for production, .env for dev/staging
+  local env="${NSELF_ENV:-dev}"
+  local output_file=".env"
+  if [[ "$env" == "prod" ]] || [[ "$env" == "production" ]]; then
+    output_file=".env.prod"
+  elif [[ "$env" == "staging" ]] || [[ "$env" == "stage" ]]; then
+    output_file=".env.staging"
+  fi
 
   # Set up trap for Ctrl+C
   trap 'echo ""; echo ""; log_info "Wizard cancelled"; echo "Run nself init --wizard to try again."; echo ""; exit 0' INT TERM
@@ -523,78 +530,55 @@ wizard_custom_services() {
   return 0
 }
 
-# Configure frontend applications
+# Configure frontend applications (now containerized)
 wizard_frontend_apps() {
   local config_array_name="$1"
 
   clear
   show_wizard_step 9 10 "Frontend Applications"
 
-  echo "🎨 Frontend Applications"
+  echo "🎨 Frontend Applications (Containerized)"
+  echo ""
+  echo "Frontend apps now run in Docker containers for consistency."
   echo ""
 
-  if confirm_action "Add frontend applications?"; then
-    local app_count=0
-    local add_more=true
-    local primary_frontend_selected=false
-
-    while [[ "$add_more" == "true" ]] && [[ $app_count -lt 10 ]]; do
-      app_count=$((app_count + 1))
-      echo ""
-      echo "Frontend App #$app_count:"
-
-      local app_name app_framework app_port
-
-      prompt_input "App name" "app$app_count" app_name "^[a-z][a-z0-9-]*$"
-
+  if confirm_action "Add a frontend application?"; then
+    add_wizard_config "$config_array_name" "FRONTEND_ENABLED" "true"
+    
+    # Ask for git repository URL
+    echo ""
+    echo "Do you have an existing frontend repository?"
+    local repo_url
+    prompt_input "Git repository URL (or press Enter to scaffold new app)" "" repo_url
+    
+    if [[ -n "$repo_url" ]]; then
+      # User provided a repo URL
+      add_wizard_config "$config_array_name" "WEB_REPO_URL" "$repo_url"
+      echo "  ✓ Will clone from: $repo_url"
+    else
+      # No repo - ask for framework to scaffold
       echo ""
       echo "Framework:"
       local framework_options=(
+        "SvelteKit - Recommended modern framework"
         "Next.js - React framework with SSR"
-        "React - Create React App"
-        "Vue.js - Progressive framework"
-        "Angular - Enterprise framework"
-        "Svelte - Compiled framework"
-        "Static HTML - Plain HTML/CSS/JS"
+        "Nuxt.js - Vue framework with SSR"
+        "React (Vite) - Fast React development"
       )
       local selected_framework
       select_option "Select framework" framework_options selected_framework
 
       case $selected_framework in
-        0) app_framework="nextjs" ;;
-        1) app_framework="react" ;;
-        2) app_framework="vue" ;;
-        3) app_framework="angular" ;;
-        4) app_framework="svelte" ;;
-        5) app_framework="static" ;;
+        0) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "sveltekit" ;;
+        1) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "nextjs" ;;
+        2) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "nuxtjs" ;;
+        3) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "react-vite" ;;
       esac
-
-      echo ""
-      prompt_input "App port" "$((3000 + app_count - 1))" app_port "^[0-9]+$"
-
-      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_NAME" "$app_name"
-      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_FRAMEWORK" "$app_framework"
-      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_PORT" "$app_port"
       
-      # Primary Frontend Logic
-      if [[ "$primary_frontend_selected" == "false" ]]; then
-        echo ""
-        if confirm_action "Make '$app_name' the primary frontend (accessible via the main domain)?"; then
-          add_wizard_config "$config_array_name" "PRIMARY_FRONTEND_PORT" "$app_port"
-          primary_frontend_selected=true
-          echo "  ✓ '$app_name' set as primary frontend."
-        fi
-      fi
-
-      echo ""
-      if ! confirm_action "Add another frontend app?"; then
-        add_more=false
-      fi
-    done
-
-    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "$app_count"
+      echo "  ✓ Will scaffold new app"
+    fi
   else
-    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "0"
+    add_wizard_config "$config_array_name" "FRONTEND_ENABLED" "false"
   fi
 
   return 0

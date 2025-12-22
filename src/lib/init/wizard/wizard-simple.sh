@@ -216,7 +216,14 @@ review_configuration_simple() {
 
 # Run simplified wizard
 run_simple_wizard() {
-  local output_file="${1:-.env}"
+  # Use environment-specific file: .env.prod for production, .env for dev/staging
+  local env="${NSELF_ENV:-dev}"
+  local output_file=".env"
+  if [[ "$env" == "prod" ]] || [[ "$env" == "production" ]]; then
+    output_file=".env.prod"
+  elif [[ "$env" == "staging" ]] || [[ "$env" == "stage" ]]; then
+    output_file=".env.staging"
+  fi
 
   # Set up trap for Ctrl+C
   trap 'echo ""; echo "Wizard cancelled"; exit 0' INT TERM
