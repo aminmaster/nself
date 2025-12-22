@@ -207,7 +207,7 @@ EOF
   if [[ "${FRONTEND_ENABLED:-false}" == "true" ]]; then
     cat >> nginx/conf.d/default.conf <<EOF
         # Proxy to containerized web app
-        proxy_pass http://${PROJECT_NAME}_web:3000;
+        proxy_pass http://${PROJECT_NAME}_web:\${WEB_PORT:-3000};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
