@@ -101,12 +101,12 @@ generate_frontend_app() {
     build:
       context: ./services/web
       dockerfile: Dockerfile
-      target: $target
+      target: \${WEB_TARGET:-production}
     container_name: ${project_name}_web
     restart: unless-stopped
     environment:
-      - NODE_ENV=$node_env
-      - PORT=$port
+      - NODE_ENV=\${NODE_ENV:-production}
+      - PORT=\${PORT:-3000}
       - HOST=0.0.0.0
       - ORIGIN=https://equilibria.org
       # Backend service connections (internal Docker network)
@@ -123,7 +123,9 @@ generate_frontend_app() {
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.equilibria.org}
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
-$volumes_block
+    volumes:
+      - ./services/web:/app
+      - /app/node_modules
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
 EOF
