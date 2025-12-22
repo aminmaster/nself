@@ -80,6 +80,8 @@ setup_web_app() {
 
 # Generate a single frontend app service
 generate_frontend_app() {
+  local service_name=${1:-web}
+  local project_name=${PROJECT_NAME:-equilibria}
   local target="production"
   local port="3000"
   local node_env="production"
