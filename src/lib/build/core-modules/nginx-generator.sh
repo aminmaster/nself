@@ -203,7 +203,23 @@ server {
     location / {
 EOF
 
-  if [[ -n "${PRIMARY_FRONTEND_PORT:-}" ]]; then
+  # Check if containerized frontend is enabled
+  if [[ "${FRONTEND_ENABLED:-false}" == "true" ]]; then
+    cat >> nginx/conf.d/default.conf <<EOF
+        # Proxy to containerized web app
+        proxy_pass http://${PROJECT_NAME}_web:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 86400;
+EOF
+  elif [[ -n "${PRIMARY_FRONTEND_PORT:-}" ]]; then
+    # Fallback: Legacy host-based frontend (for backwards compatibility)
     cat >> nginx/conf.d/default.conf <<EOF
         proxy_pass http://host.docker.internal:${PRIMARY_FRONTEND_PORT};
         proxy_http_version 1.1;
@@ -217,6 +233,7 @@ EOF
         proxy_read_timeout 86400;
 EOF
   else
+    # No frontend configured - serve default welcome page
     cat >> nginx/conf.d/default.conf <<EOF
         root /usr/share/nginx/html;
         index index.html;
