@@ -138,41 +138,50 @@ prompt_custom_services_simple() {
   done
 }
 
-# Simple frontend app prompt
+# Frontend app configuration (now containerized)
 prompt_frontend_apps_simple() {
   local config_array_name="$1"
-  local app_count=0
-  local primary_frontend_selected=false
-
+  
   echo ""
-  echo "Add frontend applications (they run outside Docker):"
+  echo "Frontend Application Setup (containerized via Docker):"
   echo ""
-
-  while [[ $app_count -lt 5 ]]; do
-    app_count=$((app_count + 1))
-
-    local app_name
-    prompt_input "App $app_count name (or press Enter to finish)" "" app_name
-
-    if [[ -z "$app_name" ]]; then
-      break
-    fi
-
-    local app_port=$((2999 + app_count))
-    eval "$config_array_name+=('FRONTEND_APP_${app_count}_NAME=$app_name')"
-    eval "$config_array_name+=('FRONTEND_APP_${app_count}_PORT=$app_port')"
-    eval "$config_array_name+=('FRONTEND_APP_${app_count}_ROUTE=$app_name')"
+  
+  if confirm_action "Add a frontend application?" "y"; then
+    eval "$config_array_name+=('# Frontend Configuration')"
+    eval "$config_array_name+=('FRONTEND_ENABLED=true')"
     
-    # Primary Frontend Logic
-    if [[ "$primary_frontend_selected" == "false" ]]; then
+    # Ask for git repository URL
+    local repo_url
+    echo ""
+    echo "Do you have an existing frontend repository?"
+    prompt_input "Git repository URL (or press Enter to scaffold new app)" "" repo_url
+    
+    if [[ -n "$repo_url" ]]; then
+      # User provided a repo URL
+      eval "$config_array_name+=('WEB_REPO_URL=$repo_url')"
+      echo "  ✓ Will clone from: $repo_url"
+    else
+      # No repo - ask for framework to scaffold
       echo ""
-      if confirm_action "Make '$app_name' the primary frontend (accessible via the main domain)?" "n"; then
-        eval "$config_array_name+=('PRIMARY_FRONTEND_PORT=$app_port')"
-        primary_frontend_selected=true
-        echo "  ✓ '$app_name' set as primary frontend."
-      fi
+      echo "Select framework to scaffold:"
+      echo "  1) SvelteKit (recommended)"
+      echo "  2) Next.js"
+      echo "  3) Nuxt.js"
+      echo "  4) React (Vite)"
+      
+      local framework_choice
+      prompt_input "Framework choice [1-4]" "1" framework_choice "^[1-4]$"
+      
+      case "$framework_choice" in
+        1) eval "$config_array_name+=('WEB_FRAMEWORK=sveltekit')" ;;
+        2) eval "$config_array_name+=('WEB_FRAMEWORK=nextjs')" ;;
+        3) eval "$config_array_name+=('WEB_FRAMEWORK=nuxtjs')" ;;
+        4) eval "$config_array_name+=('WEB_FRAMEWORK=react-vite')" ;;
+      esac
+      
+      echo "  ✓ Will scaffold new $(eval echo \$WEB_FRAMEWORK) app"
     fi
-  done
+  fi
 }
 
 # Simple configuration review
