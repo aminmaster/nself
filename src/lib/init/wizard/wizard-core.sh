@@ -263,7 +263,9 @@ wizard_service_passwords() {
   
   if confirm_action "Use auto-generated password for Superadmin?"; then
     super_pass=$(generate_password 16)
-    echo "Generated: $super_pass (MAKE A NOTE OF THIS!)"
+    echo "Generated: [hidden for security]"
+    echo "⚠️  IMPORTANT: Your superadmin password is: $super_pass"
+    echo "    Please save this password securely before continuing!"
     press_any_key
   else
     prompt_password "Superadmin Password" super_pass
