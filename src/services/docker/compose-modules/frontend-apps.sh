@@ -10,22 +10,13 @@ setup_web_app() {
   
   # Check if directory already exists with content (excluding Docker files)
   if [[ -d "$web_service_dir" ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null | grep -v '^\.dockerignore$' | grep -v '^Dockerfile$')" ]]; then
-    # Directory exists with code - skip clone/scaffold during build
-    echo "✓ Web app directory exists, skipping clone/scaffold" >&2
+    # Directory exists with code
+    echo "✓ Web app directory exists" >&2
     
-    # If repo URL is set and we're in interactive mode, offer to pull
-    if [[ -n "$repo_url" ]] && [[ -t 0 ]]; then
-      echo "Repository: $repo_url" >&2
-      echo "" >&2
-      read -t 5 -p "Pull latest from remote? [y/N]: " -n 1 -r response >&2 2>/dev/null || response="n"
-      echo "" >&2
-      
-      if [[ "$response" =~ ^[Yy]$ ]]; then
-        cd "$web_service_dir"
-        git pull origin main >&2 2>&1 || echo "⚠ Git pull failed" >&2
-        cd - > /dev/null
-        echo "✓ Pulled latest code" >&2
-      fi
+    # If repo URL is set, perform non-interactive pull to ensure latest code
+    if [[ -n "$repo_url" ]]; then
+      echo "Pulling latest from $repo_url..." >&2
+      (cd "$web_service_dir" && git reset --hard HEAD && git pull origin main) >&2 2>&1 || echo "⚠ Git pull failed (continuing anyway)" >&2
     fi
   else
     # Directory doesn't exist or is empty - create it
@@ -38,43 +29,31 @@ setup_web_app() {
         echo "✓ Cloned repository successfully" >&2
       else
         echo "✗ Failed to clone repository - skipping" >&2
-        # Don't exit, just skip - Dockerfile will still be copied
       fi
     elif [[ -n "$framework" ]] && [[ "$framework" != "sveltekit" ]] ; then
       # Only scaffold non-sveltekit frameworks automatically
-      # For sveltekit, we assume the repo exists
       echo "Scaffolding new $framework app..." >&2
       
       case "$framework" in
         nextjs)
           npx -y create-next-app@latest "$web_service_dir" --typescript --tailwind --app --no-src-dir --import-alias "@/*" >&2 2>&1 || echo "✗ Scaffold failed" >&2
           ;;
-        nuxtjs)
-          npx -y nuxi@latest init "$web_service_dir" >&2 2>&1 || echo "✗ Scaffold failed" >&2
-          ;;
         react-vite)
           npm create vite@latest "$web_service_dir" -- --template react-ts >&2 2>&1 || echo "✗ Scaffold failed" >&2
           ;;
       esac
-      
-      if [[ -d "$web_service_dir" ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null)" ]]; then
-        echo "✓ Scaffolded new $framework app" >&2
-      fi
-    else
-      # SvelteKit or no framework - just note it
-      echo "⚠ Web app directory is empty - you'll need to clone your repo manually" >&2
     fi
   fi
   
-  # Always copy Docker configuration files (whether app exists or not)
+  # Always ENFORCE Docker configuration files from nself (Our source of truth)
   if [[ -f "$nself_templates_dir/Dockerfile" ]]; then
-    cp "$nself_templates_dir/Dockerfile" "$web_service_dir/Dockerfile"
-    echo "✓ Copied Dockerfile to $web_service_dir" >&2
+    cp -f "$nself_templates_dir/Dockerfile" "$web_service_dir/Dockerfile"
+    echo "✓ Standardized Dockerfile from nself templates" >&2
   fi
   
   if [[ -f "$nself_templates_dir/.dockerignore" ]]; then
-    cp "$nself_templates_dir/.dockerignore" "$web_service_dir/.dockerignore"
-    echo "✓ Copied .dockerignore to $web_service_dir" >&2
+    cp -f "$nself_templates_dir/.dockerignore" "$web_service_dir/.dockerignore"
+    echo "✓ Standardized .dockerignore from nself templates" >&2
   fi
 }
 

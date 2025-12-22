@@ -1,12 +1,16 @@
 # Multi-stage build for SvelteKit
 
+# Multi-stage build for SvelteKit
+
 # Development stage (with hot reload support)
 FROM node:20-alpine AS development
 WORKDIR /app
+ENV NODE_ENV=development
 COPY package*.json ./
 RUN npm install
-EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Vite dev server on port 3000 to match Nginx proxy
+EXPOSE 3000
+CMD ["npx", "vite", "dev", "--host", "0.0.0.0", "--port", "3000"]
 
 # Build stage
 FROM node:20-alpine AS builder
