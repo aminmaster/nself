@@ -398,5 +398,6 @@ EOF
 export -f generate_postgres_service
 export -f generate_hasura_service
 export -f generate_auth_service
+export -f generate_db_seed_service
 export -f generate_minio_service
 export -f generate_redis_service
