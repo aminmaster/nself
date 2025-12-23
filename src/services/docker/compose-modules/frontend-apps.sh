@@ -80,7 +80,7 @@ generate_frontend_app() {
     build:
       context: ./services/web
       dockerfile: Dockerfile
-      target: \${WEB_TARGET:-production}
+      target: \${WEB_TARGET:-${target}}
       args:
         - PORT=\${PORT:-3000}
     container_name: ${project_name}_web

@@ -29,6 +29,6 @@ ARG PORT=3000
 ENV PORT=${PORT}
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
-RUN npm install --production
+RUN npm install --omit=dev --no-scripts
 EXPOSE ${PORT}
 CMD ["node", "build/index.js"]
