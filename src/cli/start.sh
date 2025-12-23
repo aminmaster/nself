@@ -169,21 +169,8 @@ check_firewall_rules() {
     missing_commands+=("sudo ufw allow 443/tcp comment 'HTTPS'")
   fi
   
-  # Check frontend app ports (if any)
-  local frontend_count="${FRONTEND_APP_COUNT:-0}"
-  if [[ "$frontend_count" -gt 0 ]]; then
-    for i in $(seq 1 "$frontend_count"); do
-      local port_var="FRONTEND_APP_${i}_PORT"
-      local port="${!port_var:-$((3000 + i - 1))}"
-      local app_name_var="FRONTEND_APP_${i}_NAME"
-      local app_name="${!app_name_var:-app${i}}"
-      
-      if ! sudo ufw status 2>/dev/null | grep -q "$port.*172.30.0.0/16"; then
-        missing_rules+=("Frontend app '$app_name' (port $port)")
-        missing_commands+=("sudo ufw allow from 172.30.0.0/16 to any port $port comment 'nself frontend: $app_name'")
-      fi
-    done
-  fi
+  # Frontend app ports no longer need host rules as they are containerized and proxied
+  return 0
   
   # Display missing rules if any
   if [[ ${#missing_rules[@]} -gt 0 ]]; then
