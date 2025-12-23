@@ -186,9 +186,9 @@ scaffold_frontend_apps() {
   for i in $(seq 1 "$frontend_count"); do
     # Safe indirect expansion
     local app_name framework port repo_url
-    eval "app_name=\"\${$app_name_var:-}\""
-    eval "framework=\"\${$framework_var:-}\""
-    eval "port=\"\${$port_var:-3000}\""
+    eval "app_name=\"\${FRONTEND_APP_${i}_NAME:-}\""
+    eval "framework=\"\${FRONTEND_APP_${i}_FRAMEWORK:-}\""
+    eval "port=\"\${FRONTEND_APP_${i}_PORT:-3000}\""
     eval "repo_url=\"\${FRONTEND_APP_${i}_REPO_URL:-}\""
     
     if [[ -z "$app_name" ]]; then
