@@ -254,23 +254,6 @@ wizard_service_passwords() {
     echo ""
   fi
 
-  # Superadmin Credentials
-  echo "👤 Application Superadmin (Mastery Account)"
-  echo "Setting up the initial superuser for the web application."
-  echo ""
-  local super_email super_pass
-  prompt_input "Superadmin Email" "admin@$base_domain" super_email
-  
-  if confirm_action "Use auto-generated password for Superadmin?"; then
-    super_pass=$(generate_password 16)
-    echo "Generated: [hidden for security]"
-  else
-    prompt_password "Superadmin Password" super_pass
-  fi
-  
-  add_wizard_config "$config_array_name" "SUPERADMIN_EMAIL" "$super_email"
-  add_wizard_secret "$config_array_name" "SUPERADMIN_PASSWORD" "$super_pass"
-
   # Storage/MinIO credentials
   local storage_enabled=false
   # Storage/MinIO credentials
@@ -595,6 +578,27 @@ wizard_frontend_apps() {
       
       add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_NAME" "$app_name"
       add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_PORT" "$app_port"
+
+      # Superadmin Credentials (Contextual)
+      echo ""
+      local app_name_upper=$(echo "$app_name" | tr '[:lower:]' '[:upper:]')
+      if confirm_action "Configure a Superadmin for '$app_name_upper'?"; then
+        echo "👤 $app_name_upper Superadmin"
+        echo "Setting up the initial superuser for this application."
+        echo ""
+        local super_email super_pass
+        prompt_input "Superadmin Email" "admin@$base_domain" super_email
+        
+        if confirm_action "Use auto-generated password for Superadmin?"; then
+          super_pass=$(generate_password 16)
+          echo "Generated: [hidden for security]"
+        else
+          prompt_password "Superadmin Password" super_pass
+        fi
+        
+        add_wizard_config "$config_array_name" "SUPERADMIN_EMAIL" "$super_email"
+        add_wizard_secret "$config_array_name" "SUPERADMIN_PASSWORD" "$super_pass"
+      fi
 
       # Primary Frontend Logic
       if [[ "$primary_frontend_selected" == "false" ]]; then
