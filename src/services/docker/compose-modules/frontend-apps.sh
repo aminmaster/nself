@@ -3,11 +3,22 @@
 
 # Setup web app directory - clone repo or scaffold, then copy Docker files
 setup_web_app() {
+  local index=${1:-1}
   local nself_templates_dir="${NSELF_ROOT:-$HOME/projects/nself}/src/templates/services/js/sveltekit"
-  local web_service_dir="./services/web"
-  local repo_url="${WEB_REPO_URL:-}"
-  local framework="${WEB_FRAMEWORK:-sveltekit}"
   
+  # Load indexed variables
+  local app_name_var="FRONTEND_APP_${index}_NAME"
+  local repo_url_var="FRONTEND_APP_${index}_REPO_URL"
+  local framework_var="FRONTEND_APP_${index}_FRAMEWORK"
+  
+  local app_name="${!app_name_var:-web}"
+  local repo_url="${!repo_url_var:-${WEB_REPO_URL:-}}"
+  local framework="${!framework_var:-${WEB_FRAMEWORK:-sveltekit}}"
+  
+  local web_service_dir="./services/${app_name}"
+  
+  echo "📦 Setting up frontend app: ${app_name} (Dir: ${web_service_dir})" >&2
+
   # Check if directory already exists with content (excluding Docker files)
   if [[ -d "$web_service_dir" ]] && [[ -n "$(ls -A "$web_service_dir" 2>/dev/null | grep -v '^\.dockerignore$' | grep -v '^Dockerfile$')" ]]; then
     # Directory exists with code
@@ -46,6 +57,7 @@ setup_web_app() {
   fi
   
   # Always ENFORCE Docker configuration files from nself (Our source of truth)
+  # For now SvelteKit template works for most modern JS frameworks
   if [[ -f "$nself_templates_dir/Dockerfile" ]]; then
     cp -f "$nself_templates_dir/Dockerfile" "$web_service_dir/Dockerfile"
     echo "✓ Standardized Dockerfile from nself templates" >&2
@@ -59,38 +71,40 @@ setup_web_app() {
 
 # Generate a single frontend app service
 generate_frontend_app() {
-  local service_name=${1:-web}
+  local index=${1:-1}
   local project_name=${PROJECT_NAME:-equilibria}
-  local target="production"
-  local port="3000"
-  local node_env="production"
-  local volumes_block=""
+  
+  local app_name_var="FRONTEND_APP_${index}_NAME"
+  local port_var="FRONTEND_APP_${index}_PORT"
+  
+  local app_name="${!app_name_var:-web}"
+  local port="${!port_var:-${PORT:-3000}}"
+  
+  # Service name includes project prefix for consistency
+  local service_name="${project_name}_${app_name}"
 
+  # Detection for WEB_TARGET default
+  local target="production"
   if [[ "${WEB_DEPLOY_MODE:-}" == "dev" ]]; then
     target="development"
-    port="5173"
-    node_env="development"
-    volumes_block="    volumes:
-      - ./services/web:/app
-      - /app/node_modules"
   fi
 
   cat <<EOF
-  ${project_name}_web:
+  ${service_name}:
     build:
-      context: ./services/web
+      context: ./services/${app_name}
       dockerfile: Dockerfile
       target: \${WEB_TARGET:-${target}}
       args:
-        - PORT=\${PORT:-3000}
-    container_name: ${project_name}_web
+        - PORT=\${PORT:-${port}}
+    container_name: ${service_name}
     restart: unless-stopped
     environment:
       - NODE_ENV=\${NODE_ENV:-production}
-      - PORT=\${PORT:-3000}
+      - PORT=\${PORT:-${port}}
       - HOST=0.0.0.0
       - ORIGIN=https://${BASE_DOMAIN:-equilibria.org}
-      - WEB_PORT=\${PORT:-3000}
+      - WEB_PORT=\${PORT:-${port}}
       # Backend service connections (internal Docker network)
       # Neo4J for document knowledge graphs and system ontology
       - NEO4J_URI=${NEO4J_URI:-bolt://${project_name}_aio_neo4j:7687}
@@ -106,7 +120,7 @@ generate_frontend_app() {
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
     volumes:
-      - ./services/web:/app
+      - ./services/${app_name}:/app
       - /app/node_modules
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
@@ -115,11 +129,22 @@ EOF
 
 # Main function to generate all frontend app services
 generate_frontend_apps() {
-  # Setup web app (clone/scaffold) and copy Docker files
-  setup_web_app
+  local count=${FRONTEND_APP_COUNT:-0}
   
-  # Generate Docker compose config
-  generate_frontend_app "web"
+  if [[ "$count" -le 0 ]]; then
+    # Compatibility with single-app config
+    if [[ "${FRONTEND_ENABLED:-false}" == "true" ]]; then
+      setup_web_app 1
+      generate_frontend_app 1
+    fi
+    return
+  fi
+
+  local i
+  for ((i=1; i<=count; i++)); do
+    setup_web_app "$i"
+    generate_frontend_app "$i"
+  done
 }
 
 # Export functions

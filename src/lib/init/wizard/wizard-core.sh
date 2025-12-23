@@ -541,43 +541,82 @@ wizard_frontend_apps() {
   echo "Frontend apps now run in Docker containers for consistency."
   echo ""
 
-  if confirm_action "Add a frontend application?"; then
+  if confirm_action "Add frontend applications?"; then
     add_wizard_config "$config_array_name" "FRONTEND_ENABLED" "true"
-    
-    # Ask for git repository URL
-    echo ""
-    echo "Do you have an existing frontend repository?"
-    local repo_url
-    prompt_input "Git repository URL (or press Enter to scaffold new app)" "" repo_url
-    
-    if [[ -n "$repo_url" ]]; then
-      # User provided a repo URL
-      add_wizard_config "$config_array_name" "WEB_REPO_URL" "$repo_url"
-      echo "  ✓ Will clone from: $repo_url"
-    else
-      # No repo - ask for framework to scaffold
-      echo ""
-      echo "Framework:"
-      local framework_options=(
-        "SvelteKit - Recommended modern framework"
-        "Next.js - React framework with SSR"
-        "Nuxt.js - Vue framework with SSR"
-        "React (Vite) - Fast React development"
-      )
-      local selected_framework
-      select_option "Select framework" framework_options selected_framework
+    local app_count=0
+    local add_more=true
+    local primary_frontend_selected=false
 
-      case $selected_framework in
-        0) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "sveltekit" ;;
-        1) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "nextjs" ;;
-        2) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "nuxtjs" ;;
-        3) add_wizard_config "$config_array_name" "WEB_FRAMEWORK" "react-vite" ;;
-      esac
+    while [[ "$add_more" == "true" ]] && [[ $app_count -lt 10 ]]; do
+      app_count=$((app_count + 1))
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "Frontend App #$app_count:"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      local app_name app_framework app_port repo_url
       
-      echo "  ✓ Will scaffold new app"
-    fi
+      prompt_input "App name (e.g., 'web' or 'admin')" "web" app_name "^[a-z][a-z0-9-]*$"
+      
+      # Ask for git repository URL
+      echo ""
+      echo "Do you have an existing frontend repository for '$app_name'?"
+      prompt_input "Git repository URL (or press Enter to scaffold new app)" "" repo_url
+      
+      if [[ -n "$repo_url" ]]; then
+        # User provided a repo URL
+        add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_REPO_URL" "$repo_url"
+        echo "  ✓ Will clone from: $repo_url"
+      else
+        # No repo - ask for framework to scaffold
+        echo ""
+        echo "Framework:"
+        local framework_options=(
+          "SvelteKit - Recommended modern framework"
+          "Next.js - React framework with SSR"
+          "Nuxt.js - Vue framework with SSR"
+          "React (Vite) - Fast React development"
+        )
+        local selected_framework
+        select_option "Select framework" framework_options selected_framework
+
+        case $selected_framework in
+          0) app_framework="sveltekit" ;;
+          1) app_framework="nextjs" ;;
+          2) app_framework="nuxtjs" ;;
+          3) app_framework="react-vite" ;;
+        esac
+        add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_FRAMEWORK" "$app_framework"
+        echo "  ✓ Will scaffold new $app_framework app"
+      fi
+
+      echo ""
+      prompt_input "Container internal port" "$((3000 + app_count - 1))" app_port "^[0-9]+$"
+      
+      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_NAME" "$app_name"
+      add_wizard_config "$config_array_name" "FRONTEND_APP_${app_count}_PORT" "$app_port"
+
+      # Primary Frontend Logic
+      if [[ "$primary_frontend_selected" == "false" ]]; then
+        echo ""
+        if confirm_action "Make '$app_name' the primary frontend (accessible via the main domain)?"; then
+          add_wizard_config "$config_array_name" "PRIMARY_FRONTEND_PORT" "$app_port"
+          add_wizard_config "$config_array_name" "PRIMARY_FRONTEND_NAME" "$app_name"
+          primary_frontend_selected=true
+          echo "  ✓ '$app_name' set as primary frontend."
+        fi
+      fi
+
+      echo ""
+      if ! confirm_action "Add another frontend app?"; then
+        add_more=false
+      fi
+    done
+
+    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "$app_count"
   else
     add_wizard_config "$config_array_name" "FRONTEND_ENABLED" "false"
+    add_wizard_config "$config_array_name" "FRONTEND_APP_COUNT" "0"
   fi
 
   return 0
