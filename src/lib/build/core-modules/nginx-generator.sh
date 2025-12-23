@@ -271,13 +271,22 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        # CORS Headers
+        # CORS Headers - Nginx as the single source of truth
+        proxy_hide_header 'Access-Control-Allow-Origin';
+        proxy_hide_header 'Access-Control-Allow-Methods';
+        proxy_hide_header 'Access-Control-Allow-Headers';
+        proxy_hide_header 'Access-Control-Allow-Credentials';
+
         add_header 'Access-Control-Allow-Origin' '\$http_origin' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
         add_header 'Access-Control-Allow-Credentials' 'true' always;
 
         if (\$request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '\$http_origin';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
@@ -322,13 +331,22 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        # CORS Headers
+        # CORS Headers - Nginx as the single source of truth
+        proxy_hide_header 'Access-Control-Allow-Origin';
+        proxy_hide_header 'Access-Control-Allow-Methods';
+        proxy_hide_header 'Access-Control-Allow-Headers';
+        proxy_hide_header 'Access-Control-Allow-Credentials';
+
         add_header 'Access-Control-Allow-Origin' '\$http_origin' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
         add_header 'Access-Control-Allow-Credentials' 'true' always;
 
         if (\$request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '\$http_origin';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
@@ -642,13 +660,22 @@ server {
 
     # Proxy everything to Dify Internal Nginx
     location / {
-        # CORS Headers
+        # CORS Headers - Nginx as the single source of truth
+        proxy_hide_header 'Access-Control-Allow-Origin';
+        proxy_hide_header 'Access-Control-Allow-Methods';
+        proxy_hide_header 'Access-Control-Allow-Headers';
+        proxy_hide_header 'Access-Control-Allow-Credentials';
+
         add_header 'Access-Control-Allow-Origin' '\$http_origin' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
         add_header 'Access-Control-Allow-Credentials' 'true' always;
 
         if (\$request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '\$http_origin';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
