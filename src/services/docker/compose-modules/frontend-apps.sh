@@ -6,14 +6,11 @@ setup_web_app() {
   local index=${1:-1}
   local nself_templates_dir="${NSELF_ROOT:-$HOME/projects/nself}/src/templates/services/js/sveltekit"
   
-  # Load indexed variables
-  local app_name_var="FRONTEND_APP_${index}_NAME"
-  local repo_url_var="FRONTEND_APP_${index}_REPO_URL"
-  local framework_var="FRONTEND_APP_${index}_FRAMEWORK"
-  
-  local app_name="${!app_name_var:-web}"
-  local repo_url="${!repo_url_var:-${WEB_REPO_URL:-}}"
-  local framework="${!framework_var:-${WEB_FRAMEWORK:-sveltekit}}"
+  # Load indexed variables safely
+  local app_name repo_url framework
+  eval "app_name=\"\${FRONTEND_APP_${index}_NAME:-web}\""
+  eval "repo_url=\"\${FRONTEND_APP_${index}_REPO_URL:-\${WEB_REPO_URL:-}}\""
+  eval "framework=\"\${FRONTEND_APP_${index}_FRAMEWORK:-\${WEB_FRAMEWORK:-sveltekit}}\""
   
   local web_service_dir="./services/${app_name}"
   
@@ -74,11 +71,9 @@ generate_frontend_app() {
   local index=${1:-1}
   local project_name=${PROJECT_NAME:-equilibria}
   
-  local app_name_var="FRONTEND_APP_${index}_NAME"
-  local port_var="FRONTEND_APP_${index}_PORT"
-  
-  local app_name="${!app_name_var:-web}"
-  local port="${!port_var:-${PORT:-3000}}"
+  local app_name port
+  eval "app_name=\"\${FRONTEND_APP_${index}_NAME:-web}\""
+  eval "port=\"\${FRONTEND_APP_${index}_PORT:-\${PORT:-3000}}\""
   
   # Service name includes project prefix for consistency
   local service_name="${project_name}_${app_name}"

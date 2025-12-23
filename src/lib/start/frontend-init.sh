@@ -184,15 +184,20 @@ scaffold_frontend_apps() {
   
   # Iterate through all frontend apps
   for i in $(seq 1 "$frontend_count"); do
-    local app_name_var="FRONTEND_APP_${i}_NAME"
-    local framework_var="FRONTEND_APP_${i}_FRAMEWORK"
-    local port_var="FRONTEND_APP_${i}_PORT"
-    
-    local app_name="${!app_name_var}"
-    local framework="${!framework_var}"
-    local port="${!port_var:-3000}"
+    # Safe indirect expansion
+    local app_name framework port repo_url
+    eval "app_name=\"\${$app_name_var:-}\""
+    eval "framework=\"\${$framework_var:-}\""
+    eval "port=\"\${$port_var:-3000}\""
+    eval "repo_url=\"\${FRONTEND_APP_${i}_REPO_URL:-}\""
     
     if [[ -z "$app_name" ]]; then
+      continue
+    fi
+
+    # Skip if it's a repo-based app (already handled during build/clone)
+    if [[ -n "$repo_url" ]]; then
+      printf "   ${COLOR_DIM}Frontend app '${app_name}' is repo-based, skipping scaffolding${COLOR_RESET}\n"
       continue
     fi
     
@@ -231,10 +236,9 @@ scaffold_frontend_apps() {
   
   printf "\n${COLOR_DIM}💡 Access your apps at:${COLOR_RESET}\n"
   for i in $(seq 1 "$frontend_count"); do
-    local app_name_var="FRONTEND_APP_${i}_NAME"
-    local port_var="FRONTEND_APP_${i}_PORT"
-    local app_name="${!app_name_var}"
-    local port="${!port_var:-3000}"
+    local app_name port
+    eval "app_name=\"\${FRONTEND_APP_${i}_NAME:-}\""
+    eval "port=\"\${FRONTEND_APP_${i}_PORT:-3000}\""
     
     if [[ -n "$app_name" ]]; then
       # Construct URL based on environment
