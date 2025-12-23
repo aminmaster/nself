@@ -200,6 +200,8 @@ EOF
       - SERVICE_API_URL=${api_url}
       - APP_API_URL=${api_url}
       - APP_WEB_URL=${web_url}
+      - CONSOLE_CORS_ALLOW_ORIGIN=https://${BASE_DOMAIN:-localhost},https://www.${BASE_DOMAIN:-localhost},https://${subdomain}.${BASE_DOMAIN:-localhost}
+      - WEB_API_CORS_ALLOW_ORIGIN=https://${BASE_DOMAIN:-localhost},https://www.${BASE_DOMAIN:-localhost},https://${subdomain}.${BASE_DOMAIN:-localhost}
       - DIFY_PLUGIN_DAEMON_URL=http://aio-dify-plugin-daemon:5002
       - PLUGIN_DAEMON_URL=http://aio-dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
@@ -707,6 +709,8 @@ EOF
       - SERVICE_API_URL=${api_url}
       - APP_API_URL=${api_url}
       - APP_WEB_URL=${web_url}
+      - CONSOLE_CORS_ALLOW_ORIGIN=https://${BASE_DOMAIN:-localhost},https://www.${BASE_DOMAIN:-localhost},https://${subdomain}.${BASE_DOMAIN:-localhost}
+      - WEB_API_CORS_ALLOW_ORIGIN=https://${BASE_DOMAIN:-localhost},https://www.${BASE_DOMAIN:-localhost},https://${subdomain}.${BASE_DOMAIN:-localhost}
       - DIFY_PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
