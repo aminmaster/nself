@@ -244,6 +244,42 @@ EOF
   fi  # Close the use_fallback if statement
 }
 
+# Generate Database Seeder service (waits for Auth migrations)
+generate_db_seed_service() {
+  local enabled="${AUTH_ENABLED:-false}"
+  [[ "$enabled" != "true" ]] && return 0
+
+  cat <<EOF
+
+  # Database Seeder (Deferred Superadmin)
+  db-seed:
+    image: postgres:\${POSTGRES_VERSION:-16-alpine}
+    container_name: \${PROJECT_NAME}_db_seed
+    restart: "no"
+    networks:
+      - \${DOCKER_NETWORK}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: \${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./postgres/init/99-seed-superadmin.sql:/seed.sql:ro
+    entrypoint: >
+      /bin/sh -c "
+      echo '→ Waiting for auth.users table...';
+      until psql -h postgres -U \${POSTGRES_USER:-postgres} -d \${POSTGRES_DB:-\${PROJECT_NAME}} -c 'SELECT 1 FROM auth.users LIMIT 1;' >/dev/null 2>&1; do
+        sleep 2;
+      done;
+      echo '✓ auth.users table found, seeding superadmin...';
+      psql -h postgres -U \${POSTGRES_USER:-postgres} -d \${POSTGRES_DB:-\${PROJECT_NAME}} -f /seed.sql;
+      echo '✓ Seeding complete';
+      "
+EOF
+}
+
 # Generate MinIO service configuration
 generate_minio_service() {
   local enabled="${MINIO_ENABLED:-false}"

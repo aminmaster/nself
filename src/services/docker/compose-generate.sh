@@ -271,6 +271,7 @@ EOF
   generate_postgres_service >> docker-compose.yml
   generate_hasura_service >> docker-compose.yml
   generate_auth_service >> docker-compose.yml
+  generate_db_seed_service >> docker-compose.yml
   generate_nginx_service >> docker-compose.yml
 
   # ============================================
