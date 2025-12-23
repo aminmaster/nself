@@ -75,14 +75,18 @@ generate_frontend_app() {
   eval "app_name=\"\${FRONTEND_APP_${index}_NAME:-web}\""
   eval "port=\"\${FRONTEND_APP_${index}_PORT:-\${PORT:-3000}}\""
   
-  # Service name includes project prefix for consistency
-  local service_name="${project_name}_${app_name}"
-
-  # Detection for WEB_TARGET default
+  # Detection for WEB_TARGET default and volumes
   local target="production"
+  local volumes_block=""
   if [[ "${WEB_DEPLOY_MODE:-}" == "dev" ]]; then
     target="development"
+    volumes_block="    volumes:
+      - ./services/${app_name}:/app
+      - /app/node_modules"
   fi
+
+  # Service name includes project prefix for consistency
+  local service_name="${project_name}_${app_name}"
 
   cat <<EOF
   ${service_name}:
@@ -114,9 +118,7 @@ generate_frontend_app() {
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.${BASE_DOMAIN:-equilibria.org}}
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
-    volumes:
-      - ./services/${app_name}:/app
-      - /app/node_modules
+${volumes_block}
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
 EOF
