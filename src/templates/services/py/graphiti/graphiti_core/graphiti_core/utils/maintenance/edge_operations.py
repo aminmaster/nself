@@ -94,6 +94,7 @@ async def extract_edges(
     edge_type_map: dict[tuple[str, str], list[str]],
     group_id: str = '',
     edge_types: dict[str, type[BaseModel]] | None = None,
+    custom_prompt: str = '',
 ) -> list[EntityEdge]:
     start = time()
 
@@ -129,8 +130,10 @@ async def extract_edges(
         'previous_episodes': [ep.content for ep in previous_episodes],
         'reference_time': episode.valid_at,
         'edge_types': edge_types_context,
-        'custom_prompt': '',
+        'custom_prompt': custom_prompt,
     }
+
+    reflexion_prompt = ''
 
     facts_missed = True
     reflexion_iterations = 0
@@ -158,11 +161,11 @@ async def extract_edges(
 
             missing_facts = reflexion_response.get('missing_facts', [])
 
-            custom_prompt = 'The following facts were missed in a previous extraction: '
+            reflexion_prompt = '\nThe following facts were missed in a previous extraction: '
             for fact in missing_facts:
-                custom_prompt += f'\n{fact},'
+                reflexion_prompt += f'\n{fact},'
 
-            context['custom_prompt'] = custom_prompt
+            context['custom_prompt'] = custom_prompt + reflexion_prompt
 
             facts_missed = len(missing_facts) != 0
 

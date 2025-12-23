@@ -384,6 +384,7 @@ class Graphiti:
         edge_types: dict[str, type[BaseModel]] | None,
         nodes: list[EntityNode],
         uuid_map: dict[str, str],
+        custom_prompt: str = '',
     ) -> tuple[list[EntityEdge], list[EntityEdge]]:
         """Extract edges from episode and resolve against existing graph."""
         extracted_edges = await extract_edges(
@@ -394,6 +395,7 @@ class Graphiti:
             edge_type_map,
             group_id,
             edge_types,
+            custom_prompt,
         )
 
         edges = resolve_edge_pointers(extracted_edges, uuid_map)
@@ -627,6 +629,7 @@ class Graphiti:
         previous_episode_uuids: list[str] | None = None,
         edge_types: dict[str, type[BaseModel]] | None = None,
         edge_type_map: dict[tuple[str, str], list[str]] | None = None,
+        custom_prompt: str = '',
     ) -> AddEpisodeResults:
         """
         Process an episode and update the graph.
@@ -739,7 +742,12 @@ class Graphiti:
 
                 # Extract and resolve nodes
                 extracted_nodes = await extract_nodes(
-                    self.clients, episode, previous_episodes, entity_types, excluded_entity_types
+                    self.clients,
+                    episode,
+                    previous_episodes,
+                    entity_types,
+                    excluded_entity_types,
+                    custom_prompt,
                 )
 
                 nodes, uuid_map, _ = await resolve_extracted_nodes(
@@ -760,6 +768,7 @@ class Graphiti:
                     edge_types,
                     nodes,
                     uuid_map,
+                    custom_prompt,
                 )
 
                 # Extract node attributes
@@ -831,6 +840,7 @@ class Graphiti:
         excluded_entity_types: list[str] | None = None,
         edge_types: dict[str, type[BaseModel]] | None = None,
         edge_type_map: dict[tuple[str, str], list[str]] | None = None,
+        custom_prompt: str = '',
     ) -> AddBulkEpisodeResults:
         """
         Process multiple episodes in bulk and update the graph.

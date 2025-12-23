@@ -18,12 +18,20 @@ generate_aio_stack() {
   local api_url="https://${subdomain}.${BASE_DOMAIN}"
   local web_url="https://${subdomain}.${BASE_DOMAIN}"
   
-  echo ""
-  echo "  # ============================================"
-  echo "  # AI Operating System (AIO) Stack"
-  echo "  # Includes: Dify v${version}, Graphiti, Neo4j, FalkorDB, MLFlow"
-  echo "  # Includes: Dify v${version}, Graphiti, Neo4j, FalkorDB, MLFlow"
-  echo "  # ============================================"
+  # ============================================
+  # AI Operating System (AIO) Stack
+  # Includes: Dify v${version}, Graphiti, Neo4j, FalkorDB, MLFlow
+  # ============================================
+
+  # Dummy service to satisfy nself dependency
+  cat <<EOF
+  ${service_name}:
+    image: alpine:latest
+    command: "true"
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+EOF
+
 
   # Ensure MLFlow Dockerfile exists (required for Postgres support)
   local mlflow_dir="./services/${service_name}/mlflow"
@@ -454,7 +462,13 @@ EOF
     restart: unless-stopped
     environment:
       - PORT=8000
-      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      # OpenRouter for text generation (Grok)
+      - OPENAI_API_KEY=\${OPENROUTER_API_KEY}
+      - OPENAI_BASE_URL=\${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - MODEL_NAME=\${OPENROUTER_MODEL_TXT:-x-ai/grok-4.1-fast}
+      # OpenAI for embeddings
+      - EMBEDDING_MODEL_NAME=\${EMBEDDING_MODEL:-text-embedding-3-large}
+      # Graph configuration
       - NEO4J_URI=bolt://aio-neo4j:7687
       - NEO4J_USER=\${NEO4J_USER:-neo4j}
       - NEO4J_PASSWORD=\${NEO4J_PASSWORD}

@@ -48,12 +48,32 @@ async def lifespan(_: FastAPI):
 router = APIRouter(lifespan=lifespan)
 
 
+import logging
+from graph_service.utils.model_factory import ModelFactory
+
+logger = logging.getLogger(__name__)
+
 @router.post('/messages', status_code=status.HTTP_202_ACCEPTED)
 async def add_messages(
     request: AddMessagesRequest,
     graphiti: ZepGraphitiDep,
 ):
-    async def add_messages_task(m: Message):
+    # Dynamic model generation from request JSON
+    entity_types = ModelFactory.create_models(request.entity_types)
+    edge_types = ModelFactory.create_models(request.edge_types)
+    
+    # Parse edge_type_map from "Source:Target" strings to (Source, Target) tuples
+    parsed_edge_type_map = None
+    if request.edge_type_map:
+        parsed_edge_type_map = {}
+        for signature, types in request.edge_type_map.items():
+            if ":" in signature:
+                source, target = signature.split(":")
+                parsed_edge_type_map[(source.strip(), target.strip())] = types
+            else:
+                logger.warning(f"Invalid edge_type_map signature: {signature}. Expected 'Source:Target'")
+
+    async def add_messages_task(m: Message, ent_types, edg_types, et_map, prompt):
         await graphiti.add_episode(
             uuid=m.uuid,
             group_id=request.group_id,
@@ -62,10 +82,14 @@ async def add_messages(
             reference_time=m.timestamp,
             source=EpisodeType.message,
             source_description=m.source_description,
+            entity_types=ent_types,
+            edge_types=edg_types,
+            edge_type_map=et_map,
+            custom_prompt=prompt or '',
         )
 
     for m in request.messages:
-        await async_worker.queue.put(partial(add_messages_task, m))
+        await async_worker.queue.put(partial(add_messages_task, m, entity_types, edge_types, parsed_edge_type_map, request.custom_prompt))
 
     return Result(message='Messages added to processing queue', success=True)
 
