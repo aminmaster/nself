@@ -478,7 +478,8 @@ EOF
       - FALKORDB_HOST=aio-falkordb
       - FALKORDB_PORT=6379
       - FALKORDB_URL=\${FALKORDB_URL:-falkor://aio-falkordb:6379}
-      - DIFY_REDIS_PASSWORD=${redis_password}
+      - FALKORDB_USER=\${FALKORDB_USER:-falkor_admin}
+      - FALKORDB_PASSWORD=\${FALKORDB_PASSWORD}
       - NHOST_WEBHOOK_SECRET=\${NHOST_WEBHOOK_SECRET}
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data

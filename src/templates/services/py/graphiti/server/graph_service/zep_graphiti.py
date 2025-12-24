@@ -111,8 +111,8 @@ async def get_graphiti(settings: ZepEnvDep):
                 password=password
             )
         else:
-            username = None
-            logger.info(f"Connecting to FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as legacy-auth (has_password: {bool(password)})")
+            username = settings.falkordb_user
+            logger.info(f"Connecting to FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username or 'legacy-auth'} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,
@@ -152,8 +152,8 @@ async def initialize_graphiti(settings: ZepEnvDep):
                 password=password
             )
         else:
-            username = None
-            logger.info(f"Initializing FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as legacy-auth (has_password: {bool(password)})")
+            username = settings.falkordb_user
+            logger.info(f"Initializing FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username or 'legacy-auth'} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,

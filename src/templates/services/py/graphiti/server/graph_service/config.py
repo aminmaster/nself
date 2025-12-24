@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     falkordb_url: str | None = Field(None)
     falkordb_host: str = 'falkordb'
     falkordb_port: int = 6379
+    falkordb_user: str | None = Field(None, validation_alias=AliasChoices('FALKORDB_USER'))
     falkordb_password: str | None = Field(
         None, validation_alias=AliasChoices('DIFY_REDIS_PASSWORD', 'FALKORDB_PASSWORD')
     )
