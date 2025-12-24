@@ -477,7 +477,7 @@ EOF
       - FALKORDB_HOST=aio-falkordb
       - FALKORDB_PORT=6379
       - FALKORDB_URL=\${FALKORDB_URL:-falkor://aio-falkordb:6379}
-      - REDIS_PASSWORD=\${REDIS_PASSWORD}
+      - REDIS_PASSWORD=\${DIFY_REDIS_PASSWORD}
       - NHOST_WEBHOOK_SECRET=\${NHOST_WEBHOOK_SECRET}
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data
@@ -503,6 +503,7 @@ EOF
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
+    command: --requirepass "${redis_password}"
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
