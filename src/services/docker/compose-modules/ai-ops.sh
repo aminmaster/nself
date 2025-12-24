@@ -503,8 +503,7 @@ EOF
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
-    environment:
-      - REDIS_ARGS=--requirepass ${redis_password}
+    command: redis-server --requirepass "${redis_password}"
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
