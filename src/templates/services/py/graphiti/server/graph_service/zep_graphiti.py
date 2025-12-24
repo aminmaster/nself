@@ -51,9 +51,9 @@ async def get_graphiti(settings: ZepEnvDep):
             parsed = urlparse(settings.falkordb_url)
             host = parsed.hostname or 'localhost'
             port = parsed.port or 6379
-            username = parsed.username or ('default' if password or parsed.password else None)
+            username = parsed.username
             password = parsed.password or password
-            logger.info(f"Connecting to FalkorDB via URL: {host}:{port} as {username} (has_password: {bool(password)})")
+            logger.info(f"Connecting to FalkorDB via URL: {host}:{port} as {username or 'legacy-auth'} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=host,
                 port=port,
@@ -61,8 +61,8 @@ async def get_graphiti(settings: ZepEnvDep):
                 password=password
             )
         else:
-            username = 'default' if password else None
-            logger.info(f"Connecting to FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username} (has_password: {bool(password)})")
+            username = None
+            logger.info(f"Connecting to FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as legacy-auth (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,
@@ -97,9 +97,9 @@ async def initialize_graphiti(settings: ZepEnvDep):
             parsed = urlparse(settings.falkordb_url)
             host = parsed.hostname or 'localhost'
             port = parsed.port or 6379
-            username = parsed.username or ('default' if password or parsed.password else None)
+            username = parsed.username
             password = parsed.password or password
-            logger.info(f"Initializing FalkorDB via URL: {host}:{port} as {username} (has_password: {bool(password)})")
+            logger.info(f"Initializing FalkorDB via URL: {host}:{port} as {username or 'legacy-auth'} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=host,
                 port=port,
@@ -107,8 +107,8 @@ async def initialize_graphiti(settings: ZepEnvDep):
                 password=password
             )
         else:
-            username = 'default' if password else None
-            logger.info(f"Initializing FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username} (has_password: {bool(password)})")
+            username = None
+            logger.info(f"Initializing FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as legacy-auth (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,
