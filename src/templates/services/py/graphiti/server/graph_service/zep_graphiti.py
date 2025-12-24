@@ -46,19 +46,28 @@ class ZepGraphiti(Graphiti):
 
 async def get_graphiti(settings: ZepEnvDep):
     if settings.falkordb_url or settings.graph_driver_type == 'falkordb':
+        password = settings.falkordb_password
         if settings.falkordb_url:
             parsed = urlparse(settings.falkordb_url)
+            host = parsed.hostname or 'localhost'
+            port = parsed.port or 6379
+            username = parsed.username or ('default' if password or parsed.password else None)
+            password = parsed.password or password
+            logger.info(f"Connecting to FalkorDB via URL: {host}:{port} as {username} (has_password: {bool(password)})")
             driver = FalkorDriver(
-                host=parsed.hostname or 'localhost',
-                port=parsed.port or 6379,
-                username=parsed.username,
-                password=parsed.password or settings.falkordb_password
+                host=host,
+                port=port,
+                username=username,
+                password=password
             )
         else:
+            username = 'default' if password else None
+            logger.info(f"Connecting to FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,
-                password=settings.falkordb_password
+                username=username,
+                password=password
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
@@ -83,19 +92,28 @@ async def get_graphiti(settings: ZepEnvDep):
 
 async def initialize_graphiti(settings: ZepEnvDep):
     if settings.falkordb_url or settings.graph_driver_type == 'falkordb':
+        password = settings.falkordb_password
         if settings.falkordb_url:
             parsed = urlparse(settings.falkordb_url)
+            host = parsed.hostname or 'localhost'
+            port = parsed.port or 6379
+            username = parsed.username or ('default' if password or parsed.password else None)
+            password = parsed.password or password
+            logger.info(f"Initializing FalkorDB via URL: {host}:{port} as {username} (has_password: {bool(password)})")
             driver = FalkorDriver(
-                host=parsed.hostname or 'localhost',
-                port=parsed.port or 6379,
-                username=parsed.username,
-                password=parsed.password or settings.falkordb_password
+                host=host,
+                port=port,
+                username=username,
+                password=password
             )
         else:
+            username = 'default' if password else None
+            logger.info(f"Initializing FalkorDB via settings: {settings.falkordb_host}:{settings.falkordb_port} as {username} (has_password: {bool(password)})")
             driver = FalkorDriver(
                 host=settings.falkordb_host,
                 port=settings.falkordb_port,
-                password=settings.falkordb_password
+                username=username,
+                password=password
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
