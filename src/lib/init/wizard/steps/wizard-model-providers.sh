@@ -76,12 +76,16 @@ wizard_model_providers() {
       echo ""
       echo "  Select default models for OpenRouter:"
       
-      local txt_model emb_model
+      local txt_model emb_model img_model base_url
       prompt_input "Text Model" "x-ai/grok-4.1-fast" txt_model
       prompt_input "Embedding Model" "openai/text-embedding-3-large" emb_model
+      prompt_input "Image Model" "google/gemini-2.5-flash-image" img_model
+      prompt_input "Base URL" "https://openrouter.ai/api/v1" base_url
       
       add_wizard_config "$config_array_name" "OPENROUTER_MODEL_TXT" "$txt_model"
       add_wizard_config "$config_array_name" "OPENROUTER_MODEL_EMB" "$emb_model"
+      add_wizard_config "$config_array_name" "OPENROUTER_MODEL_IMG" "$img_model"
+      add_wizard_config "$config_array_name" "OPENROUTER_BASE_URL" "$base_url"
     fi
   fi
   echo ""
