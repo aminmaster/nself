@@ -39,10 +39,47 @@ class ZepGraphiti(Graphiti):
         await new_node.generate_name_embedding(self.embedder)
         await new_node.save(self.driver)
         return new_node
-    
-    # ... (rest of methods unchanged, I assume I don't need to replace them if I target specific block? 
-    # Wait, replace_file_content replaces block. I need to be careful not to delete methods.)
-    # I will stick to modifying __init__ and get_graphiti independently.
+    async def get_entity_edge(self, uuid: str):
+        try:
+            edge = await EntityEdge.get_by_uuid(self.driver, uuid)
+            return edge
+        except EdgeNotFoundError as e:
+            raise HTTPException(status_code=404, detail=e.message) from e
+
+    async def delete_group(self, group_id: str):
+        try:
+            edges = await EntityEdge.get_by_group_ids(self.driver, [group_id])
+        except GroupsEdgesNotFoundError:
+            logger.warning(f'No edges found for group {group_id}')
+            edges = []
+
+        nodes = await EntityNode.get_by_group_ids(self.driver, [group_id])
+
+        episodes = await EpisodicNode.get_by_group_ids(self.driver, [group_id])
+
+        for edge in edges:
+            await edge.delete(self.driver)
+
+        for node in nodes:
+            await node.delete(self.driver)
+
+        for episode in episodes:
+            await episode.delete(self.driver)
+
+    async def delete_entity_edge(self, uuid: str):
+        try:
+            edge = await EntityEdge.get_by_uuid(self.driver, uuid)
+            await edge.delete(self.driver)
+        except EdgeNotFoundError as e:
+            raise HTTPException(status_code=404, detail=e.message) from e
+
+    async def delete_episodic_node(self, uuid: str):
+        try:
+            episode = await EpisodicNode.get_by_uuid(self.driver, uuid)
+            await episode.delete(self.driver)
+        except NodeNotFoundError as e:
+            raise HTTPException(status_code=404, detail=e.message) from e
+
 def configure_llm_client(client: ZepGraphiti, settings: ZepEnvDep):
     llm_key = settings.openrouter_api_key or settings.openai_api_key
     llm_base_url = settings.openrouter_base_url or settings.openai_base_url
@@ -125,11 +162,15 @@ async def initialize_graphiti(settings: ZepEnvDep):
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
+        client = ZepGraphiti(
+            uri=settings.neo4j_uri or "bolt://localhost:7687",
+            user=settings.neo4j_user or "neo4j",
             password=settings.neo4j_password or "password",
         )
     
     configure_llm_client(client, settings)
     await client.build_indices_and_constraints()
+
 
 
 def get_fact_result_from_edge(edge: EntityEdge):
