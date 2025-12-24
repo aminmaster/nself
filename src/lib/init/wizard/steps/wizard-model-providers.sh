@@ -59,7 +59,7 @@ wizard_model_providers() {
       
       echo ""
       local openai_base_url
-      prompt_input "OpenAI Base URL (optional)" "" openai_base_url
+      prompt_input "OpenAI Base URL (optional)" "https://api.openai.com/v1" openai_base_url
       if [[ -n "$openai_base_url" ]]; then
         add_wizard_config "$config_array_name" "OPENAI_BASE_URL" "$openai_base_url"
         echo "  ✓ OpenAI base URL set"
