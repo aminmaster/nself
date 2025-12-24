@@ -466,8 +466,8 @@ EOF
       - OPENAI_API_KEY=\${OPENROUTER_API_KEY}
       - OPENAI_BASE_URL=\${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       - MODEL_NAME=\${OPENROUTER_MODEL_TXT:-x-ai/grok-4.1-fast}
-      # OpenAI for embeddings
-      - EMBEDDING_MODEL_NAME=\${EMBEDDING_MODEL:-text-embedding-3-large}
+      # OpenAI embeddings via OpenRouter (uses openai/ prefix)
+      - EMBEDDING_MODEL_NAME=\${OPENROUTER_MODEL_EMB:-openai/text-embedding-3-large}
       # Graph configuration
       - NEO4J_URI=bolt://aio-neo4j:7687
       - NEO4J_USER=\${NEO4J_USER:-neo4j}
