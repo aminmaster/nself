@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
 
 
@@ -17,11 +17,17 @@ class Settings(BaseSettings):
     falkordb_url: str | None = Field(None)
     falkordb_host: str = 'falkordb'
     falkordb_port: int = 6379
-    falkordb_password: str | None = Field(None, alias='DIFY_REDIS_PASSWORD')
+    falkordb_password: str | None = Field(
+        None, validation_alias=AliasChoices('DIFY_REDIS_PASSWORD', 'FALKORDB_PASSWORD')
+    )
     graph_driver_type: str = 'falkordb'
-    nhost_webhook_secret: str = Field('nhost-webhook-secret', alias='NHOST_WEBHOOK_SECRET')
+    nhost_webhook_secret: str = Field(
+        'nhost-webhook-secret', validation_alias=AliasChoices('NHOST_WEBHOOK_SECRET')
+    )
 
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file='.env', extra='ignore', populate_by_name=True
+    )
 
 
 @lru_cache
