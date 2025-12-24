@@ -7,8 +7,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
 
 
 class Settings(BaseSettings):
-    openai_api_key: str
+    openai_api_key: str | None = Field(None)
     openai_base_url: str | None = Field(None)
+    openrouter_api_key: str | None = Field(None)
+    openrouter_base_url: str | None = Field(None)
     model_name: str | None = Field(None)
     embedding_model_name: str | None = Field(None)
     neo4j_uri: str | None = Field(None)

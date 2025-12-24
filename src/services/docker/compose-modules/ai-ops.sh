@@ -462,11 +462,12 @@ EOF
     restart: unless-stopped
     environment:
       - PORT=8000
-      # OpenRouter for text generation (Grok)
-      - OPENAI_API_KEY=\${OPENROUTER_API_KEY}
-      - OPENAI_BASE_URL=\${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      # AI Model Configuration
+      - OPENROUTER_API_KEY=\${OPENROUTER_API_KEY}
+      - OPENROUTER_BASE_URL=\${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - OPENAI_API_KEY=\${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=\${OPENAI_BASE_URL}
       - MODEL_NAME=\${OPENROUTER_MODEL_TXT:-x-ai/grok-4.1-fast}
-      # OpenAI embeddings via OpenRouter (uses openai/ prefix)
       - EMBEDDING_MODEL_NAME=\${OPENROUTER_MODEL_EMB:-openai/text-embedding-3-large}
       # Graph configuration
       - NEO4J_URI=bolt://aio-neo4j:7687

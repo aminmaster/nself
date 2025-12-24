@@ -43,6 +43,19 @@ class ZepGraphiti(Graphiti):
     # ... (rest of methods unchanged, I assume I don't need to replace them if I target specific block? 
     # Wait, replace_file_content replaces block. I need to be careful not to delete methods.)
     # I will stick to modifying __init__ and get_graphiti independently.
+def configure_llm_client(client: ZepGraphiti, settings: ZepEnvDep):
+    llm_key = settings.openrouter_api_key or settings.openai_api_key
+    llm_base_url = settings.openrouter_base_url or settings.openai_base_url
+    
+    if llm_base_url is not None:
+        client.llm_client.config.base_url = llm_base_url
+    if llm_key is not None:
+        client.llm_client.config.api_key = llm_key
+    if settings.model_name is not None:
+        client.llm_client.model = settings.model_name
+    
+    logger.info(f"Configured Graphiti LLM client with model: {client.llm_client.model} (base_url: {client.llm_client.config.base_url})")
+
 
 async def get_graphiti(settings: ZepEnvDep):
     if settings.falkordb_url or settings.graph_driver_type == 'falkordb':
@@ -77,12 +90,7 @@ async def get_graphiti(settings: ZepEnvDep):
             password=settings.neo4j_password or "password",
         )
     
-    if settings.openai_base_url is not None:
-        client.llm_client.config.base_url = settings.openai_base_url
-    if settings.openai_api_key is not None:
-        client.llm_client.config.api_key = settings.openai_api_key
-    if settings.model_name is not None:
-        client.llm_client.model = settings.model_name
+    configure_llm_client(client, settings)
     
     try:
         yield client
@@ -117,11 +125,10 @@ async def initialize_graphiti(settings: ZepEnvDep):
             )
         client = ZepGraphiti(graph_driver=driver)
     else:
-        client = ZepGraphiti(
-            uri=settings.neo4j_uri or "bolt://localhost:7687",
-            user=settings.neo4j_user or "neo4j",
             password=settings.neo4j_password or "password",
         )
+    
+    configure_llm_client(client, settings)
     await client.build_indices_and_constraints()
 
 
