@@ -106,13 +106,13 @@ generate_frontend_app() {
       - WEB_PORT=\${PORT:-${port}}
       # Backend service connections (internal Docker network)
       # Neo4J for document knowledge graphs and system ontology
-      - NEO4J_URI=${NEO4J_URI:-bolt://${project_name}_aio_neo4j:7687}
-      - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-}
+      - VITE_NEO4J_URI=\${NEO4J_URI:-bolt+s://neo4j.${BASE_DOMAIN:-equilibria.org}}
+      - VITE_NEO4J_USER=\${NEO4J_USER:-neo4j}
+      - VITE_NEO4J_PASSWORD=\${NEO4J_PASSWORD:-}
       # FalkorDB for user conversations and context
-      - FALKORDB_URI=${FALKORDB_URI:-bolt://${project_name}_aio_falkordb:6379}
-      - FALKORDB_USER=${FALKORDB_USER:-falkor_admin}
-      - FALKORDB_PASSWORD=${FALKORDB_PASSWORD:-}
+      - VITE_FALKORDB_URI=\${FALKORDB_URI:-bolt+s://falkordb.${BASE_DOMAIN:-equilibria.org}}
+      - VITE_FALKORDB_USER=\${FALKORDB_USER:-falkor_admin}
+      - VITE_FALKORDB_PASSWORD=\${FALKORDB_PASSWORD:-}
       - VITE_NHOST_AUTH_URL=\${NHOST_AUTH_URL:-https://auth.${BASE_DOMAIN:-equilibria.org}}
       - VITE_HASURA_URL=\${HASURA_URL:-https://api.${BASE_DOMAIN:-equilibria.org}/v1/graphql}
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.${BASE_DOMAIN:-equilibria.org}/v1}
