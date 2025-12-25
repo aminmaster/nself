@@ -12,8 +12,10 @@ from urllib.parse import urlparse
 from graphiti_core.driver.falkordb_driver import FalkorDriver
 from graphiti_core.driver.neo4j_driver import Neo4jDriver
 
-from graph_service.config import ZepEnvDep
+from graph_service.config import ZepEnvDep, Settings
 from graph_service.dto import FactResult
+from graphiti_core.llm_client.openai_client import OpenAIClient
+from graphiti_core.llm_client.config import LLMConfig
 
 logger = logging.getLogger(__name__)
 
@@ -80,21 +82,21 @@ class ZepGraphiti(Graphiti):
         except NodeNotFoundError as e:
             raise HTTPException(status_code=404, detail=e.message) from e
 
-def configure_llm_client(client: ZepGraphiti, settings: ZepEnvDep):
+def create_llm_client(settings: Settings) -> LLMClient:
     llm_key = settings.openrouter_api_key or settings.openai_api_key
     llm_base_url = settings.openrouter_base_url or settings.openai_base_url
     
-    if llm_base_url is not None:
-        client.llm_client.config.base_url = llm_base_url
-    if llm_key is not None:
-        client.llm_client.config.api_key = llm_key
-    if settings.model_name is not None:
-        client.llm_client.model = settings.model_name
+    config = LLMConfig(
+        api_key=llm_key,
+        base_url=llm_base_url,
+        model=settings.model_name
+    )
     
-    logger.info(f"Configured Graphiti LLM client with model: {client.llm_client.model} (base_url: {client.llm_client.config.base_url})")
+    return OpenAIClient(config=config)
 
 
 async def get_graphiti(settings: ZepEnvDep):
+    llm_client = create_llm_client(settings)
     if settings.falkordb_url or settings.graph_driver_type == 'falkordb':
         password = settings.falkordb_password
         if settings.falkordb_url:
@@ -119,15 +121,14 @@ async def get_graphiti(settings: ZepEnvDep):
                 username=username,
                 password=password
             )
-        client = ZepGraphiti(graph_driver=driver)
+        client = ZepGraphiti(graph_driver=driver, llm_client=llm_client)
     else:
         client = ZepGraphiti(
             uri=settings.neo4j_uri or "bolt://localhost:7687",
             user=settings.neo4j_user or "neo4j",
             password=settings.neo4j_password or "password",
+            llm_client=llm_client
         )
-    
-    configure_llm_client(client, settings)
     
     try:
         yield client
@@ -136,6 +137,7 @@ async def get_graphiti(settings: ZepEnvDep):
 
 
 async def initialize_graphiti(settings: ZepEnvDep):
+    llm_client = create_llm_client(settings)
     if settings.falkordb_url or settings.graph_driver_type == 'falkordb':
         password = settings.falkordb_password
         if settings.falkordb_url:
@@ -160,15 +162,14 @@ async def initialize_graphiti(settings: ZepEnvDep):
                 username=username,
                 password=password
             )
-        client = ZepGraphiti(graph_driver=driver)
+        client = ZepGraphiti(graph_driver=driver, llm_client=llm_client)
     else:
         client = ZepGraphiti(
             uri=settings.neo4j_uri or "bolt://localhost:7687",
             user=settings.neo4j_user or "neo4j",
             password=settings.neo4j_password or "password",
+            llm_client=llm_client
         )
-    
-    configure_llm_client(client, settings)
     await client.build_indices_and_constraints()
 
 
