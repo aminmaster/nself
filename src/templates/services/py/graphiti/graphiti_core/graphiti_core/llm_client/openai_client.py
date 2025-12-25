@@ -41,8 +41,6 @@ class OpenAIClient(BaseOpenAIClient):
         cache: bool = False,
         client: typing.Any = None,
         max_tokens: int = DEFAULT_MAX_TOKENS,
-        reasoning: str = DEFAULT_REASONING,
-        verbosity: str = DEFAULT_VERBOSITY,
     ):
         """
         Initialize the OpenAIClient with the provided configuration, cache setting, and client.
@@ -52,13 +50,20 @@ class OpenAIClient(BaseOpenAIClient):
             cache (bool): Whether to use caching for responses. Defaults to False.
             client (Any | None): An optional async client instance to use. If not provided, a new AsyncOpenAI client is created.
         """
-        super().__init__(config, cache, max_tokens, reasoning, verbosity)
+        super().__init__(config, cache, max_tokens)
 
         if config is None:
             config = LLMConfig()
 
         if client is None:
-            self.client = AsyncOpenAI(api_key=config.api_key, base_url=config.base_url)
+            default_headers = {}
+            if self._is_openrouter():
+                default_headers['HTTP-Referer'] = 'https://equilibria.org'
+                default_headers['X-Title'] = 'KBA AI OS'
+
+            self.client = AsyncOpenAI(
+                api_key=config.api_key, base_url=config.base_url, default_headers=default_headers
+            )
         else:
             self.client = client
 
@@ -69,26 +74,25 @@ class OpenAIClient(BaseOpenAIClient):
         temperature: float | None,
         max_tokens: int,
         response_model: type[BaseModel],
-        reasoning: str | None = None,
-        verbosity: str | None = None,
     ):
-        """Create a structured completion using OpenAI's beta parse API."""
-        # Reasoning models (gpt-5 family) don't support temperature
-        is_reasoning_model = (
-            model.startswith('gpt-5') or model.startswith('o1') or model.startswith('o3')
-        )
+        """Create a structured completion using OpenAI's beta parse API or fallback to regular chat completion."""
+        if not self._is_openrouter():
+            return await self.client.beta.chat.completions.parse(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_completion_tokens=max_tokens,
+                response_format=response_model,
+            )
 
-        response = await self.client.responses.parse(
+        # Fallback for OpenRouter to standard completion
+        return await self._create_completion(
             model=model,
-            input=messages,  # type: ignore
-            temperature=temperature if not is_reasoning_model else None,
-            max_output_tokens=max_tokens,
-            text_format=response_model,  # type: ignore
-            reasoning={'effort': reasoning} if reasoning is not None else None,  # type: ignore
-            text={'verbosity': verbosity} if verbosity is not None else None,  # type: ignore
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_model=response_model,
         )
-
-        return response
 
     async def _create_completion(
         self,
@@ -97,19 +101,12 @@ class OpenAIClient(BaseOpenAIClient):
         temperature: float | None,
         max_tokens: int,
         response_model: type[BaseModel] | None = None,
-        reasoning: str | None = None,
-        verbosity: str | None = None,
     ):
         """Create a regular completion with JSON format."""
-        # Reasoning models (gpt-5 family) don't support temperature
-        is_reasoning_model = (
-            model.startswith('gpt-5') or model.startswith('o1') or model.startswith('o3')
-        )
-
         return await self.client.chat.completions.create(
             model=model,
             messages=messages,
-            temperature=temperature if not is_reasoning_model else None,
+            temperature=temperature,
             max_tokens=max_tokens,
             response_format={'type': 'json_object'},
         )

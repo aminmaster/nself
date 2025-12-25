@@ -53,8 +53,6 @@ class BaseOpenAIClient(LLMClient):
         config: LLMConfig | None = None,
         cache: bool = False,
         max_tokens: int = DEFAULT_MAX_TOKENS,
-        reasoning: str | None = DEFAULT_REASONING,
-        verbosity: str | None = DEFAULT_VERBOSITY,
     ):
         if cache:
             raise NotImplementedError('Caching is not implemented for OpenAI-based clients')
@@ -64,8 +62,6 @@ class BaseOpenAIClient(LLMClient):
 
         super().__init__(config, cache)
         self.max_tokens = max_tokens
-        self.reasoning = reasoning
-        self.verbosity = verbosity
 
     @abstractmethod
     async def _create_completion(
@@ -87,8 +83,6 @@ class BaseOpenAIClient(LLMClient):
         temperature: float | None,
         max_tokens: int,
         response_model: type[BaseModel],
-        reasoning: str | None,
-        verbosity: str | None,
     ) -> Any:
         """Create a structured completion using the specific client implementation."""
         pass
@@ -129,6 +123,10 @@ class BaseOpenAIClient(LLMClient):
         result = response.choices[0].message.content or '{}'
         return json.loads(result)
 
+    def _is_openrouter(self) -> bool:
+        """Check if the base URL corresponds to OpenRouter."""
+        return self.config.base_url is not None and 'openrouter.ai' in self.config.base_url
+
     async def _generate_response(
         self,
         messages: list[Message],
@@ -148,9 +146,12 @@ class BaseOpenAIClient(LLMClient):
                     temperature=self.temperature,
                     max_tokens=max_tokens or self.max_tokens,
                     response_model=response_model,
-                    reasoning=self.reasoning,
-                    verbosity=self.verbosity,
                 )
+                
+                # If we're using OpenRouter or a fallback was triggered, handle as JSON
+                if self._is_openrouter() or not hasattr(response, 'output_text'):
+                    return self._handle_json_response(response)
+                
                 return self._handle_structured_response(response)
             else:
                 response = await self._create_completion(
