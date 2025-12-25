@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(None)
     openai_base_url: str | None = Field(None)
     openrouter_api_key: str | None = Field(None)
-    openrouter_base_url: str | None = Field(None)
+    openrouter_base_url: str | None = Field(None, validation_alias=AliasChoices('OPENROUTER_BASE_URL'))
     model_name: str | None = Field(None)
     embedding_model_name: str | None = Field(None)
     neo4j_uri: str | None = Field(None)
