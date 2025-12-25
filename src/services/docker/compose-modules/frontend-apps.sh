@@ -117,7 +117,7 @@ generate_frontend_app() {
       - VITE_HASURA_URL=\${HASURA_URL:-https://api.${BASE_DOMAIN:-equilibria.org}/v1/graphql}
       - VITE_DIFY_URL=\${DIFY_URL:-https://dify.${BASE_DOMAIN:-equilibria.org}/v1}
       - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-\${DIFY_INNER_API_KEY:-}}
-      - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-http://${project_name}_aio_graphiti:8000}
+      - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-https://graphiti.${BASE_DOMAIN:-equilibria.org}}
 ${volumes_block}
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}
