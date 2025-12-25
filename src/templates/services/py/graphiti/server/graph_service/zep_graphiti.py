@@ -86,10 +86,10 @@ def create_llm_client(settings: Settings) -> LLMClient:
     llm_key = settings.openrouter_api_key or settings.openai_api_key
     llm_base_url = settings.openrouter_base_url or settings.openai_base_url
     
-    # DEBUG LOGGING
+    # DEBUG LOGGING (Using print to bypass log filters)
     masked_key = f"{llm_key[:8]}..." if llm_key else "None"
-    logger.info(f"DEBUG: create_llm_client inputs - Base URL: {llm_base_url}, Model: {settings.model_name}, Key: {masked_key}")
-    logger.info(f"DEBUG: Settings dump - OpenRouter Base: {settings.openrouter_base_url}, OpenAI Base: {settings.openai_base_url}")
+    print(f"\n[DEBUG] create_llm_client inputs - Base URL: {llm_base_url}, Model: {settings.model_name}, Key: {masked_key}", flush=True)
+    print(f"[DEBUG] Settings dump - OpenRouter Base: {settings.openrouter_base_url}, OpenAI Base: {settings.openai_base_url}\n", flush=True)
     
     config = LLMConfig(
         api_key=llm_key,
