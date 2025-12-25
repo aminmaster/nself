@@ -114,6 +114,9 @@ EOF
       - DB_DATABASE=dify
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
+      - FALKORDB_USER=\${FALKORDB_USER:-falkor_admin}
+      - FALKORDB_PASSWORD=\${FALKORDB_PASSWORD}
+      - DIFY_REDIS_PASSWORD=\${DIFY_REDIS_PASSWORD:-aioredispass}
     entrypoint: []
     command:
       - /bin/bash
@@ -152,18 +155,19 @@ EOF
         flask db upgrade
 
         echo "5. Initializing FalkorDB security..."
-        if [[ -n "${FALKORDB_PASSWORD:-}" ]]; then
+        if [[ -n "\${FALKORDB_PASSWORD:-}" ]]; then
           echo "Setting up FalkorDB ACLs..."
-          # Install redis-tools if not present
           apt-get install -y redis-tools
-          
-          # Wait for FalkorDB
           while ! nc -z aio-falkordb 6379; do sleep 1; done
           
-          # Set up the admin user
-          # Note: We use 'default' password too if FALKORDB_PASSWORD is provided to secure the instance fully
-          redis-cli -h aio-falkordb ACL SETUSER "${FALKORDB_USER:-falkor_admin}" on ">${FALKORDB_PASSWORD}" allkeys allchannels allcommands +@all
-          redis-cli -h aio-falkordb CONFIG SET requirepass "${FALKORDB_PASSWORD}"
+          # Try to authenticate with both possible initial passwords to ensure success
+          AUTH_PASS="\${FALKORDB_PASSWORD}"
+          if ! redis-cli -h aio-falkordb -a "\${AUTH_PASS}" ping > /dev/null 2>&1; then
+              AUTH_PASS="\${DIFY_REDIS_PASSWORD}"
+          fi
+
+          redis-cli -h aio-falkordb -a "\${AUTH_PASS}" ACL SETUSER "\${FALKORDB_USER:-falkor_admin}" on ">\${FALKORDB_PASSWORD}" allkeys allchannels allcommands +@all
+          redis-cli -h aio-falkordb -a "\${AUTH_PASS}" CONFIG SET requirepass "\${FALKORDB_PASSWORD}"
           echo "FalkorDB security initialized."
         fi
 
@@ -505,7 +509,7 @@ EOF
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
-    command: redis-server --requirepass "${redis_password}"
+    command: redis-server --requirepass "${FALKORDB_PASSWORD:-${redis_password}}"
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
