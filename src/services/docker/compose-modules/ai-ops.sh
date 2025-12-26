@@ -190,6 +190,7 @@ EOF
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO
+      - MODE=api
       - SECRET_KEY=${secret_key}
       - DIFY_PORT=5001
       - DB_USERNAME=postgres
@@ -249,6 +250,7 @@ EOF
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO
+      - MODE=worker
       - SECRET_KEY=${secret_key}
       - DIFY_PORT=5001
       - DB_USERNAME=postgres
@@ -272,7 +274,43 @@ EOF
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
-    command: /bin/bash /entrypoint.sh python -m celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO
+    depends_on:
+      aio-db:
+        condition: service_healthy
+      aio-redis:
+        condition: service_started
+      aio-weaviate:
+        condition: service_started
+      aio-init:
+        condition: service_completed_successfully
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+EOF
+
+  # 3.5 Dify Beat
+  cat <<EOF
+  aio-dify-beat:
+    image: langgenius/dify-api:${version}
+    container_name: \${PROJECT_NAME}_aio_dify_beat
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=INFO
+      - MODE=beat
+      - SECRET_KEY=${secret_key}
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
+      - DB_HOST=aio-db
+      - DB_PORT=5432
+      - DB_DATABASE=dify
+      - REDIS_HOST=aio-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${redis_password}
+      - REDIS_DB=1
+      - CELERY_BROKER_URL=redis://:${redis_password}@aio-redis:6379/1
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/api/storage
+    volumes:
+      - ./.volumes/${service_name}/storage:/app/api/storage
     depends_on:
       aio-db:
         condition: service_healthy
@@ -709,6 +747,7 @@ EOF
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO
+      - MODE=api
       - SECRET_KEY=${secret_key}
       - DIFY_PORT=5001
       - DB_USERNAME=postgres
@@ -769,6 +808,7 @@ EOF
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO
+      - MODE=worker
       - SECRET_KEY=${secret_key}
       - DIFY_PORT=5001
       - DB_USERNAME=postgres
@@ -792,7 +832,45 @@ EOF
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
-    command: /bin/bash /entrypoint.sh python -m celery -A app.celery worker -P gevent -c 1 -Q dataset,generation,mail,ops_trace --loglevel INFO
+    depends_on:
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_started
+      dify-weaviate:
+        condition: service_started
+      dify-permissions-init:
+        condition: service_completed_successfully
+      dify-db-migrate:
+        condition: service_completed_successfully
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+EOF
+
+  # 3.5 Dify Beat
+  cat <<EOF
+  dify-beat:
+    image: langgenius/dify-api:${version}
+    container_name: \${PROJECT_NAME}_dify_beat
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=INFO
+      - MODE=beat
+      - SECRET_KEY=${secret_key}
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=\${DIFY_DB_PASSWORD:-\${POSTGRES_PASSWORD}}
+      - DB_HOST=dify-db
+      - DB_PORT=5432
+      - DB_DATABASE=dify
+      - REDIS_HOST=dify-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${redis_password}
+      - REDIS_DB=1
+      - CELERY_BROKER_URL=redis://:${redis_password}@dify-redis:6379/1
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/api/storage
+    volumes:
+      - ./.volumes/dify/storage:/app/api/storage
     depends_on:
       dify-db:
         condition: service_healthy
