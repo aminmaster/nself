@@ -362,7 +362,7 @@ EOF
   # 5. Dify Sandbox
   cat <<EOF
   aio-dify-sandbox:
-    image: langgenius/dify-sandbox:0.2.1
+    image: langgenius/dify-sandbox:0.2.12
     container_name: \${PROJECT_NAME}_aio_dify_sandbox
     restart: unless-stopped
     environment:
@@ -385,7 +385,7 @@ EOF
   # New Plugin Daemon
   cat <<EOF
   aio-dify-plugin-daemon:
-    image: langgenius/dify-plugin-daemon:0.5.1-local
+    image: langgenius/dify-plugin-daemon:0.5.2-local
     container_name: \${PROJECT_NAME}_aio_dify_plugin_daemon
     restart: unless-stopped
     environment:
@@ -941,7 +941,7 @@ EOF
   # 5. Dify Sandbox (Code Execution)
   cat <<EOF
   dify-sandbox:
-    image: langgenius/dify-sandbox:0.2.1
+    image: langgenius/dify-sandbox:0.2.12
     container_name: \${PROJECT_NAME}_dify_sandbox
     restart: unless-stopped
     environment:
@@ -964,7 +964,7 @@ EOF
   # Uses shared env vars similar to API
   cat <<EOF
   dify-plugin-daemon:
-    image: langgenius/dify-plugin-daemon:0.5.1-local
+    image: langgenius/dify-plugin-daemon:0.5.2-local
     container_name: \${PROJECT_NAME}_dify_plugin_daemon
     restart: unless-stopped
     environment:
