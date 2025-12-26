@@ -405,8 +405,6 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
-      - SANDBOX_HOST=aio-dify-sandbox
-      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/${service_name}/plugin_daemon:/app/storage
     depends_on:
@@ -970,8 +968,6 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
-      - SANDBOX_HOST=dify-sandbox
-      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
     depends_on:
