@@ -130,6 +130,14 @@ EOF
         mkdir -p /app/api/storage /app/daemon_storage/cwd /app/daemon_storage/archives
         chown -R 1001:1001 /app/api/storage /app/daemon_storage
 
+        echo "2.1. Initializing Sandbox Dependencies..."
+        mkdir -p /sandbox_deps
+        if [ ! -f /sandbox_deps/python-requirements.txt ]; then
+          echo "Creating python-requirements.txt for sandbox..."
+          touch /sandbox_deps/python-requirements.txt
+        fi
+
+
         echo "3. Waiting for Database..."
         while ! nc -z aio-db 5432; do sleep 1; done
 
@@ -175,6 +183,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
       - ./.volumes/${service_name}/plugin_daemon:/app/daemon_storage
+      - ./.volumes/${service_name}/dependencies:/sandbox_deps
     depends_on:
       aio-db:
         condition: service_healthy
@@ -733,7 +742,23 @@ EOF
       - DB_DATABASE=dify
       - STORAGE_TYPE=local
       - STORAGE_LOCAL_PATH=/app/api/storage
-    entrypoint: ["/bin/bash", "-c", "flask db upgrade"]
+    entrypoint: []
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        echo "1. Initializing Sandbox Dependencies..."
+        mkdir -p /sandbox_deps
+        if [ ! -f /sandbox_deps/python-requirements.txt ]; then
+          echo "Creating python-requirements.txt for sandbox..."
+          touch /sandbox_deps/python-requirements.txt
+        fi
+        
+        echo "2. Running Dify Migrations..."
+        flask db upgrade
+    volumes:
+      - ./.volumes/dify/dependencies:/sandbox_deps
     depends_on:
       dify-db:
         condition: service_healthy
