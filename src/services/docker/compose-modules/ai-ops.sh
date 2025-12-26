@@ -414,6 +414,8 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
+      - SANDBOX_HOST=sandbox
+      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/${service_name}/plugin_daemon:/app/storage
     depends_on:
@@ -493,7 +495,7 @@ EOF
       - HTTP_PORT=3128
       - COREDUMP_DIR=/var/spool/squid
       - REVERSE_PROXY_PORT=8194
-      - SANDBOX_HOST=aio-dify-sandbox
+      - SANDBOX_HOST=sandbox
       - SANDBOX_PORT=8194
     volumes:
       - ./services/${service_name}/ssrf/squid.conf.template:/etc/squid/squid.conf.template
@@ -993,6 +995,8 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
+      - SANDBOX_HOST=sandbox
+      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
     depends_on:
