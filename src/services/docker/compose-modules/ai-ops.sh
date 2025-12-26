@@ -364,8 +364,10 @@ EOF
       - HTTP_PROXY=http://aio-ssrf:3128
       - HTTPS_PROXY=http://aio-ssrf:3128
       - SANDBOX_PORT=8194
+    volumes:
+      - ./.volumes/${service_name}/dependencies:/dependencies
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
+     ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - sandbox
           - dify-sandbox
@@ -403,6 +405,8 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
+      - SANDBOX_HOST=aio-dify-sandbox
+      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/${service_name}/plugin_daemon:/app/storage
     depends_on:
@@ -925,8 +929,10 @@ EOF
       - HTTP_PROXY=http://dify-ssrf:3128
       - HTTPS_PROXY=http://dify-ssrf:3128
       - SANDBOX_PORT=8194
+    volumes:
+      - ./.volumes/dify/dependencies:/dependencies
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
+     ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - sandbox
 EOF
@@ -964,6 +970,8 @@ EOF
       - PLUGIN_S3_USE_AWS=false
       - PLUGIN_DAEMON_PORT=5002
       - DIFY_BIND_ADDRESS=0.0.0.0
+      - SANDBOX_HOST=dify-sandbox
+      - SANDBOX_PORT=8194
     volumes:
       - ./.volumes/dify/plugin_daemon:/app/storage
     depends_on:
