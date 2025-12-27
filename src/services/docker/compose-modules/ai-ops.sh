@@ -433,8 +433,6 @@ EOF
       - CODE_EXECUTION_API_KEY=dify-sandbox
       - FILES_URL=${api_url}
       - INTERNAL_FILES_URL=http://aio-dify-api:5001
-      - SSRF_PROXY_HTTP_URL=http://aio-ssrf:3128
-      - SSRF_PROXY_HTTPS_URL=http://aio-ssrf:3128
     volumes:
       - ./.volumes/${service_name}/plugin_daemon:/app/storage
     depends_on:
