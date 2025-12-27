@@ -228,6 +228,12 @@ EOF
       - PLUGIN_DAEMON_URL=http://aio-dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://aio-dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://aio-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://aio-ssrf:3128
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
     depends_on:
@@ -281,6 +287,12 @@ EOF
       - PLUGIN_DAEMON_URL=http://aio-dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://aio-dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://aio-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://aio-ssrf:3128
     volumes:
       - ./.volumes/${service_name}/storage:/app/api/storage
     depends_on:
@@ -416,6 +428,13 @@ EOF
       - DIFY_BIND_ADDRESS=0.0.0.0
       - SANDBOX_HOST=sandbox
       - SANDBOX_PORT=8194
+      - SANDBOX_API_KEY=dify-sandbox
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://aio-dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://aio-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://aio-ssrf:3128
     volumes:
       - ./.volumes/${service_name}/plugin_daemon:/app/storage
     depends_on:
@@ -805,6 +824,12 @@ EOF
       - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://dify-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://dify-ssrf:3128
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     depends_on:
@@ -859,6 +884,12 @@ EOF
       - PLUGIN_DAEMON_URL=http://dify-plugin-daemon:5002
       - DIFY_PLUGIN_DAEMON_API_KEY=${plugin_daemon_key}
       - PLUGIN_DAEMON_KEY=${plugin_daemon_key}
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://dify-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://dify-ssrf:3128
     volumes:
       - ./.volumes/dify/storage:/app/api/storage
     depends_on:
@@ -985,6 +1016,15 @@ EOF
       - SERVER_KEY=${plugin_daemon_key}
       - DIFY_INNER_API_URL=http://dify-api:5001
       - DIFY_INNER_API_KEY=${inner_api_key}
+      - SANDBOX_HOST=sandbox
+      - SANDBOX_PORT=8194
+      - SANDBOX_API_KEY=dify-sandbox
+      - CODE_EXECUTION_ENDPOINT=http://sandbox:8194
+      - CODE_EXECUTION_API_KEY=dify-sandbox
+      - FILES_URL=${api_url}
+      - INTERNAL_FILES_URL=http://dify-api:5001
+      - SSRF_PROXY_HTTP_URL=http://dify-ssrf:3128
+      - SSRF_PROXY_HTTPS_URL=http://dify-ssrf:3128
       - PLUGIN_MAX_PACKAGE_SIZE=52428800
       - PLUGIN_DEBUGGING_HOST=0.0.0.0
       - PLUGIN_DEBUGGING_PORT=5003
