@@ -505,18 +505,17 @@ start_services() {
     sleep 0.1
   done
 
-    # Clear any residual progress lines from image pulling
-    if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
-      printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
-      LAST_LINE_COUNT=0
-    fi
-
-    wait $compose_pid
-    local exit_code=$?
-
-    # Clear the spinner line
-    printf "\r%-60s\r" " "
+  # Clear any residual progress lines from image pulling
+  if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
+    printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
+    LAST_LINE_COUNT=0
   fi
+
+  wait $compose_pid
+  local exit_code=$?
+
+  # Clear the spinner line
+  printf "\r%-60s\r" " "
 
   # 10. Check results
   if [[ $exit_code -eq 0 ]]; then
