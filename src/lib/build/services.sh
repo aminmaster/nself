@@ -205,6 +205,12 @@ generate_custom_service() {
       # Copy template to services directory if it doesn't exist
       local service_dir="services/$configured_name"
 
+      # Special case for virtual templates (managed by stack generators)
+      if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+        [[ "${VERBOSE:-false}" == "true" ]] && echo "Using virtual template '$template_type' for service '$configured_name'"
+        return 0
+      fi
+
       if [[ "$force" != "true" ]] && [[ -d "$service_dir" ]] && [[ -n "$(ls -A "$service_dir" 2>/dev/null)" ]]; then
         # Skip if directory exists and has files (user may have customized)
         echo "Service '$configured_name' already exists, skipping template copy"
@@ -258,6 +264,13 @@ generate_custom_service_from_template() {
 
   # Skip if directory exists and has files (user may have customized)
   local service_dir="services/$service_name"
+
+  # Special case for virtual templates (managed by stack generators)
+  if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+    [[ "${VERBOSE:-false}" == "true" ]] && echo "Using virtual template '$template_type' for service '$service_name'"
+    return 0
+  fi
+
   if [[ "$force" != "true" ]] && [[ -d "$service_dir" ]] && [[ -n "$(ls -A "$service_dir" 2>/dev/null)" ]]; then
     [[ "${VERBOSE:-false}" == "true" ]] && echo "Service '$service_name' already exists, skipping template copy"
     return 0
