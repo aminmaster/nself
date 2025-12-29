@@ -136,12 +136,13 @@ EOF
 
   # 4. AIO Ingestion (RAGFlow Server)
   aio-ragflow:
-    image: ragflowai/ragflow:latest
+    image: infiniflow/ragflow:latest
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
     ports:
       - "80:80"
     environment:
+      - DOC_ENGINE=elasticsearch
       - DATABASE_TYPE=postgres
       - DB_NAME=ragflow
       - DB_USER=postgres
@@ -160,6 +161,9 @@ EOF
       - REDIS_PASSWORD=${redis_password}
       - TIME_ZONE=UTC
       - GUNICORN_TIMEOUT=600
+      - SANDBOX_ENABLED=1
+      - SANDBOX_HOST=aio-ragflow-sandbox
+      - SANDBOX_PORT=9385
     depends_on:
       aio-db:
         condition: service_healthy
@@ -173,6 +177,18 @@ EOF
       ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - ragflow
+
+  aio-ragflow-sandbox:
+    image: infiniflow/sandbox-executor-manager:latest
+    container_name: \${PROJECT_NAME}_aio_ragflow_sandbox
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9385:9385"
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 5. AIO Metadata (Postgres)
