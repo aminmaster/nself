@@ -11,8 +11,8 @@ generate_template_based_service() {
   # Skip if service directory doesn't exist (template not copied)
   [[ ! -d "services/$service_name" ]] && return 0
 
-  # Special handling for multi-container stacks (like Dify/AI-OPS) that generate their own headers
-  if [[ "$template_type" == "dify" ]] || [[ "$template_type" == "ai-ops" ]]; then
+  # Special handling for multi-container stacks (like AI-OPS) that generate their own headers
+  if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
       generate_aio_stack "$index" "$service_name" "$service_port"
       return 0
   fi

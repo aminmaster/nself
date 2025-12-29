@@ -581,115 +581,58 @@ server {
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_set_header Connection "upgrade";
     }
 }
 EOF
   fi
 
-  # Dify Full Stack Integration
-  # Check for Dify custom service
-  local dify_subdomain=""
-  local dify_version="${DIFY_VERSION:-1.11.1}"
+  # Unified AIO (AI Operating System) Stack Integration
+  # Check for AIO custom service (ai-ops)
+  local aio_subdomain=""
   
-  if [[ "${DIFY_SUBDOMAIN:-}" ]]; then
-     dify_subdomain="${DIFY_SUBDOMAIN}"
+  if [[ "${AIO_SUBDOMAIN:-}" ]]; then
+     aio_subdomain="${AIO_SUBDOMAIN}"
   fi
 
-  local dify_service_name="dify"
-  # If not set explicitly, check custom services for type 'dify' or 'ai-ops' to enable it
+  local aio_service_name="ai-ops"
+  # Check custom services for type 'ai-ops'
   for i in {1..20}; do
       local cs_var="CUSTOM_SERVICE_${i}"
       local cs_val="${!cs_var:-}"
-      if [[ "$cs_val" == *":dify"* ]] || [[ "$cs_val" == *":ai-ops"* ]]; then
+      if [[ "$cs_val" == *":ai-ops"* ]] || [[ "$cs_val" == *":dify"* ]]; then
           IFS=':' read -r s_name s_type s_port <<< "$cs_val"
-          dify_service_name="$s_name"
-          if [[ -z "$dify_subdomain" ]]; then
-              dify_subdomain="dify"
+          aio_service_name="$s_name"
+          if [[ -z "$aio_subdomain" ]]; then
+              aio_subdomain="brain"
           fi
           break
       fi
   done
 
-  if [[ -n "$dify_subdomain" ]]; then
+  if [[ -n "$aio_subdomain" ]]; then
     local base_domain="${BASE_DOMAIN:-localhost}"
-    local dify_service_dir="services/${dify_service_name}/nginx"
     
-    # 1. Ensure Official Nginx Templates are present (Strict Compliance)
-    if [[ ! -f "${dify_service_dir}/nginx.conf.template" ]]; then
-        echo "  - Downloading official Dify Nginx templates (v${dify_version})..."
-        mkdir -p "${dify_service_dir}/conf.d"
-        local base_url="https://raw.githubusercontent.com/langgenius/dify/${dify_version}/docker/nginx"
-        
-        # Download core templates
-        curl -s -o "${dify_service_dir}/nginx.conf.template" "${base_url}/nginx.conf.template" || echo "Warning: Failed to download nginx.conf.template"
-        curl -s -o "${dify_service_dir}/proxy.conf.template" "${base_url}/proxy.conf.template"
-        curl -s -o "${dify_service_dir}/https.conf.template" "${base_url}/https.conf.template"
-        curl -s -o "${dify_service_dir}/docker-entrypoint.sh" "${base_url}/docker-entrypoint.sh"
-        chmod +x "${dify_service_dir}/docker-entrypoint.sh"
-        
-        # Download conf.d default template configuration
-        curl -s -o "${dify_service_dir}/conf.d/default.conf.template" "${base_url}/conf.d/default.conf.template"
-        
-        # Verify core config exists
-        if [[ ! -s "${dify_service_dir}/nginx.conf.template" ]]; then
-             echo "Error: Could not download Dify templates. Falling back to simple proxy mode?"
-        fi
-    fi
-
-    # 2. Ensure SSRF Proxy Templates (Strict Compliance)
-    local dify_ssrf_dir="services/${dify_service_name}/ssrf"
-    if [[ ! -f "${dify_ssrf_dir}/squid.conf.template" ]]; then
-        echo "  - Downloading official Dify SSRF templates..."
-        mkdir -p "${dify_ssrf_dir}"
-        local ssrf_base_url="https://raw.githubusercontent.com/langgenius/dify/${dify_version}/docker/ssrf_proxy"
-        
-        curl -s -o "${dify_ssrf_dir}/squid.conf.template" "${ssrf_base_url}/squid.conf.template"
-        curl -s -o "${dify_ssrf_dir}/docker-entrypoint.sh" "${ssrf_base_url}/docker-entrypoint.sh"
-        chmod +x "${dify_ssrf_dir}/docker-entrypoint.sh"
-    fi
-
-    # 3. Generate External Nginx Proxy
-    cat > nginx/sites/dify.conf <<EOF
+    # 1. RAGFlow Site (Main User Interface)
+    cat > nginx/sites/ragflow.conf <<EOF
+# RAGFlow Ingestion Engine
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${dify_subdomain}.${base_domain};
+    server_name ${aio_subdomain}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
-    # Proxy everything to Dify Internal Nginx
     location / {
-        # CORS Headers - Nginx as the single source of truth
-        proxy_hide_header 'Access-Control-Allow-Origin';
-        proxy_hide_header 'Access-Control-Allow-Methods';
-        proxy_hide_header 'Access-Control-Allow-Headers';
-        proxy_hide_header 'Access-Control-Allow-Credentials';
-
-        add_header 'Access-Control-Allow-Origin' '\$http_origin' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-
-        if (\$request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' '\$http_origin';
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
-            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
-            add_header 'Access-Control-Allow-Credentials' 'true';
-            add_header 'Access-Control-Max-Age' 1728000;
-            add_header 'Content-Type' 'text/plain; charset=utf-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
-
-        proxy_pass http://aio-dify-nginx:80;
+        proxy_pass http://aio-ragflow:80;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         
-        # WebSocket support (for Dify real-time features)
+        # WebSocket support
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_read_timeout 86400;
@@ -697,9 +640,36 @@ server {
 }
 EOF
 
-    # 4. Expose AI OPS Sub-services (Graphiti, Neo4j, MLFlow)
+    # 2. Langflow Site (Orchestration Interface)
+    cat > nginx/sites/langflow.conf <<EOF
+# Langflow Orchestration
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name langflow.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        proxy_pass http://aio-langflow:7860;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # WebSocket support
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+
+    # 3. AI OPS Sub-services (Graphiti, Neo4j, MLFlow)
     
-    # Graphiti
+    # Graphiti API
     cat > nginx/sites/graphiti.conf <<GRAPHITI_CONF
 server {
     listen 443 ssl;
@@ -710,7 +680,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        # CORS Headers - Nginx as the single source of truth
+        # CORS Headers
         proxy_hide_header 'Access-Control-Allow-Origin';
         proxy_hide_header 'Access-Control-Allow-Methods';
         proxy_hide_header 'Access-Control-Allow-Headers';
@@ -765,11 +735,11 @@ server {
 }
 NEO4J_CONF
 
-    # Dify MLFlow (Integrated)
+    # MLFlow Tracking
     local mlflow_auth_config=""
-    if [[ "${MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-      local mlflow_user="${MLFLOW_BASIC_AUTH_USER:-admin}"
-      local mlflow_pass="${MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
+    if [[ "${AIO_MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+      local mlflow_user="${AIO_MLFLOW_BASIC_AUTH_USER:-admin}"
+      local mlflow_pass="${AIO_MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
       
       echo "Generating Basic Auth for MLFlow..."
       echo "${mlflow_user}:$(openssl passwd -apr1 "${mlflow_pass}")" > nginx/conf.d/mlflow.htpasswd
@@ -794,7 +764,7 @@ server {
     location / {
         proxy_pass http://aio-mlflow:5000;
         proxy_http_version 1.1;
-        proxy_set_header Host 127.0.0.1;
+        proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Host \$host;
@@ -804,7 +774,7 @@ server {
 }
 MLFLOW_CONF
 
-    # FalkorDB Browser (Integrated)
+    # FalkorDB Browser
     cat > nginx/sites/falkordb.conf <<FALKORDB_CONF
 server {
     listen 443 ssl;

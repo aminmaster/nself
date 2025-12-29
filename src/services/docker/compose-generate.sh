@@ -249,7 +249,7 @@ EOF
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
       dify|ai-ops)
-        export DIFY_STACK_PRESENT="true"
+        export AIO_STACK_PRESENT="true"
         ;;
     esac
   done
@@ -284,15 +284,15 @@ EOF
      [[ "${MAILPIT_ENABLED:-false}" == "true" ]] || \
      [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] || \
      [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] || \
-     [[ "${MLFLOW_ENABLED:-false}" == "true" && "${DIFY_STACK_PRESENT:-false}" != "true" ]]; then
+     [[ "${MLFLOW_ENABLED:-false}" == "true" && "${AIO_STACK_PRESENT:-false}" != "true" ]]; then
     echo "" >> docker-compose.yml
     echo "  # ============================================" >> docker-compose.yml
     echo "  # Optional Services" >> docker-compose.yml
     echo "  # ============================================" >> docker-compose.yml
     generate_utility_services >> docker-compose.yml
     
-    # Only generate standalone MLFlow if not part of Dify/AI-Ops stack
-    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "${DIFY_STACK_PRESENT:-false}" != "true" ]]; then
+    # Only generate standalone MLFlow if not part of AIO stack
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "${AIO_STACK_PRESENT:-false}" != "true" ]]; then
       generate_mlflow_service_improved >> docker-compose.yml
     fi
   fi
