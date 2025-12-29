@@ -98,51 +98,6 @@ wizard_model_providers() {
   fi
   echo ""
   
-  # Anthropic
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "🟣 Anthropic (Claude)"
-  echo "  Get key: https://console.anthropic.com/"
-  if confirm_action "Configure Anthropic API Key? (optional)"; then
-    local anthropic_key
-    prompt_password "Anthropic API Key" anthropic_key
-    if [[ -n "$anthropic_key" ]]; then
-      add_wizard_secret "$config_array_name" "ANTHROPIC_API_KEY" "$anthropic_key"
-      has_any_key=true
-      echo "  ✓ Anthropic key configured"
-    fi
-  fi
-  echo ""
-  
-  # Cohere
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "🟠 Cohere"
-  echo "  Get key: https://dashboard.cohere.com/api-keys"
-  if confirm_action "Configure Cohere API Key? (optional)"; then
-    local cohere_key
-    prompt_password "Cohere API Key" cohere_key
-    if [[ -n "$cohere_key" ]]; then
-      add_wizard_secret "$config_array_name" "COHERE_API_KEY" "$cohere_key"
-      has_any_key=true
-      echo "  ✓ Cohere key configured"
-    fi
-  fi
-  echo ""
-  
-  # HuggingFace
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "🟡 HuggingFace"
-  echo "  Get token: https://huggingface.co/settings/tokens"
-  if confirm_action "Configure HuggingFace Token? (optional)"; then
-    local hf_token
-    prompt_password "HuggingFace Token" hf_token
-    if [[ -n "$hf_token" ]]; then
-      add_wizard_secret "$config_array_name" "HUGGINGFACE_API_KEY" "$hf_token"
-      has_any_key=true
-      echo "  ✓ HuggingFace token configured"
-    fi
-  fi
-  echo ""
-  
   # Summary
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   if [[ "$has_any_key" == "true" ]]; then
