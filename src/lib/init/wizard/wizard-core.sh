@@ -399,7 +399,7 @@ wizard_custom_services() {
         "fastapi - Python FastAPI"
         "bullmq-js - BullMQ job processor"
         "grpc - gRPC service"
-        "ai-ops - AI Operating System (Dify + Graphiti + Knowledge Graph)"
+        "ai-ops - AI Operating System (RAGFlow + Langflow + Knowledge Graph)"
         "Custom Docker image"
       )
       local selected_type
@@ -421,40 +421,30 @@ wizard_custom_services() {
       if [[ "$service_type" == "ai-ops" ]]; then
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "AI Operating System Configuration:"
-        echo "  • Core: Dify.ai (Agent Platform)"
-        echo "  • Memory: Graphiti + FalkorDB (Temporal Graph)"
-        echo "  • Knowledge: Neo4j (Static Graph)"
-        echo "  • Ops: MLFlow (Model Registry)"
-        echo "  • Deploys 16+ coordinated containers"
+        echo "AI Operating System Configuration (Unified Stack):"
+        echo "  • Ingestion: RAGFlow (High-fidelity Logic)"
+        echo "  • Orchestration: Langflow (Agentic Brain)"
+        echo "  • Memory: Graphiti + FalkorDB (Temporal User State)"
+        echo "  • Knowledge: Neo4j (Structural Graph)"
+        echo "  • Ops: MLFlow (Model Management)"
+        echo "  • Infrastructure: Shared Postgres, Redis, ES, Minio"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         
-        local dify_version dify_subdomain dify_secret
-        prompt_input "Dify Version" "1.11.1" dify_version
-        add_wizard_config "$config_array_name" "DIFY_VERSION" "$dify_version"
+        local aio_version aio_subdomain aio_secret
+        prompt_input "AIO Version" "1.0.0" aio_version
+        add_wizard_config "$config_array_name" "AIO_VERSION" "$aio_version"
 
-        prompt_input "Subdomain" "dify" dify_subdomain
-        add_wizard_config "$config_array_name" "DIFY_SUBDOMAIN" "$dify_subdomain"
+        prompt_input "AIO Subdomain (e.g. brain)" "brain" aio_subdomain
+        add_wizard_config "$config_array_name" "AIO_SUBDOMAIN" "$aio_subdomain"
 
         # Generate Secret Key
-        dify_secret=$(generate_password 32)
-        add_wizard_secret "$config_array_name" "DIFY_SECRET_KEY" "$dify_secret"
+        aio_secret=$(generate_password 32)
+        add_wizard_secret "$config_array_name" "AIO_SECRET_KEY" "$aio_secret"
         
         # Generate Redis Password
-        local dify_redis_password
-        dify_redis_password=$(generate_password 24)
-        add_wizard_secret "$config_array_name" "DIFY_REDIS_PASSWORD" "$dify_redis_password"
-        
-        # Generate Plugin Daemon Key
-        local dify_plugin_key
-        dify_plugin_key=$(generate_password 32)
-        add_wizard_secret "$config_array_name" "DIFY_PLUGIN_DAEMON_KEY" "$dify_plugin_key"
-        add_wizard_secret "$config_array_name" "DIFY_PLUGIN_DAEMON_API_KEY" "$dify_plugin_key"
-        
-        # Generate Inner API Key
-        local dify_inner_key
-        dify_inner_key=$(generate_password 32)
-        add_wizard_secret "$config_array_name" "DIFY_INNER_API_KEY" "$dify_inner_key"
+        local aio_redis_password
+        aio_redis_password=$(generate_password 24)
+        add_wizard_secret "$config_array_name" "AIO_REDIS_PASSWORD" "$aio_redis_password"
         
         # Neo4j Credentials
         local neo4j_password
@@ -462,25 +452,18 @@ wizard_custom_services() {
         add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
         add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
 
-        # MLFlow Config (Auto-Enable)
-        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
-        add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
-        
-        # MLFlow Basic Auth Credentials (Nginx level)
-        add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_ENABLED" "true"
-        add_wizard_config "$config_array_name" "MLFLOW_BASIC_AUTH_USER" "admin"
-        add_wizard_secret "$config_array_name" "MLFLOW_BASIC_AUTH_PASSWORD" "$(generate_password 16)"
-
-        # FalkorDB Database Credentials (Internal Security)
-        local falkordb_user="falkor_admin"
+        # FalkorDB Database Credentials
         local falkordb_pass=$(generate_password 24)
-        add_wizard_config "$config_array_name" "FALKORDB_USER" "$falkordb_user"
         add_wizard_secret "$config_array_name" "FALKORDB_PASSWORD" "$falkordb_pass"
         # Provide URL without credentials for browser manual login
         add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://aio-falkordb:6379"
 
+        # MLFlow Config (Auto-Enable)
+        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+        add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
+
         add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-        add_wizard_config "$config_array_name" "DIFY_STACK_PRESENT" "true"
+        add_wizard_config "$config_array_name" "AIO_STACK_PRESENT" "true"
       fi
 
       # Service-specific default ports
