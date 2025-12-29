@@ -143,6 +143,50 @@ update_progress() {
   fi
 }
 
+# Track lines printed for recursive status updates
+LAST_LINE_COUNT=0
+
+# Clean pull progress renderer
+render_pull_progress() {
+  local start_output="$1"
+  local spin_char="$2"
+  
+  # Find all unique images being pulled
+  local pulling_images=$(grep "Pulling from\|Pulled" "$start_output" | sed -E 's/.*Pulling from //;s/.*Pulled //' | sort -u || echo "")
+  
+  if [[ -z "$pulling_images" ]]; then
+    return 0
+  fi
+
+  # Move cursor back up if we already printed lines
+  if [[ $LAST_LINE_COUNT -gt 0 ]]; then
+    printf "\033[%dA" "$LAST_LINE_COUNT"
+  fi
+
+  local current_count=0
+  for img in $pulling_images; do
+    # Check status of this image
+    local status="Pending"
+    local color="${COLOR_BLUE}"
+    local icon="${spin_char}"
+    
+    if grep -q "Pulled\|Pull complete.*$img\|Already exists.*$img" "$start_output" 2>/dev/null; then
+      status="Done"
+      color="${COLOR_GREEN}"
+      icon="✓"
+    elif grep -q "Extracting.*$img" "$start_output" 2>/dev/null; then
+      status="Extracting"
+    elif grep -q "Downloading.*$img" "$start_output" 2>/dev/null; then
+      status="Downloading"
+    fi
+    
+    printf "\r${color}%s${COLOR_RESET} %-45s [%s]\033[K\n" "$icon" "$img" "$status"
+    current_count=$((current_count + 1))
+  done
+  
+  LAST_LINE_COUNT=$current_count
+}
+
 # Check firewall configuration
 check_firewall_rules() {
   # Skip if UFW not installed
@@ -356,191 +400,116 @@ start_services() {
   # Show initial preparing message
   printf "${COLOR_BLUE}⠋${COLOR_RESET} Analyzing Docker configuration..."
 
-  # Execute docker compose
-  if [[ "$VERBOSE" == "true" ]]; then
-    # Verbose mode - show Docker output directly
-    printf "\r%-60s\r" " "  # Clear the preparing message
-    $compose_cmd "${compose_args[@]}" 2>&1 | tee "$start_output"
-    local exit_code=${PIPESTATUS[0]}
-  else
-    # Clean mode - capture output and show progress
-    $compose_cmd "${compose_args[@]}" > "$start_output" 2> "$error_output" &
-    local compose_pid=$!
+  # Execute docker compose in background (unified for both modes)
+  $compose_cmd "${compose_args[@]}" > "$start_output" 2> "$error_output" &
+  local compose_pid=$!
 
-    # Spinner characters for animation
-    local spinner=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
-    local spin_index=0
+  # Spinner characters for animation
+  local spinner=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local spin_index=0
 
-    # Track progress based on docker output
-    local network_done=false
-    local volumes_done=false
-    local containers_created=false
-    local services_starting=false
-    local monitoring_started=false
-    local custom_started=false
+  # Track progress based on docker output
+  local network_done=false
+  local volumes_done=false
+  local containers_created=false
+  local services_starting=false
+  local monitoring_started=false
+  local custom_started=false
 
-    # Count total expected services from docker-compose.yml
-    local total_services=$(grep -c "^  [a-z].*:" docker-compose.yml 2>/dev/null || echo "25")
-    local images_to_pull=0
-    local images_pulled=0
-    local containers_started=0
-    local current_action="Analyzing Docker configuration"
-    local last_line=""
-    local last_update=$(date +%s)
+  # Count total expected services
+  local total_services=$(grep -c "^  [a-z].*:" docker-compose.yml 2>/dev/null || echo "25")
+  local containers_started=0
+  local current_action="Analyzing Docker configuration"
+  local last_line=""
+  local last_update=$(date +%s)
 
-    # Initial delay to let docker compose start
-    sleep 0.2
+  # Initial delay to let docker compose start
+  sleep 0.2
 
-    while ps -p $compose_pid > /dev/null 2>&1; do
-      # Update spinner
-      spin_index=$(( (spin_index + 1) % 10 ))
+  while ps -p $compose_pid > /dev/null 2>&1; do
+    # Update spinner
+    spin_index=$(( (spin_index + 1) % 10 ))
 
-      # Get the last non-empty line from output to see what's happening
-      last_line=$(tail -n 10 "$start_output" 2>/dev/null | grep -v "^$" | tail -n 1 || echo "")
+    # Get the last non-empty line
+    last_line=$(tail -n 10 "$start_output" 2>/dev/null | grep -v "^$" | tail -n 1 || echo "")
 
-      # Check what's happening based on output patterns with more detail
-      if echo "$last_line" | grep -q "Building\|Step\|RUN\|COPY\|FROM"; then
-        # Building custom images - count steps
-        local build_steps=$(grep -c "Step [0-9]" "$start_output" 2>/dev/null || true)
-        local image_name=$(echo "$last_line" | grep -oE "Building [a-z_-]+" | sed 's/Building //' || echo "image")
-        current_action="Building custom Docker images"
-        if [[ -n "$image_name" ]] && [[ "$image_name" != "image" ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (building %s)" "${spinner[$spin_index]}" "$current_action" "$image_name"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (step %d)" "${spinner[$spin_index]}" "$current_action" "$build_steps"
-        fi
+    # 1. Pull Progress (Multi-line compact view)
+    if echo "$last_line" | grep -q "Pulling\|Pull complete\|Already exists\|Downloading\|Extracting\|Waiting"; then
+      current_action="Downloading Docker images"
+      render_pull_progress "$start_output" "${spinner[$spin_index]}"
+      sleep 0.1
+      continue
+    # 2. Cleanup pull lines if we moved past that phase
+    elif [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
+      printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
+      LAST_LINE_COUNT=0
+    fi
 
-      elif echo "$last_line" | grep -q "Pulling\|Pull complete\|Already exists\|Downloading\|Extracting\|Waiting"; then
-        # Count unique images being pulled - better tracking
-        local pulling_count=$(grep -c "Pulling from" "$start_output" 2>/dev/null || true)
-        local pulled_count=$(grep -c "Pull complete\|Already exists" "$start_output" 2>/dev/null || true)
+    # 3. Handle other progress steps (ordered by lifecycle)
+    if echo "$last_line" | grep -q "Building\|Step\|RUN\|COPY\|FROM"; then
+      local build_steps=$(grep -c "Step [0-9]" "$start_output" 2>/dev/null || true)
+      local image_name=$(echo "$last_line" | grep -oE "Building [a-z_-]+" | sed 's/Building //' || echo "image")
+      current_action="Building custom Docker images"
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%s)\033[K" "${spinner[$spin_index]}" "$current_action" "${image_name:-step $build_steps}"
 
-        # Try to estimate total images needed
-        if [[ $images_to_pull -eq 0 ]]; then
-          # Rough estimate based on service count
-          images_to_pull=$((total_services * 2 / 3))  # Not all services have unique images
-        fi
-
-        # Get the current image being pulled
-        local current_image=$(echo "$last_line" | grep -oE "[a-z0-9-]+/[a-z0-9-]+" | tail -1 || echo "")
-        current_action="Downloading Docker images"
-
-        if [[ -n "$current_image" ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d) %s" "${spinner[$spin_index]}" "$current_action" "$pulling_count" "$images_to_pull" "$current_image"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d)" "${spinner[$spin_index]}" "$current_action" "$pulling_count" "$images_to_pull"
-        fi
-
-      elif grep -q "Network.*Creating\|Network.*Created" "$start_output" 2>/dev/null; then
-        # Network creation
-        local network_count=$(grep -c "Network.*Created" "$start_output" 2>/dev/null || true)
-        current_action="Creating Docker network"
-        printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s..." "${spinner[$spin_index]}" "$current_action"
-
-        if [[ "$network_done" == "false" ]] && [[ "$network_count" -gt 0 ]]; then
-          update_progress 2 "done"
-          network_done=true
-        fi
-
-      elif grep -q "Volume.*Creating\|Volume.*Created" "$start_output" 2>/dev/null; then
-        # Volume creation
-        local volume_count=$(grep -c "Volume.*Created" "$start_output" 2>/dev/null || true)
-        current_action="Creating Docker volumes"
-        if [[ "$volume_count" -gt 0 ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d created)" "${spinner[$spin_index]}" "$current_action" "$volume_count"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s..." "${spinner[$spin_index]}" "$current_action"
-        fi
-
-        if [[ "$volumes_done" == "false" ]] && [[ "$volume_count" -gt 0 ]]; then
-          update_progress 3 "done"
-          volumes_done=true
-        fi
-
-      elif echo "$last_line" | grep -q "Container.*Creating\|Container.*Created"; then
-        # Count containers being created with more detail
-        local created_count=$(grep -c "Container.*Created" "$start_output" 2>/dev/null || true)
-        local creating_count=$(grep -c "Container.*Creating" "$start_output" 2>/dev/null || true)
-        local total_creating=$((created_count + creating_count))
-
-        # Get the name of container being created
-        local container_name=$(echo "$last_line" | grep -oE "Container ${project_name}_[a-z0-9_-]+" | sed "s/Container ${project_name}_//" || echo "")
-        current_action="Creating Docker containers"
-
-        if [[ -n "$container_name" ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d) %s" "${spinner[$spin_index]}" "$current_action" "$created_count" "$total_services" "$container_name"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d)" "${spinner[$spin_index]}" "$current_action" "$created_count" "$total_services"
-        fi
-
-        if [[ "$created_count" -ge "$total_services" ]] && [[ "$containers_created" == "false" ]]; then
-          update_progress 4 "done"
-          containers_created=true
-        fi
-
-      elif echo "$last_line" | grep -q "Container.*Starting\|Container.*Started\|Container.*Running"; then
-        # Count containers being started with more detail
-        containers_started=$(grep -c "Container.*Started" "$start_output" 2>/dev/null || true)
-        local starting_count=$(grep -c "Container.*Starting" "$start_output" 2>/dev/null || true)
-
-        # Get the name of container being started
-        local container_name=$(echo "$last_line" | grep -oE "Container ${project_name}_[a-z0-9_-]+" | sed "s/Container ${project_name}_//" || echo "")
-        current_action="Starting Docker containers"
-
-        if [[ -n "$container_name" ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d) %s" "${spinner[$spin_index]}" "$current_action" "$containers_started" "$total_services" "$container_name"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d)" "${spinner[$spin_index]}" "$current_action" "$containers_started" "$total_services"
-        fi
-
-        # Update specific service categories as they start
-        if [[ "$services_starting" == "false" ]] && grep -q "Container ${project_name}_postgres.*Started" "$start_output" 2>/dev/null; then
-          update_progress 5 "done"
-          services_starting=true
-        fi
-
-        if [[ "$services_starting" == "true" ]] && grep -q "Container ${project_name}_minio.*Started" "$start_output" 2>/dev/null; then
-          update_progress 6 "done"
-        fi
-
-        if [[ "$monitoring_started" == "false" ]] && grep -q "Container ${project_name}_prometheus.*Started" "$start_output" 2>/dev/null; then
-          update_progress 7 "done"
-          monitoring_started=true
-        fi
-
-        if [[ "$custom_started" == "false" ]] && grep -q "Container ${project_name}_express_api.*Started" "$start_output" 2>/dev/null; then
-          update_progress 8 "done"
-          custom_started=true
-        fi
-      else
-        # Default spinner while waiting - show more detail
-        local current_time=$(date +%s)
-        local elapsed=$((current_time - last_update))
-
-        # Change message based on elapsed time and what we're likely doing
-        if [[ "$elapsed" -lt 5 ]]; then
-          current_action="Preparing Docker environment"
-        elif [[ "$elapsed" -lt 15 ]]; then
-          current_action="Checking Docker images"
-        elif [[ "$elapsed" -lt 30 ]]; then
-          current_action="Processing service dependencies"
-        elif [[ "$elapsed" -lt 60 ]]; then
-          current_action="Configuring network and volumes"
-        else
-          current_action="Initializing services"
-        fi
-
-        # Show basic progress even when we don't have specific info
-        local any_containers=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d ' ')
-        if [[ "$any_containers" -gt 0 ]]; then
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d containers active)" "${spinner[$spin_index]}" "$current_action" "$any_containers"
-        else
-          printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s..." "${spinner[$spin_index]}" "$current_action"
-        fi
+    elif grep -q "Network.*Creating\|Network.*Created" "$start_output" 2>/dev/null; then
+      current_action="Creating Docker network"
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
+      if [[ "$network_done" == "false" ]]; then
+        update_progress 2 "done"
+        network_done=true
       fi
 
-      sleep 0.1  # Faster updates for smoother animation
-    done
+    elif grep -q "Volume.*Creating\|Volume.*Created" "$start_output" 2>/dev/null; then
+      local volume_count=$(grep -c "Volume.*Created" "$start_output" 2>/dev/null || echo "0")
+      current_action="Creating Docker volumes"
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d created)\033[K" "${spinner[$spin_index]}" "$current_action" "$volume_count"
+      if [[ "$volumes_done" == "false" ]]; then
+        update_progress 3 "done"
+        volumes_done=true
+      fi
+
+    elif echo "$last_line" | grep -q "Container.*Creating\|Container.*Created"; then
+      local created_count=$(grep -c "Container.*Created" "$start_output" 2>/dev/null || echo "0")
+      local container_name=$(echo "$last_line" | grep -oE "Container ${project_name}_[a-z0-9_-]+" | sed "s/Container ${project_name}_//" || echo "")
+      current_action="Creating Docker containers"
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d) %s\033[K" "${spinner[$spin_index]}" "$current_action" "$created_count" "$total_services" "$container_name"
+      if [[ "$created_count" -ge "$total_services" ]] && [[ "$containers_created" == "false" ]]; then
+        update_progress 4 "done"
+        containers_created=true
+      fi
+
+    elif echo "$last_line" | grep -q "Container.*Starting\|Container.*Started\|Container.*Running"; then
+      containers_started=$(grep -c "Container.*Started" "$start_output" 2>/dev/null || echo "0")
+      local container_name=$(echo "$last_line" | grep -oE "Container ${project_name}_[a-z0-9_-]+" | sed "s/Container ${project_name}_//" || echo "")
+      current_action="Starting Docker containers"
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s... (%d/%d) %s\033[K" "${spinner[$spin_index]}" "$current_action" "$containers_started" "$total_services" "$container_name"
+
+      # Selective progress updates
+      if [[ "$services_starting" == "false" ]] && grep -q "Container ${project_name}_postgres.*Started" "$start_output" 2>/dev/null; then
+        update_progress 5 "done"
+        services_starting=true
+      fi
+      if grep -q "Container ${project_name}_minio.*Started" "$start_output" 2>/dev/null; then
+        update_progress 6 "done"
+      fi
+      if [[ "$monitoring_started" == "false" ]] && grep -q "Container ${project_name}_prometheus.*Started" "$start_output" 2>/dev/null; then
+        update_progress 7 "done"
+        monitoring_started=true
+      fi
+    else
+      # Default state while waiting
+      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
+    fi
+
+    sleep 0.1
+  done
+
+    # Clear any residual progress lines from image pulling
+    if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
+      printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
+      LAST_LINE_COUNT=0
+    fi
 
     wait $compose_pid
     local exit_code=$?
