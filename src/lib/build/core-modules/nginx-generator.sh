@@ -6,6 +6,10 @@
 generate_nginx_config() {
   local force="${1:-false}"
 
+  # Cleanup existing configuration to prevent stale routes
+  rm -rf nginx/sites/*.conf nginx/conf.d/*.conf 2>/dev/null || true
+  mkdir -p nginx/{sites,conf.d,includes,routes,streams} 2>/dev/null || true
+
   # Generate main nginx.conf
   generate_main_nginx_conf
 
@@ -207,7 +211,8 @@ EOF
   if [[ "${FRONTEND_ENABLED:-false}" == "true" ]]; then
     cat >> nginx/conf.d/default.conf <<EOF
         # Proxy to containerized web app
-        proxy_pass http://${PROJECT_NAME}_${PRIMARY_FRONTEND_NAME:-web}:${PRIMARY_FRONTEND_PORT:-3000};
+        set \$target_frontend ${PROJECT_NAME}_${PRIMARY_FRONTEND_NAME:-web};
+        proxy_pass http://\$target_frontend:${PRIMARY_FRONTEND_PORT:-3000};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -293,7 +298,8 @@ server {
             return 204;
         }
 
-        proxy_pass http://hasura:8080;
+        set \$target_hasura hasura;
+        proxy_pass http://\$target_hasura:8080;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -353,7 +359,8 @@ server {
             return 204;
         }
 
-        proxy_pass http://auth:4000;
+        set \$target_auth auth;
+        proxy_pass http://\$target_auth:4000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -381,7 +388,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://minio:9001;
+        set \$target_minio_console minio;
+        proxy_pass http://\$target_minio_console:9001;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -404,7 +412,8 @@ server {
     client_max_body_size 1000M;
 
     location / {
-        proxy_pass http://minio:9000;
+        set \$target_minio_s3 minio;
+        proxy_pass http://\$target_minio_s3:9000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -433,7 +442,8 @@ server {
     client_max_body_size 100M;
 
     location / {
-        proxy_pass http://${project_name}_meilisearch:7700;
+        set \$target_meili meilisearch;
+        proxy_pass http://\$target_meili:7700;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -460,7 +470,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://rabbitmq:15672;
+        set \$target_rabbit rabbitmq;
+        proxy_pass http://\$target_rabbit:15672;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -492,7 +503,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://functions:3000;
+        set \$target_functions functions;
+        proxy_pass http://\$target_functions:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -518,7 +530,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://nself-admin:3021;
+        set \$target_admin nself-admin;
+        proxy_pass http://\$target_admin:3021;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -819,7 +832,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://grafana:3000;
+        set \$target_grafana grafana;
+        proxy_pass http://\$target_grafana:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -862,7 +876,8 @@ server {
     ${auth_config}
 
     location / {
-        proxy_pass http://prometheus:9090;
+        set \$target_prometheus prometheus;
+        proxy_pass http://\$target_prometheus:9090;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
