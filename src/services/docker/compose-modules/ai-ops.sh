@@ -6,29 +6,41 @@ generate_ragflow_configs() {
 
   # 1. Internal Nginx Config (Optimized for application delivery)
   rm -rf "$ragflow_vol_dir/ragflow-internal.conf"
-  cat > "$ragflow_vol_dir/ragflow-internal.conf" <<EOF
+  cat <<'NGINX_CONF' > "$ragflow_vol_dir/ragflow-internal.conf"
 server {
     listen 80;
     server_name _;
 
-    # Increase upload limits for large documents
+    root /ragflow/web/dist;
+    index index.html;
+
+    # Handle Frontend SPA Routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to Python Backend
+    location ~ ^/(v1|api)/ {
+        proxy_pass http://127.0.0.1:9380;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Increase timeouts for long-running RAG tasks
+        proxy_read_timeout 600s;
+        proxy_connect_timeout 600s;
+        proxy_send_timeout 600s;
+    }
+
+    # Max body size for file uploads
     client_max_body_size 128M;
 
-    location / {
-        proxy_pass http://127.0.0.1:9380;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        
-        # WebSocket support
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 86400;
-    }
+    # Gzip for faster asset loading
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 }
-EOF
+NGINX_CONF
 
   # 2. Service Configuration (Postgres + Redis Auth)
   rm -rf "$ragflow_vol_dir/service_conf.yaml"
