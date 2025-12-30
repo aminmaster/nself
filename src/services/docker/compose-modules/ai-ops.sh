@@ -48,6 +48,14 @@ mysql:
   max_connections: 900
   stale_timeout: 300
   max_allowed_packet: 1073741824
+postgres:
+  name: '\${DB_NAME:-ragflow}'
+  user: '\${DB_USER:-postgres}'
+  password: '\${DB_PASSWORD:-aiopassword}'
+  host: '\${DB_HOST:-aio-db}'
+  port: \${DB_PORT:-5432}
+  max_connections: 100
+  stale_timeout: 30
 minio:
   user: 'admin'
   password: '\${DB_PASSWORD:-aiopassword}'
