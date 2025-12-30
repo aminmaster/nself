@@ -533,14 +533,14 @@ render_start_progress() {
   # Initial delay to let docker compose start
   sleep 0.2
 
+  # 1. Main progress loop
+  local exit_code=0
   while ps -p $compose_pid > /dev/null 2>&1; do
     # Update spinner
     spin_index=$(( (spin_index + 1) % 10 ))
 
-    # 1. Pull Progress (Multi-line detailed view)
+    # Pull Progress (Multi-line detailed view)
     if grep -q "Pulling from\|Pulled\|Downloading\|Extracting" "$start_output" 2>/dev/null; then
-      # If we were in pulling phase but just finished, we need to show the final state
-      # but only if we haven't started showing container progress yet
       if ! grep -q "Container.*Created\|Container.*Started" "$start_output" 2>/dev/null; then
         render_detailed_status "$start_output" "${spinner[$spin_index]}" "pulling"
         sleep 0.1
@@ -548,39 +548,31 @@ render_start_progress() {
       fi
     fi
 
-    # 2. Container/Network/Volume Progress
+    # Container/Network/Volume Progress (Multi-line detailed view)
     if grep -q "Container\|Network\|Volume" "$start_output" 2>/dev/null; then
-      # If we just switched from pulling to starting, cleanup the pull block
-      if grep -q "Pulling from" "$start_output" 2>/dev/null && [[ ${LAST_LINE_COUNT:-0} -gt 0 ]] && ! grep -q "Container.*Started\|Container.*Created" "$start_output" 2>/dev/null; then
-         # This is a bit tricky, we only clear if we are SURE we moved on
-         : 
-      fi
-      
       render_detailed_status "$start_output" "${spinner[$spin_index]}" "starting"
       sleep 0.1
       continue
     fi
 
-    # 3. Handle specific one-off steps strictly for background tasks
-    last_line=$(tail -n 1 "$start_output" 2>/dev/null || echo "")
-    if [[ -n "$last_line" ]]; then
-      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
-    fi
-
+    # Default fallback spinner
+    printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
     sleep 0.1
   done
 
-  # Clear any residual progress lines from image pulling
+  # Clear any residual progress lines
   if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
     printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
     LAST_LINE_COUNT=0
   fi
 
-  wait $compose_pid
-  local exit_code=$?
+  # Capture final exit code safely (don't let set -e kill us here)
+  if ! wait $compose_pid; then
+    exit_code=$?
+  fi
 
   # Clear the spinner line
-  printf "\r%-60s\r" " "
+  printf "\r\033[K"
 
   # 10. Check results
   if [[ $exit_code -eq 0 ]]; then
