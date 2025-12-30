@@ -248,6 +248,7 @@ EOF
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${redis_password}
       - RAGFLOW_CONF=/ragflow/conf/service_conf.yaml
+      - MYSQL_USER=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
       - POSTGRES_HOST=aio-db
