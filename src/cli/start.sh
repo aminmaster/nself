@@ -402,94 +402,108 @@ start_services() {
 
 # Detailed Multi-line Status Renderer
 render_detailed_status() {
-  local start_output="$1"
+  local data_source="$1"
   local spin_char="$2"
-  local mode="${3:-pulling}" # pulling or starting
+  local mode="${3:-pulling}" # pulling, starting, or health
+  local project_name="${4:-${PROJECT_NAME:-myproject}}"
   
-  # 1. Identify all services/images mentioned in the output
   local targets=""
-  if [[ "$mode" == "pulling" ]]; then
-    # Get images being pulled
-    targets=$(grep "Pulling from\|Already exists" "$start_output" | sed -E 's/.*Pulling from //;s/.*Already exists //' | sort -u || echo "")
-  else
-    # Get containers, networks, volumes
-    # Extract only the name part after the prefix
-    targets=$(grep -E "Container|Network|Volume" "$start_output" | grep -E "Created|Started|Healthy|Creating|Starting" | \
-      sed -E 's/.*(Container|Network|Volume) [^ ]+_?([a-zA-Z0-9_-]+).*/\2/' | sort -u || echo "")
-  fi
-  
-  if [[ -z "$targets" ]]; then
-    return 0
-  fi
-
-  # 2. Move cursor back up if we already printed lines
-  if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
-    printf "\033[%dA" "$LAST_LINE_COUNT"
-  fi
-
   local current_count=0
-  IFS=$'\n'
-  for t in $targets; do
-    local status="Pending"
-    local color="${COLOR_DIM}"
-    local icon="${spin_char}"
-    local progress=""
-    local bar=""
+  
+  if [[ "$mode" == "health" ]]; then
+    # Mode: Health (Direct Docker PS query)
+    # Using tab separation for easier parsing
+    local containers=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}" 2>/dev/null || echo "")
+    if [[ -z "$containers" ]]; then return 0; fi
     
-    # Image Pulling logic
-    if [[ "$mode" == "pulling" ]]; then
-      if grep -q "Pulled.*$t\|Already exists.*$t" "$start_output" 2>/dev/null; then
-        status="Done"
-        color="${COLOR_GREEN}"
-        icon="✓"
-      elif grep -q "Extracting.*$t" "$start_output" 2>/dev/null; then
-        status="Extracting"
-        color="${COLOR_CYAN}"
-        # Extract progress like [⣿⣿⣿⣿]
-        bar=$(grep "Extracting.*$t" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Extracting.*$t" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Downloading.*$t" "$start_output" 2>/dev/null; then
-        status="Downloading"
-        color="${COLOR_BLUE}"
-        bar=$(grep "Downloading.*$t" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Downloading.*$t" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Pulling from.*$t" "$start_output" 2>/dev/null; then
-        status="Pulling"
-      fi
-    # Container/Network/Volume Starting logic
-    else
-      if grep -q "Healthy.*$t" "$start_output" 2>/dev/null; then
+    # Move cursor back up if we already printed lines
+    [[ ${LAST_LINE_COUNT:-0} -gt 0 ]] && printf "\033[%dA" "$LAST_LINE_COUNT"
+    
+    IFS=$'\n'
+    for line in $containers; do
+      local full_name=$(echo "$line" | cut -f1)
+      local raw_status=$(echo "$line" | cut -f2)
+      # Extract service name (remove project prefix)
+      local t=${full_name#${project_name}_}
+      
+      local status="Starting"
+      local color="${COLOR_BLUE}"
+      local icon="${spin_char}"
+      
+      if [[ "$raw_status" == *"healthy"* ]]; then
         status="Healthy"
         color="${COLOR_GREEN}"
         icon="✓"
-      elif grep -q "Started.*$t" "$start_output" 2>/dev/null; then
-        status="Started"
-        color="${COLOR_GREEN}"
-        icon="✓"
-      elif grep -q "Created.*$t" "$start_output" 2>/dev/null; then
-        status="Created"
-        color="${COLOR_GREEN}"
-        icon="✓"
-      elif grep -q "Creating.*$t\|Starting.*$t" "$start_output" 2>/dev/null; then
-        status="Starting"
-        color="${COLOR_BLUE}"
+      elif [[ "$raw_status" == *"unhealthy"* ]]; then
+        status="Unhealthy"
+        color="${COLOR_RED}"
+        icon="✗"
+      elif [[ "$raw_status" == *"Exited"* ]]; then
+        status="Stopped"
+        color="${COLOR_DIM}"
+        icon="○"
       fi
-    fi
+      
+      printf "\r${color}%s${COLOR_RESET} %-25s %-12s\033[K\n" "$icon" "$t" "$status"
+      current_count=$((current_count + 1))
+    done
+    unset IFS
     
-    # Format and print the line
-    local label="%-25s"
-    local state="%-12s"
-    
-    if [[ -n "$bar" ]]; then
-       printf "\r${color}%s${COLOR_RESET} ${label} ${state} %s %s\033[K\n" "$icon" "$t" "$status" "$bar" "$progress"
-    elif [[ -n "$progress" ]]; then
-       printf "\r${color}%s${COLOR_RESET} ${label} ${state} [%s]\033[K\n" "$icon" "$t" "$status" "$progress"
+  else
+    # Mode: Pulling/Starting (Log file parsing)
+    if [[ "$mode" == "pulling" ]]; then
+      targets=$(grep "Pulling from\|Already exists" "$data_source" | sed -E 's/.*Pulling from //;s/.*Already exists //' | sort -u || echo "")
     else
-       printf "\r${color}%s${COLOR_RESET} ${label} ${state}\033[K\n" "$icon" "$t" "$status"
+      targets=$(grep -E "Container|Network|Volume" "$data_source" | grep -E "Created|Started|Healthy|Creating|Starting" | \
+        sed -E 's/.*(Container|Network|Volume) [^ ]+_?([a-zA-Z0-9_-]+).*/\2/' | sort -u || echo "")
     fi
-    current_count=$((current_count + 1))
-  done
-  unset IFS
+    
+    if [[ -z "$targets" ]]; then return 0; fi
+    [[ ${LAST_LINE_COUNT:-0} -gt 0 ]] && printf "\033[%dA" "$LAST_LINE_COUNT"
+    
+    IFS=$'\n'
+    for t in $targets; do
+      local status="Pending"
+      local color="${COLOR_DIM}"
+      local icon="${spin_char}"
+      local progress=""
+      local bar=""
+      
+      if [[ "$mode" == "pulling" ]]; then
+        if grep -q "Pulled.*$t\|Already exists.*$t" "$data_source" 2>/dev/null; then
+          status="Done"; color="${COLOR_GREEN}"; icon="✓"
+        elif grep -q "Extracting.*$t" "$data_source" 2>/dev/null; then
+          status="Extracting"; color="${COLOR_CYAN}"
+          bar=$(grep "Extracting.*$t" "$data_source" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
+          progress=$(grep "Extracting.*$t" "$data_source" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
+        elif grep -q "Downloading.*$t" "$data_source" 2>/dev/null; then
+          status="Downloading"; color="${COLOR_BLUE}"
+          bar=$(grep "Downloading.*$t" "$data_source" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
+          progress=$(grep "Downloading.*$t" "$data_source" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
+        elif grep -q "Pulling from.*$t" "$data_source" 2>/dev/null; then
+          status="Pulling"
+        fi
+      else
+        if grep -q "Started.*$t\|Healthy.*$t" "$data_source" 2>/dev/null; then
+          status="Started"; color="${COLOR_GREEN}"; icon="✓"
+        elif grep -q "Created.*$t" "$data_source" 2>/dev/null; then
+          status="Created"; color="${COLOR_GREEN}"; icon="✓"
+        elif grep -q "Creating.*$t\|Starting.*$t" "$data_source" 2>/dev/null; then
+          status="Starting"; color="${COLOR_BLUE}"
+        fi
+      fi
+      
+      if [[ -n "$bar" ]]; then
+         printf "\r${color}%s${COLOR_RESET} %-25s %-12s %s %s\033[K\n" "$icon" "$t" "$status" "$bar" "$progress"
+      elif [[ -n "$progress" ]]; then
+         printf "\r${color}%s${COLOR_RESET} %-25s %-12s [%s]\033[K\n" "$icon" "$t" "$status" "$progress"
+      else
+         printf "\r${color}%s${COLOR_RESET} %-25s %-12s\033[K\n" "$icon" "$t" "$status"
+      fi
+      current_count=$((current_count + 1))
+    done
+    unset IFS
+  fi
   
   LAST_LINE_COUNT=$current_count
 }
@@ -573,13 +587,15 @@ render_start_progress() {
     sleep 0.1
   done
 
-  # Clear any residual progress lines
-  if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
-    printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
-    LAST_LINE_COUNT=0
+  # 9. Clear residual progress lines ONLY if we aren't going into health checks or if we failed
+  if [[ $exit_code -ne 0 ]] || [[ "$SKIP_HEALTH_CHECKS" == "true" ]]; then
+    if [[ ${LAST_LINE_COUNT:-0} -gt 0 ]]; then
+      printf "\033[%dA\033[J" "$LAST_LINE_COUNT"
+      LAST_LINE_COUNT=0
+    fi
   fi
 
-  # Capture final exit code safely (don't let set -e kill us here)
+  # Capture final exit code safely
   if ! wait $compose_pid; then
     exit_code=$?
   fi
@@ -605,15 +621,19 @@ render_start_progress() {
       local health_check_passed=false
 
       while true; do
-        local current_time=$(date +%s)
-        local elapsed=$((current_time - start_time))
+        current_time=$(date +%s)
+        elapsed=$((current_time - start_time))
 
         if [[ $elapsed -ge $HEALTH_CHECK_TIMEOUT ]]; then
           break
         fi
 
-        # Count health status
-        local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d ' ')
+        # Update Live Health Monitor
+        spin_index=$(( (spin_index + 1) % 10 ))
+        render_detailed_status "" "${spinner[$spin_index]}" "health" "$project_name"
+
+        # Count health status for exit condition
+        local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | wc -l | tr -d ' ')
         local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -c "healthy" || echo "0")
         local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -cE "(healthy|unhealthy|starting)" || echo "0")
 
@@ -633,6 +653,8 @@ render_start_progress() {
         sleep "$HEALTH_CHECK_INTERVAL"
       done
 
+      # Final health update
+      render_detailed_status "" "✓" "health" "$project_name"
       update_progress 9 "done"
     else
       # Skip health checks
@@ -649,12 +671,12 @@ render_start_progress() {
 
     # Count service types
     local core_count=4
-    local optional_count=$(grep -c "_ENABLED=true" "$env_file" 2>/dev/null || echo "0")
+    local optional_count=$(grep -c "_ENABLED=true" "$env_file" 2>/dev/null | tr -d ' ' || echo "0")
     local monitoring_count=0
     if grep -q "MONITORING_ENABLED=true" "$env_file" 2>/dev/null; then
       monitoring_count=10
     fi
-    local custom_count=$(grep -c "^CS_[0-9]=" "$env_file" 2>/dev/null || echo "0")
+    local custom_count=$(grep -c "^CS_[0-9]=" "$env_file" 2>/dev/null | tr -d ' ' || echo "0")
 
     # Final summary (like build command)
     printf "\n"
