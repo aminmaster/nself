@@ -1,6 +1,68 @@
-#!/usr/bin/env bash
-# ai-ops.sh - AI Operating System (AIO) Full Stack Generator
-# Unified stack for the Equilibria Brain.
+# Generate RAGFlow specific configurations
+generate_ragflow_configs() {
+  local service_name="$1"
+  local ragflow_vol_dir="./.volumes/${service_name}/ragflow"
+  mkdir -p "$ragflow_vol_dir"
+
+  # 1. Internal Nginx Config (Optimized for application delivery)
+  cat > "$ragflow_vol_dir/ragflow-internal.conf" <<EOF
+server {
+    listen 80;
+    server_name _;
+
+    # Increase upload limits for large documents
+    client_max_body_size 128M;
+
+    location / {
+        proxy_pass http://127.0.0.1:9380;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # WebSocket support
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+
+  # 2. Service Configuration (Postgres + Redis Auth)
+  cat > "$ragflow_vol_dir/service_conf.yaml" <<EOF
+ragflow:
+  host: 0.0.0.0
+  http_port: 9380
+admin:
+  host: 0.0.0.0
+  http_port: 9381
+mysql:
+  name: '\${DB_NAME:-ragflow}'
+  user: '\${DB_USER:-postgres}'
+  password: '\${DB_PASSWORD:-aiopassword}'
+  host: '\${DB_HOST:-aio-db}'
+  port: \${DB_PORT:-5432}
+  max_connections: 900
+  stale_timeout: 300
+  max_allowed_packet: 1073741824
+minio:
+  user: 'admin'
+  password: '\${DB_PASSWORD:-aiopassword}'
+  host: 'aio-minio:9000'
+  bucket: ''
+  prefix_path: ''
+es:
+  hosts: 'http://aio-es:9200'
+  username: 'elastic'
+  password: '\${DB_PASSWORD:-aiopassword}'
+redis:
+  db: 1
+  username: ''
+  password: '\${DB_PASSWORD:-aiopassword}'
+  host: 'aio-redis:6379'
+EOF
+}
 
 # Generate AIO Stack (RAGFlow + Langflow + Graphiti + Neo4j + MLFlow + FalkorDB)
 generate_aio_stack() {
@@ -10,8 +72,11 @@ generate_aio_stack() {
 
   # Configuration
   local subdomain="${AIO_SUBDOMAIN:-brain}"
-  local redis_password="${AIO_REDIS_PASSWORD:-aioredispass}"
+  local redis_password="\${POSTGRES_PASSWORD:-aiopassword}"
   local api_url="https://${subdomain}.${BASE_DOMAIN}"
+
+  # Generate RAGFlow specific configurations
+  generate_ragflow_configs "$service_name"
   
   # ============================================
   # AI Operating System (AIO) Stack
@@ -179,6 +244,9 @@ EOF
         condition: service_healthy
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+    volumes:
+      - ./.volumes/${service_name}/ragflow/service_conf.yaml:/ragflow/conf/service_conf.yaml:ro
+      - ./.volumes/${service_name}/ragflow/ragflow-internal.conf:/etc/nginx/conf.d/ragflow.conf:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
