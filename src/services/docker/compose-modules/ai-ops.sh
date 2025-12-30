@@ -259,6 +259,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/ragflow/service_conf.yaml:/ragflow/conf/service_conf.yaml.template:ro
       - ./.volumes/${service_name}/ragflow/ragflow-internal.conf:/etc/nginx/conf.d/ragflow.conf:ro
+      - /dev/null:/etc/nginx/sites-enabled/default:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
