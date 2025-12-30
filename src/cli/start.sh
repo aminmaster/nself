@@ -362,7 +362,7 @@ start_services() {
     source ".env.runtime"
     set -ue
     # Update project_name from runtime file
-    project_name=$(grep "^PROJECT_NAME=" .env.runtime 2>/dev/null | cut -d= -f2- || echo "$project_name")
+    project_name=$(grep "^PROJECT_NAME=" .env.runtime 2>/dev/null | cut -d= -f2- | tr -d '\r' || echo "$project_name")
   fi
 
   # 9. Start services with progress tracking
@@ -443,7 +443,7 @@ render_lifecycle_tracker() {
     # 1. Check direct Docker status (Highest truth)
     # Match with project prefix or exact name, allowing for dash-to-underscore conversion
     local t_alt="${t//-/_}"
-    local container_match=$(echo "$container_states" | grep -E "^(${project_name}_${t}|${project_name}_${t_alt}|${t}|${t_alt})\t")
+    local container_match=$(echo "$container_states" | grep -E "^(${project_name}_${t}|${project_name}_${t_alt}|${t}|${t_alt})[[:space:]]")
     
     if [[ -n "$container_match" ]]; then
       local raw_status=$(echo "$container_match" | cut -f2)
