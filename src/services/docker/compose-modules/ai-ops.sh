@@ -5,6 +5,7 @@ generate_ragflow_configs() {
   mkdir -p "$ragflow_vol_dir"
 
   # 1. Internal Nginx Config (Optimized for application delivery)
+  rm -rf "$ragflow_vol_dir/ragflow-internal.conf"
   cat > "$ragflow_vol_dir/ragflow-internal.conf" <<EOF
 server {
     listen 80;
@@ -30,6 +31,7 @@ server {
 EOF
 
   # 2. Service Configuration (Postgres + Redis Auth)
+  rm -rf "$ragflow_vol_dir/service_conf.yaml"
   cat > "$ragflow_vol_dir/service_conf.yaml" <<EOF
 ragflow:
   host: 0.0.0.0
