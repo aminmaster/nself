@@ -30,6 +30,11 @@ dist/
 /build/
 *.pid
 .claude/
+.nself/
+docker-compose.yml
+nginx/
+postgres/
+ssl/
 
 # Environment files should not be in CLI (except templates)
 .env
