@@ -257,7 +257,7 @@ EOF
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     volumes:
-      - ./.volumes/${service_name}/ragflow/service_conf.yaml:/ragflow/conf/service_conf.yaml:ro
+      - ./.volumes/${service_name}/ragflow/service_conf.yaml:/ragflow/conf/service_conf.yaml.template:ro
       - ./.volumes/${service_name}/ragflow/ragflow-internal.conf:/etc/nginx/conf.d/ragflow.conf:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
