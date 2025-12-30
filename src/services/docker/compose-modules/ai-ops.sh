@@ -146,6 +146,16 @@ DOCKERFILE
         
         create_db() {
           local dbname=\$\$1
+          local max_retries=30
+          local count=0
+          
+          echo "Checking/Creating database \$\$dbname..."
+          until psql -h aio-db -U postgres -lqt >/dev/null 2>&1 || [ \$\$count -eq \$\$max_retries ]; do
+            echo "Waiting for Postgres to be ready for connections (Attempt \$\$count/\$\$max_retries)..."
+            sleep 2
+            count=\$((\$\$count + 1))
+          done
+
           if ! psql -h aio-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "\$\$dbname"; then
             echo "Creating database \$\$dbname..."
             psql -h aio-db -U postgres -c "CREATE DATABASE \$\$dbname;"
