@@ -512,8 +512,9 @@ output_table() {
                 
                 # Expand AI-OPS details
                 if [[ "$template" == "ai-ops" ]]; then
-                   local dify_sub="${DIFY_SUBDOMAIN:-dify}"
-                   echo -e "    ├─ Dify:       ${COLOR_GREEN}${protocol}://${dify_sub}.${domain}${COLOR_RESET}"
+                   local ragflow_sub="${AIO_SUBDOMAIN:-brain}"
+                   echo -e "    ├─ RAGFlow:    ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
+                   echo -e "    ├─ Langflow:   ${COLOR_GREEN}${protocol}://langflow.${domain}${COLOR_RESET}"
                    echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
                    echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
                    echo -e "    ├─ FalkorDB:   ${COLOR_GREEN}${protocol}://falkordb.${domain}${COLOR_RESET}"

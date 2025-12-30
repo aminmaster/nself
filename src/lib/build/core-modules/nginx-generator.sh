@@ -131,11 +131,11 @@ generate_stream_routes() {
     # Parse CS_ format: service_name:template_type:port
     IFS=':' read -r cs_name template_type cs_port <<< "$cs_value"
     
-    # Only generate stream config for Neo4j services or AI-OPS/Dify (which has Neo4j)
-    if [[ "$template_type" == "neo4j" ]] || [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
-        # For ai-ops/dify, the service name for Neo4j is likely fixed or aliased, but we use the main service name for the stream file
-        if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
-           # AI-OPS uses aio-neo4j container (updated from dify-neo4j)
+    # Only generate stream config for Neo4j services or AI-OPS (which has Neo4j)
+    if [[ "$template_type" == "neo4j" ]] || [[ "$template_type" == "ai-ops" ]]; then
+        # For ai-ops, the service name for Neo4j is likely fixed or aliased, but we use the main service name for the stream file
+        if [[ "$template_type" == "ai-ops" ]]; then
+           # AI-OPS uses aio-neo4j container
            cs_name="aio-neo4j"
         fi
         if [[ "$services_found" == "false" ]]; then
@@ -529,20 +529,19 @@ server {
 EOF
   fi
 
-  # MLflow Model Registry (Standalone - Skip if Dify Stack is present as it has its own)
-  local dify_stack_exists=false
-  # Simple check if "dify" or "ai-ops" is in headers (detected earlier or re-detect here?)
-  # We reuse the logic from Dify section later, but we need to know NOW.
+  # MLflow Model Registry (Standalone - Skip if AIO Stack is present as it has its own)
+  local aio_stack_exists=false
+  # Simple check if "ai-ops" is in headers
   for i in {1..20}; do
       local cs_var="CUSTOM_SERVICE_${i}"
       local cs_val="${!cs_var:-}"
-      if [[ "$cs_val" == *":dify"* ]] || [[ "$cs_val" == *":ai-ops"* ]]; then
-          dify_stack_exists=true
+      if [[ "$cs_val" == *":ai-ops"* ]]; then
+          aio_stack_exists=true
           break
       fi
   done
 
-  if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$dify_stack_exists" == "false" ]]; then
+  if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
     local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
     local base_domain="${BASE_DOMAIN:-localhost}"
     local auth_config=""
@@ -600,11 +599,12 @@ EOF
   for i in {1..20}; do
       local cs_var="CUSTOM_SERVICE_${i}"
       local cs_val="${!cs_var:-}"
-      if [[ "$cs_val" == *":ai-ops"* ]] || [[ "$cs_val" == *":dify"* ]]; then
+      if [[ "$cs_val" == *":ai-ops"* ]]; then
           IFS=':' read -r s_name s_type s_port <<< "$cs_val"
           aio_service_name="$s_name"
+          # Priority: AIO_SUBDOMAIN > Service Name > "brain"
           if [[ -z "$aio_subdomain" ]]; then
-              aio_subdomain="brain"
+              aio_subdomain="${AIO_SUBDOMAIN:-${aio_service_name:-brain}}"
           fi
           break
       fi
@@ -619,7 +619,7 @@ EOF
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${aio_subdomain}.${base_domain};
+    server_name ${aio_subdomain}.${base_domain} ${aio_service_name}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
@@ -973,7 +973,7 @@ generate_custom_routes() {
     fi
 
     # Skip generic config generation for services that manage their own Nginx config
-    if [[ "$template" == "dify" ]] || [[ "$template" == "ai-ops" ]]; then
+    if [[ "$template" == "ai-ops" ]]; then
       rm -f "nginx/sites/custom-${cs_name}.conf" 2>/dev/null || true
       continue
     fi

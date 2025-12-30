@@ -115,10 +115,9 @@ generate_frontend_app() {
       - VITE_FALKORDB_PASSWORD=\${FALKORDB_PASSWORD:-}
       - VITE_NHOST_AUTH_URL=\${NHOST_AUTH_URL:-https://auth.${BASE_DOMAIN:-equilibria.org}}
       - VITE_HASURA_URL=\${HASURA_URL:-https://api.${BASE_DOMAIN:-equilibria.org}/v1/graphql}
-      - VITE_DIFY_URL=\${DIFY_URL:-https://dify.${BASE_DOMAIN:-equilibria.org}/v1}
-      - VITE_DIFY_API_KEY=\${DIFY_API_KEY:-\${DIFY_INNER_API_KEY:-}}
+      - VITE_RAGFLOW_URL=\${AIO_URL:-https://${AIO_SUBDOMAIN:-brain}.${BASE_DOMAIN:-equilibria.org}}
+      - VITE_LANGFLOW_URL=\${LANGFLOW_URL:-https://langflow.${BASE_DOMAIN:-equilibria.org}}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-https://graphiti.${BASE_DOMAIN:-equilibria.org}}
-      - DIFY_DATASET_API_KEY=${DIFY_DATASET_API_KEY:-}
 ${volumes_block}
     networks:
       - \${DOCKER_NETWORK:-${project_name}_network}

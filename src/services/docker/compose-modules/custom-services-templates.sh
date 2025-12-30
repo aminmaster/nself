@@ -8,14 +8,14 @@ generate_template_based_service() {
   local template_type="$3"
   local service_port="$4"
 
-  # Skip if service directory doesn't exist (template not copied)
-  [[ ! -d "services/$service_name" ]] && return 0
-
   # Special handling for multi-container stacks (like AI-OPS) that generate their own headers
-  if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+  if [[ "$template_type" == "ai-ops" ]]; then
       generate_aio_stack "$index" "$service_name" "$service_port"
       return 0
   fi
+
+  # Skip if service directory doesn't exist (template not copied)
+  [[ ! -d "services/$service_name" ]] && return 0
 
   cat <<EOF
 

@@ -206,7 +206,7 @@ generate_custom_service() {
       local service_dir="services/$configured_name"
 
       # Special case for virtual templates (managed by stack generators)
-      if [[ "$template_type" == "ai-ops" ]] || [[ "$template_type" == "dify" ]]; then
+      if [[ "$template_type" == "ai-ops" ]]; then
         [[ "${VERBOSE:-false}" == "true" ]] && echo "Using virtual template '$template_type' for service '$configured_name'"
         return 0
       fi

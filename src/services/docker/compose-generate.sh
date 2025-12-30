@@ -248,7 +248,7 @@ EOF
       graphrag|graph-builder|falkordb|graphiti)
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
-      dify|ai-ops)
+      ai-ops)
         export AIO_STACK_PRESENT="true"
         ;;
     esac

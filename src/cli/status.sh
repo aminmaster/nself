@@ -484,13 +484,15 @@ show_urls() {
   fi
 
   # AI-Ops stack URLs
-  local dify_stack_exists=false
-  if [[ "${DIFY_STACK_PRESENT:-false}" == "true" ]] || grep -q "aio-dify-nginx" docker-compose.yml 2>/dev/null; then
-    dify_stack_exists=true
+  local aio_stack_exists=false
+  if [[ "${AIO_STACK_PRESENT:-false}" == "true" ]] || grep -q "aio-ragflow" docker-compose.yml 2>/dev/null; then
+    aio_stack_exists=true
   fi
 
-  if [[ "$dify_stack_exists" == "true" ]]; then
-    echo "Dify UI:        https://dify.$base_domain"
+  if [[ "$aio_stack_exists" == "true" ]]; then
+    local ragflow_sub="${AIO_SUBDOMAIN:-brain}"
+    echo "RAGFlow UI:     https://${ragflow_sub}.$base_domain"
+    echo "Langflow UI:    https://langflow.$base_domain"
     echo "Graphiti API:   https://graphiti.$base_domain"
     echo "Neo4j UI:       https://neo4j.$base_domain"
     echo "MLFlow UI:      https://mlflow.$base_domain"
