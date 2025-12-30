@@ -107,6 +107,8 @@ check_service_health() {
     else
       echo "stopped"
     fi
+  elif [[ "$state" == "created" ]]; then
+    echo "waiting"
   else
     echo "$state"
   fi
@@ -307,8 +309,8 @@ show_service_overview() {
     local is_running=false
 
     if [[ "$use_docker_fallback" == "true" ]]; then
-      # Query docker directly for container status
-      local container_name="${project_name}_${service}"
+      # Query docker directly for container status with proper underscore naming
+      local container_name="${project_name}_${service//-/_}"
       local container_status=$(docker ps --filter "name=${container_name}" --format "{{.Status}}" 2>/dev/null)
       if [[ -n "$container_status" ]]; then
         is_running=true
@@ -332,8 +334,8 @@ show_service_overview() {
         indicator="\033[1;32m✓\033[0m" # Green check for healthy or completed
       elif [[ "$health" == "unhealthy" ]]; then
         indicator="\033[1;31m✗\033[0m" # Red X for unhealthy
-      elif [[ "$health" == "starting" ]]; then
-        indicator="\033[1;33m⟳\033[0m" # Yellow spinner for starting
+      elif [[ "$health" == "starting" || "$health" == "waiting" ]]; then
+        indicator="\033[1;33m⟳\033[0m" # Yellow spinner for starting/waiting
       else
         indicator="\033[1;36m●\033[0m" # Cyan for no health check
       fi

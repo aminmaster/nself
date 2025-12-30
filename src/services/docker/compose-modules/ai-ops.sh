@@ -176,11 +176,9 @@ EOF
       aio-init:
         condition: service_completed_successfully
       aio-redis:
-        condition: service_started
+        condition: service_healthy
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
-        aliases:
-          - ragflow
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
@@ -226,11 +224,16 @@ EOF
     image: redis:7-alpine
     container_name: \${PROJECT_NAME}_aio_redis
     restart: unless-stopped
-    command: redis-server --requirepass "${redis_password}"
+    command: redis-server --requirepass \${POSTGRES_PASSWORD:-aiopassword}
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "\${POSTGRES_PASSWORD:-aiopassword}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 EOF
 
   # 7. AIO Graphiti (Knowledge Management)
@@ -276,9 +279,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
-        aliases:
-          - neo4j
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
       interval: 30s

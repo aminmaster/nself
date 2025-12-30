@@ -592,7 +592,10 @@ render_detailed_status() {
 
         # Count health status for exit condition
         local running_containers=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}\t{{.State}}" 2>/dev/null)
-        local total_targeted=$(echo "$STATUS_TARGETS" | wc -w | tr -d ' ')
+        local total_targeted=$(echo "$STATUS_TARGETS" | wc -w | tr -d '[:space:]')
+        
+        # Save total targets for final summary
+        FINAL_STATUS_TARGET_COUNT=$total_targeted
         
         local healthy_count=0
         local total_with_health=0
@@ -669,7 +672,9 @@ render_detailed_status() {
     printf "${COLOR_GREEN}✓${COLOR_RESET} Services (%s): %s core, %s optional, %s monitoring, %s custom\n" \
       "${running_count:-0}" "${core_count:-4}" "${optional_count:-0}" "${monitoring_count:-0}" "${custom_count:-0}"
 
-    if [[ $total_with_health -gt 0 ]]; then
+    if [[ ${FINAL_STATUS_TARGET_COUNT:-} -gt 0 ]]; then
+      printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s checks passing (AIO Stack)\n" "${healthy_count:-0}" "${FINAL_STATUS_TARGET_COUNT:-0}"
+    elif [[ $total_with_health -gt 0 ]]; then
       printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s checks passing\n" "${healthy_count:-0}" "${total_with_health:-0}"
     fi
 
