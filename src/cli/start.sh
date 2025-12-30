@@ -103,7 +103,7 @@ if [[ "$SHOW_HELP" == "true" ]]; then
   echo "Environment Variables (optional):"
   echo "  NSELF_START_MODE              Start mode: smart, fresh, force (default: smart)"
   echo "  NSELF_HEALTH_CHECK_TIMEOUT    Health check timeout seconds (default: 120)"
-  echo "  NSELF_HEALTH_CHECK_REQUIRED   Percent services required healthy (default: 80)"
+  echo "  NSELF_HEALTH_CHECK_REQUIRED   Percent services required healthy (default: 80, 100 for AIO)"
   echo "  NSELF_SKIP_HEALTH_CHECKS      Skip health validation (default: false)"
   echo ""
   echo "Examples:"
@@ -471,7 +471,7 @@ render_lifecycle_tracker() {
           status="Stopped"; color="${COLOR_DIM}"; icon="○"
         fi
       elif [[ "$raw_state" == "created" ]]; then
-        status="Waiting"; color="${COLOR_DIM}"
+        status="Waiting"; color="${COLOR_DIM}"; icon="."
       fi
     fi
 
@@ -571,6 +571,12 @@ render_detailed_status() {
       # Progressive health check with configurable timeout and threshold
       local start_time=$(date +%s)
       local health_check_passed=false
+      local required_threshold="${HEALTH_CHECK_REQUIRED:-80}"
+      
+      # If AIO stack is present, require 100% unless specifically overridden
+      if grep -q "AIO_STACK_PRESENT=true" .env.runtime 2>/dev/null && [[ -z "${NSELF_HEALTH_CHECK_REQUIRED:-}" ]]; then
+        required_threshold=100
+      fi
 
       while true; do
         current_time=$(date +%s)
@@ -592,7 +598,7 @@ render_detailed_status() {
         # Calculate percentage
         if [[ $total_with_health -gt 0 ]]; then
           local health_percent=$((healthy_count * 100 / total_with_health))
-          if [[ $health_percent -ge $HEALTH_CHECK_REQUIRED ]]; then
+          if [[ $health_percent -ge $required_threshold ]]; then
             health_check_passed=true
             break
           fi

@@ -19,6 +19,8 @@ generate_tempo_service() {
     ports:
       - "\${TEMPO_PORT:-3200}:3200"
       - "14268:14268"  # Jaeger ingest
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 }
 
@@ -42,7 +44,7 @@ generate_alertmanager_service() {
     ports:
       - "\${ALERTMANAGER_PORT:-9093}:9093"
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 30s
@@ -83,7 +85,7 @@ $volumes
     ports:
       - "\${CADVISOR_PORT:-8082}:8080"
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     command:
       - '--housekeeping_interval=10s'
       - '--docker_only=true'
@@ -120,7 +122,7 @@ generate_node_exporter_service() {
     ports:
       - "\${NODE_EXPORTER_PORT:-9100}:9100"
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/metrics"]
       interval: 30s
@@ -147,7 +149,7 @@ generate_postgres_exporter_service() {
     ports:
       - "\${POSTGRES_EXPORTER_PORT:-9187}:9187"
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     depends_on:
       - postgres
     healthcheck:
@@ -180,7 +182,7 @@ generate_redis_exporter_service() {
     ports:
       - "\${REDIS_EXPORTER_PORT:-9121}:9121"
     networks:
-      - \${DOCKER_NETWORK}
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
     depends_on:
       - redis
     healthcheck:
