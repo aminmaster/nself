@@ -555,8 +555,21 @@ render_start_progress() {
       continue
     fi
 
-    # Default fallback spinner
-    printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
+    # Default fallback spinner: Show actual Docker output if available
+    local last_line=""
+    # Check stderr first as Docker status usually goes there
+    last_line=$(tail -n 1 "$error_output" 2>/dev/null | tr -d '\r\n' | sed 's/^[[:space:]]*//' | cut -c1-60 || echo "")
+    if [[ -z "$last_line" ]]; then
+       # Fallback to stdout
+       last_line=$(tail -n 1 "$start_output" 2>/dev/null | tr -d '\r\n' | sed 's/^[[:space:]]*//' | cut -c1-60 || echo "")
+    fi
+
+    if [[ -n "$last_line" ]]; then
+       printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s\033[K" "${spinner[$spin_index]}" "$last_line"
+    else
+       printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s...\033[K" "${spinner[$spin_index]}" "$current_action"
+    fi
+
     sleep 0.1
   done
 
