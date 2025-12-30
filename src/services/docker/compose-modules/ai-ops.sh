@@ -179,6 +179,12 @@ EOF
       ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - ragflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   aio-ragflow-sandbox:
     image: infiniflow/sandbox-executor-manager:latest

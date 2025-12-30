@@ -443,7 +443,8 @@ render_lifecycle_tracker() {
     # 1. Check direct Docker status (Highest truth)
     # Match with project prefix or exact name, allowing for dash-to-underscore conversion
     local t_alt="${t//-/_}"
-    local container_match=$(echo "$container_states" | grep -E "^(${project_name}_${t}|${project_name}_${t_alt}|${t}|${t_alt})[[:space:]]")
+    # Exact match for container name using awk to avoid collisions (e.g., ragflow vs ragflow-sandbox)
+    local container_match=$(echo "$container_states" | awk -F'\t' -v name="${project_name}_${t//-/_}" '$1 == name {print $0; exit}')
     
     if [[ -n "$container_match" ]]; then
       local raw_status=$(echo "$container_match" | cut -f2)
