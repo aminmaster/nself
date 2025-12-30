@@ -369,6 +369,7 @@ start_services() {
   local compose_cmd="docker compose"
   local start_output=$(mktemp)
   local error_output=$(mktemp)
+  local exit_code_file=$(mktemp)
 
   # Build the docker compose command based on start mode
   local compose_args=(
@@ -501,13 +502,19 @@ render_lifecycle_tracker() {
       fi
     fi
     
+    # Enforce spinner/icon relationship
+    local final_icon="$icon"
+    if [[ "$status" == "Pending" || "$status" == "Starting" || "$status" == "Pulling" || "$status" == "Downloading" || "$status" == "Extracting" ]]; then
+        [[ "$final_icon" == "✓" ]] && final_icon="${spin_char}"
+    fi
+
     # Format and print the line
     if [[ -n "$bar" ]]; then
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s %s %s\033[K\n" "$icon" "$t" "$status" "$bar" "$progress"
+       printf "\r${color}%s${COLOR_RESET} %-25s %-12s %s %s\033[K\n" "$final_icon" "$t" "$status" "$bar" "$progress"
     elif [[ -n "$progress" ]]; then
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s [%s]\033[K\n" "$icon" "$t" "$status" "$progress"
+       printf "\r${color}%s${COLOR_RESET} %-25s %-12s [%s]\033[K\n" "$final_icon" "$t" "$status" "$progress"
     else
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s\033[K\n" "$icon" "$t" "$status"
+       printf "\r${color}%s${COLOR_RESET} %-25s %-12s\033[K\n" "$final_icon" "$t" "$status"
     fi
     current_count=$((current_count + 1))
   done
@@ -521,7 +528,7 @@ render_detailed_status() {
 }
 
   # 1. Start Docker Compose in background
-  $compose_cmd "${compose_args[@]}" > "$start_output" 2> "$error_output" &
+  ( $compose_cmd "${compose_args[@]}" > "$start_output" 2> "$error_output"; echo $? > "$exit_code_file" ) &
   local compose_pid=$!
 
   # 2. Main Persistent Loop
@@ -548,9 +555,9 @@ render_detailed_status() {
   done
 
   # 3. Capture final exit code safely
-  if ! wait $compose_pid 2>/dev/null; then
-    exit_code=$?
-  fi
+  wait $compose_pid 2>/dev/null || true
+  exit_code=$(cat "$exit_code_file" 2>/dev/null || echo 0)
+  rm -f "$exit_code_file"
 
   # Clear the spinner line
   printf "\r\033[K"
@@ -656,21 +663,40 @@ render_detailed_status() {
     local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep "healthy" | wc -l | tr -d '[:space:]')
     local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -E "(healthy|unhealthy|starting)" | wc -l | tr -d '[:space:]')
 
-    # Count service types
+    # Count service types accurately by group
     local core_count=4
-    local optional_count=$(grep "_ENABLED=true" "$env_file" 2>/dev/null | grep -v "^#" | wc -l | tr -d '[:space:]')
+    local optional_count=0
+    [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${MINIO_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${REDIS_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${MAILPIT_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
+    
     local monitoring_count=0
-    if grep -q "MONITORING_ENABLED=true" "$env_file" 2>/dev/null; then
+    if [[ "${MONITORING_ENABLED:-false}" == "true" ]]; then
       monitoring_count=10
     fi
-    local custom_count=$(grep "^CS_[0-9]=" "$env_file" 2>/dev/null | wc -l | tr -d '[:space:]')
+
+    local aio_count=0
+    if grep -q "AIO_STACK_PRESENT=true" .env.runtime 2>/dev/null; then
+       aio_count=$(echo "$STATUS_TARGETS" | grep -o "aio[a-z0-9-]*" | sort -u | wc -l | tr -d '[:space:]')
+    fi
+
+    local custom_count=0
+    for i in {1..20}; do
+      local cs_var="CS_${i}"
+      [[ -n "${!cs_var:-}" ]] && custom_count=$((custom_count + 1))
+    done
 
     # Final summary (like build command)
     printf "\n"
     printf "${COLOR_GREEN}✓${COLOR_RESET} ${COLOR_BOLD}All services started successfully${COLOR_RESET}\n"
     printf "${COLOR_GREEN}✓${COLOR_RESET} Project: ${COLOR_BOLD}%s${COLOR_RESET} (%s) / BD: %s\n" "$project_name" "$env" "${BASE_DOMAIN:-localhost}"
-    printf "${COLOR_GREEN}✓${COLOR_RESET} Services (%s): %s core, %s optional, %s monitoring, %s custom\n" \
-      "${running_count:-0}" "${core_count:-4}" "${optional_count:-0}" "${monitoring_count:-0}" "${custom_count:-0}"
+    printf "${COLOR_GREEN}✓${COLOR_RESET} Services (%s): %s core, %s optional, %s monitoring, %s custom%s\n" \
+      "${running_count:-0}" "${core_count:-4}" "${optional_count:-0}" "${monitoring_count:-0}" "${custom_count:-0}" \
+      "$( [[ $aio_count -gt 0 ]] && echo ", $aio_count aio" || echo "" )"
 
     if [[ ${FINAL_STATUS_TARGET_COUNT:-} -gt 0 ]]; then
       printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s checks passing (AIO Stack)\n" "${healthy_count:-0}" "${FINAL_STATUS_TARGET_COUNT:-0}"
