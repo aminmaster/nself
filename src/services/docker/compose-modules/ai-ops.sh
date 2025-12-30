@@ -125,7 +125,7 @@ EOF
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
@@ -141,8 +141,8 @@ EOF
     image: infiniflow/ragflow:latest
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
-    ports:
-      - "80:80"
+    # Port 80 is handled by internal Nginx
+    # (Removed host port 80 mapping to avoid conflict with Nginx)
     environment:
       - DOC_ENGINE=elasticsearch
       - DATABASE_TYPE=postgres

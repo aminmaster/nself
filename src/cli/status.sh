@@ -306,8 +306,8 @@ show_service_overview() {
         is_running=true
       fi
     else
-      # Use compose ps output
-      local info=$(echo "$all_containers" | grep "^$service" | head -1)
+      # Use compose ps output with exact word matching for service name
+      local info=$(echo "$all_containers" | grep -w "^$service" | head -1)
       if [[ -n "$info" ]]; then
         local status=$(echo "$info" | awk '{print $2, $3, $4, $5, $6}')
         if [[ "$status" == *"Up"* ]]; then
