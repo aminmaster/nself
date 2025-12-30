@@ -231,16 +231,17 @@ EOF
     environment:
       - DOC_ENGINE=elasticsearch
       - DATABASE_TYPE=postgres
+      - DB_TYPE=postgres
       - DB_NAME=ragflow
       - DB_USER=postgres
       - DB_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
       - DB_HOST=aio-db
       - DB_PORT=5432
       - STORAGE_TYPE=minio
+      - STORAGE_IMPL=MINIO
       - MINIO_HOST=aio-minio
       - MINIO_PORT=9000
       - MINIO_USER=admin
-      - MINIO_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
       - MINIO_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
       - ES_HOST=aio-es
       - ES_PORT=9200
