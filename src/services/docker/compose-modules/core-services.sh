@@ -335,7 +335,7 @@ EOF
     profiles:
       - init-containers
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     depends_on:
       minio:
         condition: service_healthy

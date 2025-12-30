@@ -120,7 +120,7 @@ generate_frontend_app() {
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-https://graphiti.${BASE_DOMAIN:-equilibria.org}}
 ${volumes_block}
     networks:
-      - \${DOCKER_NETWORK:-${project_name}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 }
 

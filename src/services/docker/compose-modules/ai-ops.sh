@@ -178,7 +178,7 @@ EOF
       aio-redis:
         condition: service_started
     networks:
-      \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - ragflow
     healthcheck:
@@ -276,7 +276,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
-      \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}:
+      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
         aliases:
           - neo4j
     healthcheck:

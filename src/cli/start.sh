@@ -403,8 +403,8 @@ start_services() {
 # Pre-detect services for Lifecycle Tracker
 STATUS_TARGETS=$(docker compose --project-name "$project_name" --env-file "$env_file" config --services 2>/dev/null | sort || echo "")
 if [[ -z "$STATUS_TARGETS" ]]; then
-  # Fallback if config fails
-  STATUS_TARGETS=$(grep -E "^  [a-z].*:" docker-compose.yml 2>/dev/null | sed 's/^  //;s/://' | sort || echo "")
+  # Fallback if config fails: extract keys only under the 'services:' block
+  STATUS_TARGETS=$(awk '/^services:/ {flag=1; next} /^[a-z].*:/ {flag=0} flag && /^  [a-z].*:/ {print $1}' docker-compose.yml 2>/dev/null | sed 's/://' | sort || echo "")
 fi
 
 # Track unique services for the multi-line UI
@@ -649,18 +649,18 @@ render_detailed_status() {
     fi
 
     # Get final counts for summary
-    local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d ' ')
-    local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -c "healthy" || echo "0")
-    local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -cE "(healthy|unhealthy|starting)" || echo "0")
+    local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d '[:space:]')
+    local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep "healthy" | wc -l | tr -d '[:space:]')
+    local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -E "(healthy|unhealthy|starting)" | wc -l | tr -d '[:space:]')
 
     # Count service types
     local core_count=4
-    local optional_count=$(grep -c "_ENABLED=true" "$env_file" 2>/dev/null | tr -d ' ' || echo "0")
+    local optional_count=$(grep "_ENABLED=true" "$env_file" 2>/dev/null | grep -v "^#" | wc -l | tr -d '[:space:]')
     local monitoring_count=0
     if grep -q "MONITORING_ENABLED=true" "$env_file" 2>/dev/null; then
       monitoring_count=10
     fi
-    local custom_count=$(grep -c "^CS_[0-9]=" "$env_file" 2>/dev/null | tr -d ' ' || echo "0")
+    local custom_count=$(grep "^CS_[0-9]=" "$env_file" 2>/dev/null | wc -l | tr -d '[:space:]')
 
     # Final summary (like build command)
     printf "\n"
