@@ -429,8 +429,8 @@ render_lifecycle_tracker() {
   # Move cursor back up if we already printed lines
   [[ ${LAST_LINE_COUNT:-0} -gt 0 ]] && printf "\033[%dA" "$LAST_LINE_COUNT"
 
-  # Batch query container statuses once per render
-  local container_states=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}" 2>/dev/null || echo "")
+  # Batch query container statuses once per render (include all to see Created/Exited)
+  local container_states=$(docker ps -a --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}\t{{.State}}" 2>/dev/null || echo "")
 
   local current_count=0
   for t in $services; do
@@ -447,13 +447,15 @@ render_lifecycle_tracker() {
     
     if [[ -n "$container_match" ]]; then
       local raw_status=$(echo "$container_match" | cut -f2)
+      local raw_state=$(echo "$container_match" | cut -f3)
+
       if [[ "$raw_status" == *"healthy"* ]]; then
         status="Healthy"; color="${COLOR_GREEN}"; icon="✓"
       elif [[ "$raw_status" == *"unhealthy"* ]]; then
         status="Unhealthy"; color="${COLOR_RED}"; icon="✗"
       elif [[ "$raw_status" == *"Restarting"* ]]; then
         status="Restarting"; color="${COLOR_YELLOW}"; icon="!"
-      elif [[ "$raw_status" == *"Up"* ]]; then
+      elif [[ "$raw_state" == "running" ]]; then
         if [[ "$raw_status" == *"(health: starting)"* ]] || [[ "$raw_status" == *"(starting)"* ]]; then
           status="Starting"; color="${COLOR_BLUE}"
         elif [[ "$raw_status" == *"(healthy)"* ]]; then
@@ -461,8 +463,14 @@ render_lifecycle_tracker() {
         else
           status="Running"; color="${COLOR_CYAN}"; icon="●"
         fi
-      elif [[ "$raw_status" == *"Exited"* ]]; then
-        status="Stopped"; color="${COLOR_DIM}"; icon="○"
+      elif [[ "$raw_state" == "exited" ]]; then
+        if [[ "$raw_status" == *"Exited (0)"* ]]; then
+          status="Completed"; color="${COLOR_GREEN}"; icon="✓"
+        else
+          status="Stopped"; color="${COLOR_DIM}"; icon="○"
+        fi
+      elif [[ "$raw_state" == "created" ]]; then
+        status="Waiting"; color="${COLOR_DIM}"
       fi
     fi
 

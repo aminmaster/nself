@@ -64,6 +64,10 @@ DOCKERFILE
       - DB_HOST=aio-db
       - DB_PORT=5432
     entrypoint: ["/bin/sh", "-c"]
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    volumes:
+      - ./.volumes/${service_name}/es:/mnt/es-data
     command:
       - |
         set -e
@@ -87,12 +91,10 @@ DOCKERFILE
         create_db "langflow"
         create_db "ragflow"
 
+        echo "3. Fixing permissions..."
+        chown -R 1000:1000 /mnt/es-data || true
+
         echo "All initialization tasks completed."
-    depends_on:
-      aio-db:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
 EOF
 
   # 2. AIO Storage (Minio - for RAGFlow)
@@ -123,7 +125,7 @@ EOF
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
