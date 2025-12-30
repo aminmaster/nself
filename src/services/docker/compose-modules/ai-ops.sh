@@ -71,15 +71,15 @@ DOCKERFILE
         until nc -z aio-db 5432; do echo "Waiting for aio-db..."; sleep 1; done
 
         echo "2. Initializing AIO Databases..."
-        export PGPASSWORD="\${DB_PASSWORD}"
+        export PGPASSWORD="\$\${DB_PASSWORD}"
         
         create_db() {
-          local dbname=\$1
-          if ! psql -h aio-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "\$dbname"; then
-            echo "Creating database \$dbname..."
-            psql -h aio-db -U postgres -c "CREATE DATABASE \$dbname;"
+          local dbname=\$\$1
+          if ! psql -h aio-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "\$\$dbname"; then
+            echo "Creating database \$\$dbname..."
+            psql -h aio-db -U postgres -c "CREATE DATABASE \$\$dbname;"
           else
-            echo "Database \$dbname already exists."
+            echo "Database \$\$dbname already exists."
           fi
         }
 
