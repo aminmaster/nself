@@ -291,11 +291,11 @@ EOF
       - ./.volumes/${service_name}/ragflow/ragflow-internal.conf:/etc/nginx/conf.d/ragflow.conf:ro
       - /dev/null:/etc/nginx/sites-enabled/default:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 120s
 
   aio-ragflow-sandbox:
     image: infiniflow/sandbox-executor-manager:latest
