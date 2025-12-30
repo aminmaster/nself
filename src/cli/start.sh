@@ -441,41 +441,47 @@ render_lifecycle_tracker() {
     local bar=""
     
     # 1. Check direct Docker status (Highest truth)
-    local container_match=$(echo "$container_states" | grep "_${t}\t")
+    # Match with project prefix or exact name, allowing for dash-to-underscore conversion
+    local t_alt="${t//-/_}"
+    local container_match=$(echo "$container_states" | grep -E "^(${project_name}_${t}|${project_name}_${t_alt}|${t}|${t_alt})\t")
+    
     if [[ -n "$container_match" ]]; then
       local raw_status=$(echo "$container_match" | cut -f2)
       if [[ "$raw_status" == *"healthy"* ]]; then
         status="Healthy"; color="${COLOR_GREEN}"; icon="✓"
       elif [[ "$raw_status" == *"unhealthy"* ]]; then
         status="Unhealthy"; color="${COLOR_RED}"; icon="✗"
+      elif [[ "$raw_status" == *"Restarting"* ]]; then
+        status="Restarting"; color="${COLOR_YELLOW}"; icon="!"
       elif [[ "$raw_status" == *"Starting"* ]] || [[ "$raw_status" == *"Up"* ]]; then
         status="Starting"; color="${COLOR_BLUE}"
       elif [[ "$raw_status" == *"Exited"* ]]; then
-        status="Stopped"; color="${COLOR_YELLOW}"; icon="○"
+        status="Stopped"; color="${COLOR_DIM}"; icon="○"
       fi
     fi
 
     # 2. If no container yet, check logs for progress
     if [[ "$status" == "Pending" ]]; then
       # Check for Startup logs
-      if grep -q "Started.*$t\|Healthy.*$t" "$start_output" 2>/dev/null; then
+      if grep -q "Started.*$t\|Healthy.*$t" "$start_output" 2>/dev/null || grep -q "Started.*$t_alt\|Healthy.*$t_alt" "$start_output" 2>/dev/null; then
         status="Started"; color="${COLOR_GREEN}"; icon="✓"
-      elif grep -q "Creating.*$t\|Starting.*$t" "$start_output" 2>/dev/null; then
+      elif grep -q "Creating.*$t\|Starting.*$t" "$start_output" 2>/dev/null || grep -q "Creating.*$t_alt\|Starting.*$t_alt" "$start_output" 2>/dev/null; then
         status="Starting"; color="${COLOR_BLUE}"
-      elif grep -q "Created.*$t" "$start_output" 2>/dev/null; then
+      elif grep -q "Created.*$t" "$start_output" 2>/dev/null || grep -q "Created.*$t_alt" "$start_output" 2>/dev/null; then
         status="Created"; color="${COLOR_BLUE}"
       # Check for Pulling logs
-      elif grep -q "Pulled.*$t\|Already exists.*$t" "$start_output" 2>/dev/null; then
+      elif grep -q "Pulled.*$t\|Already exists.*$t\|Pull complete.*$t" "$start_output" 2>/dev/null || \
+           grep -q "Pulled.*$t_alt\|Already exists.*$t_alt\|Pull complete.*$t_alt" "$start_output" 2>/dev/null; then
         status="Pulled"; color="${COLOR_BLUE}"
-      elif grep -q "Extracting.*$t" "$start_output" 2>/dev/null; then
+      elif grep -q "Extracting.*$t" "$start_output" 2>/dev/null || grep -q "Extracting.*$t_alt" "$start_output" 2>/dev/null; then
         status="Extracting"; color="${COLOR_CYAN}"
-        bar=$(grep "Extracting.*$t" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Extracting.*$t" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Downloading.*$t" "$start_output" 2>/dev/null; then
+        bar=$(grep "Extracting.*$t\|Extracting.*$t_alt" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
+        progress=$(grep "Extracting.*$t\|Extracting.*$t_alt" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
+      elif grep -q "Downloading.*$t" "$start_output" 2>/dev/null || grep -q "Downloading.*$t_alt" "$start_output" 2>/dev/null; then
         status="Downloading"; color="${COLOR_BLUE}"
-        bar=$(grep "Downloading.*$t" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Downloading.*$t" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Pulling from.*$t" "$start_output" 2>/dev/null; then
+        bar=$(grep "Downloading.*$t\|Downloading.*$t_alt" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
+        progress=$(grep "Downloading.*$t\|Downloading.*$t_alt" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
+      elif grep -q "Pulling from.*$t" "$start_output" 2>/dev/null || grep -q "Pulling from.*$t_alt" "$start_output" 2>/dev/null; then
         status="Pulling"; color="${COLOR_BLUE}"
       fi
     fi
