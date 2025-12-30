@@ -313,6 +313,12 @@ EOF
       dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
+    command: >
+      /bin/sh -c "mlflow server
+      --backend-store-uri \$\${MLFLOW_BACKEND_STORE_URI}
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000"
     environment:
       - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:\${POSTGRES_PASSWORD:-aiopassword}@aio-db:5432/mlflow
       - MLFLOW_HOST=0.0.0.0

@@ -625,7 +625,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://aio-ragflow:80;
+        set \$target_ragflow aio-ragflow;
+        proxy_pass http://\$target_ragflow:80;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -652,7 +653,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://aio-langflow:7860;
+        set \$target_langflow aio-langflow;
+        proxy_pass http://\$target_langflow:7860;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -702,7 +704,8 @@ server {
             return 204;
         }
 
-        proxy_pass http://aio-graphiti:8000;
+        set \$target_graphiti aio-graphiti;
+        proxy_pass http://\$target_graphiti:8000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -723,7 +726,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://aio-neo4j:7474;
+        set \$target_neo4j aio-neo4j;
+        proxy_pass http://\$target_neo4j:7474;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -762,7 +766,8 @@ server {
     ${mlflow_auth_config}
 
     location / {
-        proxy_pass http://aio-mlflow:5000;
+        set \$target_mlflow aio-mlflow;
+        proxy_pass http://\$target_mlflow:5000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -785,7 +790,8 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        proxy_pass http://aio-falkordb-browser:3000;
+        set \$target_falkordb aio-falkordb-browser;
+        proxy_pass http://\$target_falkordb:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

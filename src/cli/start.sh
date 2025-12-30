@@ -453,8 +453,14 @@ render_lifecycle_tracker() {
         status="Unhealthy"; color="${COLOR_RED}"; icon="✗"
       elif [[ "$raw_status" == *"Restarting"* ]]; then
         status="Restarting"; color="${COLOR_YELLOW}"; icon="!"
-      elif [[ "$raw_status" == *"Starting"* ]] || [[ "$raw_status" == *"Up"* ]]; then
-        status="Starting"; color="${COLOR_BLUE}"
+      elif [[ "$raw_status" == *"Up"* ]]; then
+        if [[ "$raw_status" == *"(health: starting)"* ]] || [[ "$raw_status" == *"(starting)"* ]]; then
+          status="Starting"; color="${COLOR_BLUE}"
+        elif [[ "$raw_status" == *"(healthy)"* ]]; then
+          status="Healthy"; color="${COLOR_GREEN}"; icon="✓"
+        else
+          status="Running"; color="${COLOR_CYAN}"; icon="●"
+        fi
       elif [[ "$raw_status" == *"Exited"* ]]; then
         status="Stopped"; color="${COLOR_DIM}"; icon="○"
       fi
