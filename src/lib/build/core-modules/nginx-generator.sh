@@ -619,7 +619,7 @@ EOF
 server {
     listen 443 ssl;
     http2 on;
-    server_name ragflow.${base_domain} ${aio_subdomain}.${base_domain} ${aio_service_name}.${base_domain};
+    server_name ${aio_subdomain}.${base_domain} ${aio_service_name}.${base_domain};
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
