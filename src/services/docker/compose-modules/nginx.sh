@@ -144,7 +144,9 @@ server {
     server_name ${route};
 
     location / {
-        proxy_pass http://${service_name}:${port};
+        resolver 127.0.0.11 valid=30s;
+        set \$upstream_${service_name//-/_} ${service_name};
+        proxy_pass http://\$upstream_${service_name//-/_}:${port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
