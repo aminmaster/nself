@@ -38,7 +38,7 @@ DOCKERFILE
     container_name: \${PROJECT_NAME}_mlflow
     restart: unless-stopped
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     depends_on:
       postgres:
         condition: service_healthy

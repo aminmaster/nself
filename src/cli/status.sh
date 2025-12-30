@@ -99,6 +99,14 @@ check_service_health() {
   elif [[ "$state" == "running" ]]; then
     # Running without health check - default to healthy
     echo "healthy"
+  elif [[ "$state" == "exited" ]]; then
+    # Check exit code for success
+    local exit_code=$(docker inspect "$container_name" --format='{{.State.ExitCode}}' 2>/dev/null)
+    if [[ "$exit_code" == "0" ]]; then
+      echo "completed"
+    else
+      echo "stopped"
+    fi
   else
     echo "$state"
   fi
@@ -316,13 +324,12 @@ show_service_overview() {
       fi
     fi
 
-    if [[ "$is_running" == "true" ]]; then
+    if [[ "$is_running" == "true" ]] || [[ "$health" == "completed" ]]; then
       running=$((running + 1))
       local indicator=""
 
-      # Choose indicator based on health
-      if [[ "$health" == "healthy" ]]; then
-        indicator="\033[1;32m✓\033[0m" # Green check for healthy
+      if [[ "$health" == "healthy" || "$health" == "completed" ]]; then
+        indicator="\033[1;32m✓\033[0m" # Green check for healthy or completed
       elif [[ "$health" == "unhealthy" ]]; then
         indicator="\033[1;31m✗\033[0m" # Red X for unhealthy
       elif [[ "$health" == "starting" ]]; then

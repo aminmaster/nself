@@ -591,9 +591,35 @@ render_detailed_status() {
         render_lifecycle_tracker "$start_output" "$error_output" "${spinner[$spin_index]}" "$project_name" "$STATUS_TARGETS"
 
         # Count health status for exit condition
-        local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | wc -l | tr -d ' ')
-        local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -c "healthy" || echo "0")
-        local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -cE "(healthy|unhealthy|starting)" || echo "0")
+        local running_containers=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}\t{{.State}}" 2>/dev/null)
+        local total_targeted=$(echo "$STATUS_TARGETS" | wc -w | tr -d ' ')
+        
+        local healthy_count=0
+        local total_with_health=0
+        
+        # Check each target service
+        for target in $STATUS_TARGETS; do
+          local target_alt="${target//-/_}"
+          local match=$(echo "$running_containers" | grep -E "^(${project_name}_${target}|${project_name}_${target_alt})[[:space:]]")
+          
+          if [[ -n "$match" ]]; then
+            local status=$(echo "$match" | cut -f2)
+            local state=$(echo "$match" | cut -f3)
+            
+            if [[ "$status" == *"healthy"* ]]; then
+              healthy_count=$((healthy_count + 1))
+            elif [[ "$status" != *"unhealthy"* && "$status" != *"starting"* ]] && [[ "$state" == "running" ]]; then
+              # Running without health check - treat as healthy for percentage
+              healthy_count=$((healthy_count + 1))
+            elif [[ "$state" == "exited" ]] && [[ "$status" == *"Exited (0)"* ]]; then
+              # Task completed successfully
+              healthy_count=$((healthy_count + 1))
+            fi
+          fi
+        done
+
+        # The denominator should be the total number of expected services
+        local total_with_health=$total_targeted
 
         # Calculate percentage
         if [[ $total_with_health -gt 0 ]]; then

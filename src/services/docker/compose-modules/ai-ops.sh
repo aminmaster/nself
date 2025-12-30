@@ -26,7 +26,7 @@ generate_aio_stack() {
     image: alpine:latest
     command: "true"
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # Ensure MLFlow Dockerfile exists
@@ -65,7 +65,7 @@ DOCKERFILE
       - DB_PORT=5432
     entrypoint: ["/bin/sh", "-c"]
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     volumes:
       - ./.volumes/${service_name}/es:/mnt/es-data
     command:
@@ -110,7 +110,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/minio:/data
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -129,7 +129,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
       interval: 30s
@@ -175,8 +175,10 @@ EOF
         condition: service_healthy
       aio-init:
         condition: service_completed_successfully
+      aio-redis:
+        condition: service_started
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
+      \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}:
         aliases:
           - ragflow
     healthcheck:
@@ -196,7 +198,7 @@ EOF
     ports:
       - "9385:9385"
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # 5. AIO Metadata (Postgres)
@@ -212,7 +214,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/db:/var/lib/postgresql/data
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 10s
@@ -228,7 +230,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # 7. AIO Graphiti (Knowledge Management)
@@ -258,7 +260,7 @@ EOF
       aio-falkordb:
         condition: service_healthy
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # 8. AIO Neo4j (Structural Graph)
@@ -274,7 +276,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
-      ${DOCKER_NETWORK:-${PROJECT_NAME}_network}:
+      \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}:
         aliases:
           - neo4j
     healthcheck:
@@ -295,7 +297,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -310,7 +312,7 @@ EOF
       - REDIS_HOST=aio-falkordb
       - REDIS_PORT=6379
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # 10. AIO MLFlow (Tracking)
@@ -337,7 +339,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 
   # 11. AIO Langflow (Orchestration Brain)
@@ -356,7 +358,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     networks:
-      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 EOF
 }
 
