@@ -409,7 +409,7 @@ generate_aio_stack() {
     environment:
       NEO4J_AUTH: neo4j/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       NEO4J_server_memory_pagecache_size: 512m
-      NEO4J_server_memory_heap_max_size: 1G
+      NEO4J_server_memory_heap_max__size: 1G
       NEO4J_PLUGINS: '["apoc"]'
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
