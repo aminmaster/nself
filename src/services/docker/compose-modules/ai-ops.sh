@@ -428,7 +428,7 @@ generate_aio_stack() {
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
-    command: ["redis-server", "--loadmodule", "/var/lib/falkordb/bin/falkordb.so", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
+    command: redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
@@ -462,7 +462,8 @@ generate_aio_stack() {
       --default-artifact-root /mlflow/artifacts
       --host 0.0.0.0
       --port 5000
-      --no-serve-artifacts"
+      --no-serve-artifacts
+      --allowed-hosts *"
     environment:
       MLFLOW_BACKEND_STORE_URI: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow
       MLFLOW_HOST: 0.0.0.0
