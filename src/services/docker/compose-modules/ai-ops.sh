@@ -170,9 +170,9 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_init
     restart: "no"
     environment:
-      - DB_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - DB_HOST=aio-db
-      - DB_PORT=5432
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: aio-db
+      DB_PORT: 5432
     entrypoint: ["/bin/sh", "-c"]
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
@@ -223,8 +223,8 @@ generate_aio_stack() {
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=${NSELF_ADMIN_USER:-admin}
-      - MINIO_ROOT_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      MINIO_ROOT_USER: ${NSELF_ADMIN_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/minio:/data
     networks:
@@ -241,9 +241,9 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_es
     restart: unless-stopped
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
@@ -266,44 +266,36 @@ generate_aio_stack() {
     command:
       - --enable-adminserver
     environment:
-      # Database Configuration
-      - DATABASE_TYPE=postgres
-      - DB_TYPE=postgres
-      - DB_NAME=ragflow
-      - DB_USER=postgres
-      - DB_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
-      - DB_HOST="aio-db"
-      - DB_PORT="5432"
-      - POSTGRES_USER="postgres"
-      - POSTGRES_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
-      - POSTGRES_HOST="aio-db"
-      - POSTGRES_PORT="5432"
-      - POSTGRES_DBNAME="ragflow"
-      # Storage Configuration
-      - STORAGE_TYPE=minio
-      - STORAGE_IMPL=MINIO
-      - MINIO_HOST=aio-minio
-      - MINIO_PORT=9000
-      - MINIO_USER="${NSELF_ADMIN_USER:-admin}"
-      - MINIO_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
-      # Search Configuration
-      - DOC_ENGINE="elasticsearch"
-      - ES_HOST="aio-es"
-      - ES_PORT="9200"
-      - ES_USER=""
-      - ES_PASSWORD=""
-      # Cache Configuration
-      - REDIS_HOST="aio-redis"
-      - REDIS_PORT="6379"
-      - REDIS_PASSWORD="${NSELF_ADMIN_PASSWORD:-${REDIS_PASSWORD:-aiopassword}}"
-      # Sandbox Configuration
-      - SANDBOX_ENABLED=1
-      - SANDBOX_HOST=aio-ragflow-sandbox
-      - SANDBOX_PORT=9385
-      # Server Configuration
-      - TIME_ZONE=UTC
-      - GUNICORN_TIMEOUT=600
-      - REGISTER_ENABLED=0
+      DATABASE_TYPE: postgres
+      DB_TYPE: postgres
+      DB_NAME: ragflow
+      DB_USER: postgres
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: aio-db
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      POSTGRES_HOST: aio-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: ragflow
+      STORAGE_TYPE: minio
+      STORAGE_IMPL: MINIO
+      MINIO_HOST: aio-minio
+      MINIO_PORT: 9000
+      MINIO_USER: ${NSELF_ADMIN_USER:-admin}
+      MINIO_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DOC_ENGINE: elasticsearch
+      ES_HOST: aio-es
+      ES_PORT: 9200
+      REDIS_HOST: aio-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${REDIS_PASSWORD:-aiopassword}}
+      SANDBOX_ENABLED: 1
+      SANDBOX_HOST: aio-ragflow-sandbox
+      SANDBOX_PORT: 9385
+      TIME_ZONE: UTC
+      GUNICORN_TIMEOUT: 600
+      REGISTER_ENABLED: 0
     depends_on:
       aio-db:
         condition: service_healthy
@@ -347,9 +339,9 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_db
     restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - POSTGRES_DB=postgres
-      - PGDATA=/var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./.volumes/${service_name}/db:/var/lib/postgresql/data
     networks:
@@ -365,7 +357,7 @@ generate_aio_stack() {
     image: redis:7-alpine
     container_name: \${PROJECT_NAME}_aio_redis
     restart: unless-stopped
-    command: redis-server --requirepass ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+    command: ["redis-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
@@ -384,16 +376,16 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
     environment:
-      - PORT="8000"
-      - OPENAI_API_KEY="\${OPENAI_API_KEY}"
-      - NEO4J_URI="bolt://aio-neo4j:7687"
-      - NEO4J_USER="${NSELF_ADMIN_USER:-admin}"
-      - NEO4J_PASSWORD="${NSELF_ADMIN_PASSWORD:-${NEO4J_PASSWORD:-aiopassword}}"
-      - GRAPHITI_DATABASE="neo4j"
-      - GRAPH_DRIVER_TYPE="falkordb"
-      - FALKORDB_HOST="aio-falkordb"
-      - FALKORDB_PORT="6379"
-      - FALKORDB_PASSWORD="${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}"
+      PORT: 8000
+      OPENAI_API_KEY: \${OPENAI_API_KEY}
+      NEO4J_URI: bolt://aio-neo4j:7687
+      NEO4J_USER: ${NSELF_ADMIN_USER:-admin}
+      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${NEO4J_PASSWORD:-aiopassword}}
+      GRAPHITI_DATABASE: neo4j
+      GRAPH_DRIVER_TYPE: falkordb
+      FALKORDB_HOST: aio-falkordb
+      FALKORDB_PORT: 6379
+      FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data
     depends_on:
@@ -410,15 +402,15 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_neo4j
     restart: unless-stopped
     environment:
-      - NEO4J_AUTH=${NSELF_ADMIN_USER:-admin}/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - NEO4J_dbms_memory_pagecache_size=512m
-      - NEO4J_dbms_memory_heap_max__size=1G
+      NEO4J_AUTH: ${NSELF_ADMIN_USER:-admin}/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      NEO4J_dbms_memory_pagecache_size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7474/-/health/ready"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -428,14 +420,13 @@ generate_aio_stack() {
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
-    environment:
-      - REDIS_ARGS="--requirepass ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aioredispass}}"
+    command: ["falkordb-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -445,8 +436,8 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_falkordb_browser
     restart: unless-stopped
     environment:
-      - REDIS_HOST=aio-falkordb
-      - REDIS_PORT=6379
+      REDIS_HOST: aio-falkordb
+      REDIS_PORT: 6379
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
@@ -464,9 +455,9 @@ generate_aio_stack() {
       --host 0.0.0.0
       --port 5000"
     environment:
-      - MLFLOW_BACKEND_STORE_URI="postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow"
-      - MLFLOW_HOST="0.0.0.0"
-      - MLFLOW_PORT="5000"
+      MLFLOW_BACKEND_STORE_URI: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow
+      MLFLOW_HOST: 0.0.0.0
+      MLFLOW_PORT: 5000
     depends_on:
       aio-db:
         condition: service_healthy
@@ -483,11 +474,11 @@ generate_aio_stack() {
     ports:
       - "7860:7860"
     environment:
-      - LANGFLOW_DATABASE_URL="postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow"
-      - LANGFLOW_AUTO_LOGIN="False"
-      - LANGFLOW_SUPERUSER="${NSELF_ADMIN_USER:-admin}"
-      - LANGFLOW_SUPERUSER_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
-      - LANGFLOW_SECRET_KEY="\${AUTH_JWT_SECRET:-equilibria_secret_key}"
+      LANGFLOW_DATABASE_URL: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow
+      LANGFLOW_AUTO_LOGIN: "False"
+      LANGFLOW_SUPERUSER: ${NSELF_ADMIN_USER:-admin}
+      LANGFLOW_SUPERUSER_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
     depends_on:
       aio-db:
         condition: service_healthy

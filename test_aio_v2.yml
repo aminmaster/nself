@@ -1,0 +1,328 @@
+  ai-ops:
+    image: alpine:latest
+    command: "true"
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+
+  # 1. AIO Init (Database & Permission Setup)
+  aio-init:
+    image: postgres:15-alpine
+    container_name: ${PROJECT_NAME}_aio_init
+    restart: "no"
+    environment:
+      DB_PASSWORD: pass:with:colon
+      DB_HOST: aio-db
+      DB_PORT: 5432
+    entrypoint: ["/bin/sh", "-c"]
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    volumes:
+      - ./.volumes/ai-ops/es:/mnt/es-data
+    command:
+      - |
+        set -e
+        echo "1. Waiting for Database..."
+        until nc -z aio-db 5432; do echo "Waiting for aio-db..."; sleep 1; done
+
+        echo "2. Initializing AIO Databases..."
+        export PGPASSWORD="$${DB_PASSWORD}"
+        
+        create_db() {
+          local dbname=$$1
+          local max_retries=30
+          local count=0
+          
+          echo "Checking/Creating database $$dbname..."
+          until psql -h aio-db -U postgres -lqt >/dev/null 2>&1 || [ $$count -eq $$max_retries ]; do
+            echo "Waiting for Postgres to be ready for connections (Attempt $$count/$$max_retries)..."
+            sleep 2
+            count=$(($$count + 1))
+          done
+
+          if ! psql -h aio-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "$$dbname"; then
+            echo "Creating database $$dbname..."
+            psql -h aio-db -U postgres -c "CREATE DATABASE $$dbname;"
+          else
+            echo "Database $$dbname already exists."
+          fi
+        }
+
+        create_db "mlflow"
+        create_db "langflow"
+        create_db "ragflow"
+
+        echo "3. Fixing permissions..."
+        chown -R 1000:1000 /mnt/es-data || true
+
+        echo "All initialization tasks completed."
+
+  # 2. AIO Storage (Minio - for RAGFlow)
+  aio-minio:
+    image: minio/minio:latest
+    container_name: ${PROJECT_NAME}_aio_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: pass:with:colon
+    volumes:
+      - ./.volumes/ai-ops/minio:/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # 3. AIO Search (Elasticsearch - for RAGFlow)
+  aio-es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: ${PROJECT_NAME}_aio_es
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+    volumes:
+      - ./.volumes/ai-ops/es:/usr/share/elasticsearch/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 60s
+
+  # 4. AIO Ingestion (RAGFlow Server - Official v0.23.0 Setup)
+  aio-ragflow:
+    image: infiniflow/ragflow:v0.23.0
+    container_name: ${PROJECT_NAME}_aio_ragflow
+    restart: unless-stopped
+    ports:
+      - "9380:9380"  # Python API
+      - "9381:9381"  # Admin API
+    command:
+      - --enable-adminserver
+    environment:
+      DATABASE_TYPE: postgres
+      DB_TYPE: postgres
+      DB_NAME: ragflow
+      DB_USER: postgres
+      DB_PASSWORD: pass:with:colon
+      DB_HOST: aio-db
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass:with:colon
+      POSTGRES_HOST: aio-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: ragflow
+      STORAGE_TYPE: minio
+      STORAGE_IMPL: MINIO
+      MINIO_HOST: aio-minio
+      MINIO_PORT: 9000
+      MINIO_USER: admin
+      MINIO_PASSWORD: pass:with:colon
+      DOC_ENGINE: elasticsearch
+      ES_HOST: aio-es
+      ES_PORT: 9200
+      REDIS_HOST: aio-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: pass:with:colon
+      SANDBOX_ENABLED: 1
+      SANDBOX_HOST: aio-ragflow-sandbox
+      SANDBOX_PORT: 9385
+      TIME_ZONE: UTC
+      GUNICORN_TIMEOUT: 600
+      REGISTER_ENABLED: 0
+    depends_on:
+      aio-db:
+        condition: service_healthy
+      aio-es:
+        condition: service_healthy
+      aio-minio:
+        condition: service_healthy
+      aio-init:
+        condition: service_completed_successfully
+      aio-redis:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    volumes:
+      - ./.volumes/ai-ops/ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf:ro
+      - ./.volumes/ai-ops/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
+      - ./.volumes/ai-ops/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./.volumes/ai-ops/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  aio-ragflow-sandbox:
+    image: infiniflow/sandbox-executor-manager:latest
+    container_name: ${PROJECT_NAME}_aio_ragflow_sandbox
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9385:9385"
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+
+  # 5. AIO Metadata (Postgres)
+  aio-db:
+    image: postgres:15-alpine
+    container_name: ${PROJECT_NAME}_aio_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: pass:with:colon
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./.volumes/ai-ops/db:/var/lib/postgresql/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 6. AIO Cache (Redis)
+  aio-redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME}_aio_redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "pass:with:colon"]
+    volumes:
+      - ./.volumes/ai-ops/redis:/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pass:with:colon", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 7. AIO Graphiti (Knowledge Management)
+  aio-graphiti:
+    build:
+      context: ./services/ai-ops/graphiti
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_aio_graphiti
+    restart: unless-stopped
+    environment:
+      PORT: 8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      NEO4J_URI: bolt://aio-neo4j:7687
+      NEO4J_USER: admin
+      NEO4J_PASSWORD: pass:with:colon
+      GRAPHITI_DATABASE: neo4j
+      GRAPH_DRIVER_TYPE: falkordb
+      FALKORDB_HOST: aio-falkordb
+      FALKORDB_PORT: 6379
+      FALKORDB_PASSWORD: pass:with:colon
+    volumes:
+      - ./.volumes/ai-ops/graphiti/data:/app/data
+    depends_on:
+      aio-neo4j:
+        condition: service_healthy
+      aio-falkordb:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+
+  # 8. AIO Neo4j (Structural Graph)
+  aio-neo4j:
+    image: neo4j:5.26
+    container_name: ${PROJECT_NAME}_aio_neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: admin/pass:with:colon
+      NEO4J_dbms_memory_pagecache_size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
+    volumes:
+      - ./.volumes/ai-ops/neo4j/data:/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7474/-/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  # 9. AIO FalkorDB (Temporal Graph)
+  aio-falkordb:
+    image: falkordb/falkordb:latest
+    container_name: ${PROJECT_NAME}_aio_falkordb
+    restart: unless-stopped
+    command: ["falkordb-server", "--requirepass", "pass:with:colon"]
+    volumes:
+      - ./.volumes/ai-ops/falkordb/data:/data
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pass:with:colon", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  aio-falkordb-browser:
+    image: falkordb/falkordb-browser:latest
+    container_name: ${PROJECT_NAME}_aio_falkordb_browser
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: aio-falkordb
+      REDIS_PORT: 6379
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+
+  # 10. AIO MLFlow (Tracking)
+  aio-mlflow:
+    build:
+      context: ./services/ai-ops/mlflow
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_aio_mlflow
+    restart: unless-stopped
+    command: >
+      /bin/sh -c "mlflow server
+      --backend-store-uri $${MLFLOW_BACKEND_STORE_URI}
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000"
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://postgres:pass:with:colon@aio-db:5432/mlflow
+      MLFLOW_HOST: 0.0.0.0
+      MLFLOW_PORT: 5000
+    depends_on:
+      aio-db:
+        condition: service_healthy
+      aio-init:
+        condition: service_completed_successfully
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
+
+  # 11. AIO Langflow (Orchestration Brain)
+  aio-langflow:
+    image: langflowai/langflow:latest
+    container_name: ${PROJECT_NAME}_aio_langflow
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      LANGFLOW_DATABASE_URL: postgresql://postgres:pass:with:colon@aio-db:5432/langflow
+      LANGFLOW_AUTO_LOGIN: "False"
+      LANGFLOW_SUPERUSER: admin
+      LANGFLOW_SUPERUSER_PASSWORD: pass:with:colon
+      LANGFLOW_SECRET_KEY: ${AUTH_JWT_SECRET:-equilibria_secret_key}
+    depends_on:
+      aio-db:
+        condition: service_healthy
+      aio-init:
+        condition: service_completed_successfully
+    networks:
+      - ${DOCKER_NETWORK:-${PROJECT_NAME}_network}
