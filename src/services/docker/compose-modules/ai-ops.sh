@@ -215,10 +215,8 @@ generate_aio_stack() {
         chown -R 1000:1000 /mnt/es-data || true
 
         echo "All initialization tasks completed."
-EOF
 
   # 2. AIO Storage (Minio - for RAGFlow)
-  cat <<EOF
   aio-minio:
     image: minio/minio:latest
     container_name: \${PROJECT_NAME}_aio_minio
@@ -263,42 +261,41 @@ EOF
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
     ports:
-      # - "80:80"      # Internal Nginx handles this via internal network
       - "9380:9380"  # Python API
       - "9381:9381"  # Admin API
     command:
       - --enable-adminserver
     environment:
-      # Database Configuration (Using Postgres instead of MySQL)
+      # Database Configuration
       - DATABASE_TYPE=postgres
       - DB_TYPE=postgres
       - DB_NAME=ragflow
       - DB_USER=postgres
-      - DB_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - DB_HOST=aio-db
-      - DB_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - POSTGRES_HOST=aio-db
-      - POSTGRES_PORT=5432
-      - POSTGRES_DBNAME=ragflow
+      - DB_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
+      - DB_HOST="aio-db"
+      - DB_PORT="5432"
+      - POSTGRES_USER="postgres"
+      - POSTGRES_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
+      - POSTGRES_HOST="aio-db"
+      - POSTGRES_PORT="5432"
+      - POSTGRES_DBNAME="ragflow"
       # Storage Configuration
       - STORAGE_TYPE=minio
       - STORAGE_IMPL=MINIO
       - MINIO_HOST=aio-minio
       - MINIO_PORT=9000
-      - MINIO_USER=${NSELF_ADMIN_USER:-admin}
-      - MINIO_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      - MINIO_USER="${NSELF_ADMIN_USER:-admin}"
+      - MINIO_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
       # Search Configuration
-      - DOC_ENGINE=elasticsearch
-      - ES_HOST=aio-es
-      - ES_PORT=9200
-      - ES_USER=
-      - ES_PASSWORD=
+      - DOC_ENGINE="elasticsearch"
+      - ES_HOST="aio-es"
+      - ES_PORT="9200"
+      - ES_USER=""
+      - ES_PASSWORD=""
       # Cache Configuration
-      - REDIS_HOST=aio-redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${NSELF_ADMIN_PASSWORD:-${REDIS_PASSWORD:-aiopassword}}
+      - REDIS_HOST="aio-redis"
+      - REDIS_PORT="6379"
+      - REDIS_PASSWORD="${NSELF_ADMIN_PASSWORD:-${REDIS_PASSWORD:-aiopassword}}"
       # Sandbox Configuration
       - SANDBOX_ENABLED=1
       - SANDBOX_HOST=aio-ragflow-sandbox
@@ -321,11 +318,9 @@ EOF
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     volumes:
-      # Official Nginx Configs (3 files)
       - ./.volumes/${service_name}/ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Service Configuration Template
       - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
@@ -345,10 +340,8 @@ EOF
       - "9385:9385"
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
-EOF
 
   # 5. AIO Metadata (Postgres)
-  cat <<EOF
   aio-db:
     image: postgres:15-alpine
     container_name: \${PROJECT_NAME}_aio_db
@@ -360,7 +353,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/db:/var/lib/postgresql/data
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 10s
@@ -376,7 +369,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
       interval: 10s
@@ -384,7 +377,6 @@ EOF
       retries: 5
 
   # 7. AIO Graphiti (Knowledge Management)
-  cat <<EOF
   aio-graphiti:
     build:
       context: ./services/${service_name}/graphiti
@@ -392,16 +384,16 @@ EOF
     container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
     environment:
-      - PORT=8000
-      - OPENAI_API_KEY=\${OPENAI_API_KEY}
-      - NEO4J_URI=bolt://aio-neo4j:7687
-      - NEO4J_USER=${NSELF_ADMIN_USER:-admin}
-      - NEO4J_PASSWORD=${NSELF_ADMIN_PASSWORD:-${NEO4J_PASSWORD:-aiopassword}}
-      - GRAPHITI_DATABASE=neo4j
-      - GRAPH_DRIVER_TYPE=falkordb
-      - FALKORDB_HOST=aio-falkordb
-      - FALKORDB_PORT=6379
-      - FALKORDB_PASSWORD=${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
+      - PORT="8000"
+      - OPENAI_API_KEY="\${OPENAI_API_KEY}"
+      - NEO4J_URI="bolt://aio-neo4j:7687"
+      - NEO4J_USER="${NSELF_ADMIN_USER:-admin}"
+      - NEO4J_PASSWORD="${NSELF_ADMIN_PASSWORD:-${NEO4J_PASSWORD:-aiopassword}}"
+      - GRAPHITI_DATABASE="neo4j"
+      - GRAPH_DRIVER_TYPE="falkordb"
+      - FALKORDB_HOST="aio-falkordb"
+      - FALKORDB_PORT="6379"
+      - FALKORDB_PASSWORD="${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}"
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data
     depends_on:
@@ -410,11 +402,9 @@ EOF
       aio-falkordb:
         condition: service_healthy
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
-EOF
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
   # 8. AIO Neo4j (Structural Graph)
-  cat <<EOF
   aio-neo4j:
     image: neo4j:5.26
     container_name: \${PROJECT_NAME}_aio_neo4j
@@ -426,26 +416,24 @@ EOF
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
-EOF
 
   # 9. AIO FalkorDB (Temporal Graph)
-  cat <<EOF
   aio-falkordb:
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
     environment:
-      - REDIS_ARGS=--requirepass ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aioredispass}}
+      - REDIS_ARGS="--requirepass ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aioredispass}}"
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -460,11 +448,9 @@ EOF
       - REDIS_HOST=aio-falkordb
       - REDIS_PORT=6379
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
-EOF
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
   # 10. AIO MLFlow (Tracking)
-  cat <<EOF
   aio-mlflow:
     build:
       context: ./services/${service_name}/mlflow
@@ -478,20 +464,18 @@ EOF
       --host 0.0.0.0
       --port 5000"
     environment:
-      - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow
-      - MLFLOW_HOST=0.0.0.0
-      - MLFLOW_PORT=5000
+      - MLFLOW_BACKEND_STORE_URI="postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow"
+      - MLFLOW_HOST="0.0.0.0"
+      - MLFLOW_PORT="5000"
     depends_on:
       aio-db:
         condition: service_healthy
       aio-init:
         condition: service_completed_successfully
     networks:
-      - ${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
-EOF
+      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
   # 11. AIO Langflow (Orchestration Brain)
-  cat <<EOF
   aio-langflow:
     image: langflowai/langflow:latest
     container_name: \${PROJECT_NAME}_aio_langflow
@@ -499,11 +483,11 @@ EOF
     ports:
       - "7860:7860"
     environment:
-      - LANGFLOW_DATABASE_URL=postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow
-      - LANGFLOW_AUTO_LOGIN=False
-      - LANGFLOW_SUPERUSER=${NSELF_ADMIN_USER:-admin}
-      - LANGFLOW_SUPERUSER_PASSWORD=${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      - LANGFLOW_SECRET_KEY=\${AUTH_JWT_SECRET:-equilibria_secret_key}
+      - LANGFLOW_DATABASE_URL="postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow"
+      - LANGFLOW_AUTO_LOGIN="False"
+      - LANGFLOW_SUPERUSER="${NSELF_ADMIN_USER:-admin}"
+      - LANGFLOW_SUPERUSER_PASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
+      - LANGFLOW_SECRET_KEY="\${AUTH_JWT_SECRET:-equilibria_secret_key}"
     depends_on:
       aio-db:
         condition: service_healthy
