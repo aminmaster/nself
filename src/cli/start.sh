@@ -365,12 +365,9 @@ start_services() {
     project_name=$(grep "^PROJECT_NAME=" .env.runtime 2>/dev/null | cut -d= -f2- | tr -d '\r' || echo "$project_name")
   fi
 
-  # 9. Start services with progress tracking
+  # 9. Start services
   local compose_cmd="docker compose"
-  local start_output=$(mktemp)
-  local error_output=$(mktemp)
-  local exit_code_file=$(mktemp)
-
+  
   # Build the docker compose command based on start mode
   local compose_args=(
     "--project-name" "$project_name"
@@ -395,181 +392,30 @@ start_services() {
     echo ""
   fi
 
-  # Save terminal state before docker operations (for later restoration)
-  local saved_tty_settings=""
-  if [[ -t 0 ]]; then
-    saved_tty_settings=$(stty -g 2>/dev/null || true)
+  # Execute docker compose
+  if [[ "$VERBOSE" == "true" ]]; then
+    update_progress 2 "running"
+    # Show real-time output in verbose mode
+    $compose_cmd "${compose_args[@]}"
+    local exit_code=$?
+    update_progress 2 "done"
+  else
+    update_progress 2 "running"
+    # Suppress output but show progress in normal mode
+    $compose_cmd "${compose_args[@]}" > /dev/null 2>&1
+    local exit_code=$?
+    update_progress 2 "done"
   fi
-
-# Pre-detect services for Lifecycle Tracker
-STATUS_TARGETS=$(docker compose --project-name "$project_name" --env-file "$env_file" config --services 2>/dev/null | sort || echo "")
-if [[ -z "$STATUS_TARGETS" ]]; then
-  # Fallback if config fails: extract keys only under the 'services:' block
-  STATUS_TARGETS=$(awk '/^services:/ {flag=1; next} /^[a-z].*:/ {flag=0} flag && /^  [a-z].*:/ {print $1}' docker-compose.yml 2>/dev/null | sed 's/://' | sort || echo "")
-fi
-
-# Track unique services for the multi-line UI
-# (Using simple variables instead of associative arrays for Bash 3.2 compatibility if needed)
-
-# Unified Lifecycle Tracker Renderer
-render_lifecycle_tracker() {
-  local start_output="$1"
-  local error_output="$2"
-  local spin_char="$3"
-  local project_name="${4:-${PROJECT_NAME:-myproject}}"
-  local services="${5:-}"
-  
-  if [[ -z "$services" ]]; then
-    # Fallback to dynamic detection if not pre-provided
-    services=$(grep -E "Container|Network|Volume|Pulling from" "$start_output" | \
-      sed -E 's/.*(Container|Network|Volume|Pulling from) [^ ]+_?([a-zA-Z0-9_-]+).*/\2/' | sort -u || echo "")
-  fi
-  
-  if [[ -z "$services" ]]; then return 0; fi
-
-  # Move cursor back up if we already printed lines
-  [[ ${LAST_LINE_COUNT:-0} -gt 0 ]] && printf "\033[%dA" "$LAST_LINE_COUNT"
-
-  # Batch query container statuses once per render (include all to see Created/Exited)
-  local container_states=$(docker ps -a --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}\t{{.State}}" 2>/dev/null || echo "")
-
-  local current_count=0
-  for t in $services; do
-    local status="Pending"
-    local color="${COLOR_DIM}"
-    local icon="${spin_char}"
-    local progress=""
-    local bar=""
-    
-    # 1. Check direct Docker status (Highest truth)
-    # Match with project prefix or exact name, allowing for dash-to-underscore conversion
-    local t_alt="${t//-/_}"
-    # Exact match for container name using awk to avoid collisions (e.g., ragflow vs ragflow-sandbox)
-    local container_match=$(echo "$container_states" | awk -F'\t' -v name="${project_name}_${t//-/_}" '$1 == name {print $0; exit}')
-    
-    if [[ -n "$container_match" ]]; then
-      local raw_status=$(echo "$container_match" | cut -f2)
-      local raw_state=$(echo "$container_match" | cut -f3)
-
-      if [[ "$raw_status" == *"healthy"* ]]; then
-        status="Healthy"; color="${COLOR_GREEN}"; icon="✓"
-      elif [[ "$raw_status" == *"unhealthy"* ]]; then
-        status="Unhealthy"; color="${COLOR_RED}"; icon="✗"
-      elif [[ "$raw_status" == *"Restarting"* ]]; then
-        status="Restarting"; color="${COLOR_YELLOW}"; icon="!"
-      elif [[ "$raw_state" == "running" ]]; then
-        if [[ "$raw_status" == *"(health: starting)"* ]] || [[ "$raw_status" == *"(starting)"* ]]; then
-          status="Starting"; color="${COLOR_BLUE}"
-        elif [[ "$raw_status" == *"(healthy)"* ]]; then
-          status="Healthy"; color="${COLOR_GREEN}"; icon="✓"
-        else
-          status="Running"; color="${COLOR_CYAN}"; icon="●"
-        fi
-      elif [[ "$raw_state" == "exited" ]]; then
-        if [[ "$raw_status" == *"Exited (0)"* ]]; then
-          status="Completed"; color="${COLOR_GREEN}"; icon="✓"
-        else
-          status="Stopped"; color="${COLOR_DIM}"; icon="○"
-        fi
-      elif [[ "$raw_state" == "created" ]]; then
-        status="Waiting"; color="${COLOR_DIM}"; icon="."
-      fi
-    fi
-
-    # 2. If no container yet, check logs for progress
-    if [[ "$status" == "Pending" ]]; then
-      # Check for Startup logs
-      if grep -q "Started.*$t\|Healthy.*$t" "$start_output" 2>/dev/null || grep -q "Started.*$t_alt\|Healthy.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Started"; color="${COLOR_GREEN}"; icon="✓"
-      elif grep -q "Creating.*$t\|Starting.*$t" "$start_output" 2>/dev/null || grep -q "Creating.*$t_alt\|Starting.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Starting"; color="${COLOR_BLUE}"
-      elif grep -q "Created.*$t" "$start_output" 2>/dev/null || grep -q "Created.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Created"; color="${COLOR_BLUE}"
-      # Check for Pulling logs
-      elif grep -q "Pulled.*$t\|Already exists.*$t\|Pull complete.*$t" "$start_output" 2>/dev/null || \
-           grep -q "Pulled.*$t_alt\|Already exists.*$t_alt\|Pull complete.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Pulled"; color="${COLOR_BLUE}"
-      elif grep -q "Extracting.*$t" "$start_output" 2>/dev/null || grep -q "Extracting.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Extracting"; color="${COLOR_CYAN}"
-        bar=$(grep "Extracting.*$t\|Extracting.*$t_alt" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Extracting.*$t\|Extracting.*$t_alt" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Downloading.*$t" "$start_output" 2>/dev/null || grep -q "Downloading.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Downloading"; color="${COLOR_BLUE}"
-        bar=$(grep "Downloading.*$t\|Downloading.*$t_alt" "$start_output" | tail -1 | grep -o "\[[⣿ ]*\]" || echo "")
-        progress=$(grep "Downloading.*$t\|Downloading.*$t_alt" "$start_output" | tail -1 | grep -o "[0-9.]\+MB / [0-9.]\+MB" || echo "")
-      elif grep -q "Pulling from.*$t" "$start_output" 2>/dev/null || grep -q "Pulling from.*$t_alt" "$start_output" 2>/dev/null; then
-        status="Pulling"; color="${COLOR_BLUE}"
-      fi
-    fi
-    
-    # Enforce spinner/icon relationship
-    local final_icon="$icon"
-    if [[ "$status" == "Pending" || "$status" == "Starting" || "$status" == "Pulling" || "$status" == "Downloading" || "$status" == "Extracting" ]]; then
-        [[ "$final_icon" == "✓" ]] && final_icon="${spin_char}"
-    fi
-
-    # Format and print the line
-    if [[ -n "$bar" ]]; then
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s %s %s\033[K\n" "$final_icon" "$t" "$status" "$bar" "$progress"
-    elif [[ -n "$progress" ]]; then
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s [%s]\033[K\n" "$final_icon" "$t" "$status" "$progress"
-    else
-       printf "\r${color}%s${COLOR_RESET} %-25s %-12s\033[K\n" "$final_icon" "$t" "$status"
-    fi
-    current_count=$((current_count + 1))
-  done
-  
-  LAST_LINE_COUNT=$current_count
-}
-
-# Legacy wrappers for backward compatibility if needed
-render_detailed_status() {
-  render_lifecycle_tracker "$1" "$2" "$3" "$4" "$STATUS_TARGETS"
-}
-
-  # 1. Start Docker Compose in background
-  ( $compose_cmd "${compose_args[@]}" > "$start_output" 2> "$error_output"; echo $? > "$exit_code_file" ) &
-  local compose_pid=$!
-
-  # 2. Main Persistent Loop
-  local spinner=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
-  local spin_index=0
-  local exit_code=0
-  
-  while ps -p $compose_pid > /dev/null 2>&1; do
-    spin_index=$(( (spin_index + 1) % 10 ))
-    
-    # Render persistent lifecycle tracker
-    render_lifecycle_tracker "$start_output" "$error_output" "${spinner[$spin_index]}" "$project_name" "$STATUS_TARGETS"
-    
-    # Fallback to single-line spinner feedback if no services are detected yet
-    if [[ ${LAST_LINE_COUNT:-0} -eq 0 ]]; then
-      local last_line=$(tail -n 1 "$error_output" 2>/dev/null | tr -d '\r\n' | sed 's/^[[:space:]]*//' | cut -c1-60 || echo "")
-      if [[ -z "$last_line" ]]; then
-        last_line=$(tail -n 1 "$start_output" 2>/dev/null | tr -d '\r\n' | sed 's/^[[:space:]]*//' | cut -c1-60 || echo "")
-      fi
-      printf "\r${COLOR_BLUE}%s${COLOR_RESET} %s\033[K" "${spinner[$spin_index]}" "${last_line:-Starting Docker operations...}"
-    fi
-
-    sleep 0.2
-  done
-
-  # 3. Capture final exit code safely
-  wait $compose_pid 2>/dev/null || true
-  exit_code=$(cat "$exit_code_file" 2>/dev/null || echo 0)
-  rm -f "$exit_code_file"
-
-  # Clear the spinner line
-  printf "\r\033[K"
 
   # 10. Check results
   if [[ $exit_code -eq 0 ]]; then
-    # Mark any remaining steps as done
-    for i in 2 3 4 5 6 7 8; do
-      if [[ "${PROGRESS_STATUS[$i]}" == "pending" ]]; then
-        update_progress $i "done"
-      fi
-    done
+    # Mark intermediate steps as done
+    update_progress 3 "done"
+    update_progress 4 "done"
+    update_progress 5 "done"
+    update_progress 6 "done"
+    update_progress 7 "done"
+    update_progress 8 "done"
 
     # Verify health checks (unless skipped)
     if [[ "$SKIP_HEALTH_CHECKS" != "true" ]]; then
@@ -585,6 +431,8 @@ render_detailed_status() {
         required_threshold=100
       fi
 
+      printf "Waiting for services to become healthy (threshold: %d%%)...\n" "$required_threshold"
+
       while true; do
         current_time=$(date +%s)
         elapsed=$((current_time - start_time))
@@ -593,19 +441,11 @@ render_detailed_status() {
           break
         fi
 
-        # Update Live Health Monitor
-        spin_index=$(( (spin_index + 1) % 10 ))
-        render_lifecycle_tracker "$start_output" "$error_output" "${spinner[$spin_index]}" "$project_name" "$STATUS_TARGETS"
-
-        # Count health status for exit condition
+        # Count health status
         local running_containers=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}\t{{.Status}}\t{{.State}}" 2>/dev/null)
         local total_targeted=$(echo "$STATUS_TARGETS" | wc -w | tr -d '[:space:]')
         
-        # Save total targets for final summary
-        FINAL_STATUS_TARGET_COUNT=$total_targeted
-        
         local healthy_count=0
-        local total_with_health=0
         
         # Check each target service
         for target in $STATUS_TARGETS; do
@@ -619,132 +459,46 @@ render_detailed_status() {
             if [[ "$status" == *"healthy"* ]]; then
               healthy_count=$((healthy_count + 1))
             elif [[ "$status" != *"unhealthy"* && "$status" != *"starting"* ]] && [[ "$state" == "running" ]]; then
-              # Running without health check - treat as healthy for percentage
               healthy_count=$((healthy_count + 1))
             elif [[ "$state" == "exited" ]] && [[ "$status" == *"Exited (0)"* ]]; then
-              # Task completed successfully
               healthy_count=$((healthy_count + 1))
             fi
           fi
         done
 
-        # The denominator should be the total number of expected services
-        local total_with_health=$total_targeted
-
-        # Calculate percentage
-        if [[ $total_with_health -gt 0 ]]; then
-          local health_percent=$((healthy_count * 100 / total_with_health))
+        if [[ $total_targeted -gt 0 ]]; then
+          local health_percent=$((healthy_count * 100 / total_targeted))
+          printf "\rProgress: %d/%d healthy (%d%%) [Elapsed: %ds]\033[K" "$healthy_count" "$total_targeted" "$health_percent" "$elapsed"
           if [[ $health_percent -ge $required_threshold ]]; then
             health_check_passed=true
+            printf "\n"
             break
           fi
-        elif [[ $running_count -gt 0 ]]; then
-          # If no health checks defined, consider it passing if containers are running
-          health_check_passed=true
-          break
         fi
 
         sleep "$HEALTH_CHECK_INTERVAL"
       done
 
-      # Final health update
-      render_lifecycle_tracker "$start_output" "$error_output" "✓" "$project_name" "$STATUS_TARGETS"
       update_progress 9 "done"
     else
-      # Skip health checks
       update_progress 9 "done"
-      local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d ' ')
-      local healthy_count=0
-      local total_with_health=0
     fi
 
-    # Get final counts for summary
+    # Final summary (simplified)
     local running_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Names}}" 2>/dev/null | wc -l | tr -d '[:space:]')
     local healthy_count=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep "healthy" | wc -l | tr -d '[:space:]')
-    local total_with_health=$(docker ps --filter "label=com.docker.compose.project=$project_name" --format "{{.Status}}" 2>/dev/null | grep -E "(healthy|unhealthy|starting)" | wc -l | tr -d '[:space:]')
 
-    # Count service types accurately by group
-    local core_count=4
-    local optional_count=0
-    [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${MINIO_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${REDIS_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${MAILPIT_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]] && optional_count=$((optional_count + 1))
-    
-    local monitoring_count=0
-    if [[ "${MONITORING_ENABLED:-false}" == "true" ]]; then
-      monitoring_count=10
-    fi
+    printf "\n${COLOR_GREEN}✓${COLOR_RESET} ${COLOR_BOLD}All services started successfully${COLOR_RESET}\n"
+    printf "${COLOR_GREEN}✓${COLOR_RESET} Project: ${COLOR_BOLD}%s${COLOR_RESET} (%s)\n" "$project_name" "$env"
+    printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s healthy\n" "$healthy_count" "$running_count"
 
-    local aio_count=0
-    if grep -q "AIO_STACK_PRESENT=true" .env.runtime 2>/dev/null; then
-       aio_count=$(echo "$STATUS_TARGETS" | grep -o "aio[a-z0-9-]*" | sort -u | wc -l | tr -d '[:space:]')
-    fi
-
-    local custom_count=0
-    for i in {1..20}; do
-      local cs_var="CS_${i}"
-      [[ -n "${!cs_var:-}" ]] && custom_count=$((custom_count + 1))
-    done
-
-    # Final summary (like build command)
-    printf "\n"
-    printf "${COLOR_GREEN}✓${COLOR_RESET} ${COLOR_BOLD}All services started successfully${COLOR_RESET}\n"
-    printf "${COLOR_GREEN}✓${COLOR_RESET} Project: ${COLOR_BOLD}%s${COLOR_RESET} (%s) / BD: %s\n" "$project_name" "$env" "${BASE_DOMAIN:-localhost}"
-    printf "${COLOR_GREEN}✓${COLOR_RESET} Services (%s): %s core, %s optional, %s monitoring, %s custom%s\n" \
-      "${running_count:-0}" "${core_count:-4}" "${optional_count:-0}" "${monitoring_count:-0}" "${custom_count:-0}" \
-      "$( [[ $aio_count -gt 0 ]] && echo ", $aio_count aio" || echo "" )"
-
-    if [[ ${FINAL_STATUS_TARGET_COUNT:-} -gt 0 ]]; then
-      printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s checks passing (AIO Stack)\n" "${healthy_count:-0}" "${FINAL_STATUS_TARGET_COUNT:-0}"
-    elif [[ $total_with_health -gt 0 ]]; then
-      printf "${COLOR_GREEN}✓${COLOR_RESET} Health: %s/%s checks passing\n" "${healthy_count:-0}" "${total_with_health:-0}"
-    fi
-
-    printf "\n\n${COLOR_BOLD}Next steps:${COLOR_RESET}\n\n"
+    printf "\n${COLOR_BOLD}Next steps:${COLOR_RESET}\n"
     printf "1. ${COLOR_BLUE}nself status${COLOR_RESET} - Check service health\n"
-    printf "   View detailed status of all running services\n\n"
     printf "2. ${COLOR_BLUE}nself urls${COLOR_RESET} - View service URLs\n"
-    printf "   Access your application and service dashboards\n\n"
-    printf "3. ${COLOR_BLUE}nself logs${COLOR_RESET} - View service logs\n"
-    printf "   Monitor real-time logs from all services\n\n"
-    printf "For more help, use: ${COLOR_DIM}nself help${COLOR_RESET} or ${COLOR_DIM}nself help start${COLOR_RESET}\n\n"
+    printf "3. ${COLOR_BLUE}nself logs${COLOR_RESET} - View service logs\n\n"
 
   else
-    # Error occurred - mark remaining steps as error
-    for i in "${!PROGRESS_STATUS[@]}"; do
-      if [[ "${PROGRESS_STATUS[$i]}" == "pending" || "${PROGRESS_STATUS[$i]}" == "running" ]]; then
-        update_progress $i "error"
-      fi
-    done
-
     printf "\n${COLOR_RED}✗ Failed to start services${COLOR_RESET}\n\n"
-
-    # Show error details
-    if [[ -s "$error_output" ]]; then
-      printf "${COLOR_RED}Error details:${COLOR_RESET}\n"
-      # Show meaningful errors only
-      grep -E "(ERROR|Error|error|failed|Failed|dependency|unhealthy)" "$error_output" 2>/dev/null | head -5 || true
-
-      # Check specifically for postgres issues
-      if grep -q "demo-app_postgres.*unhealthy\|demo-app_postgres.*Error" "$error_output" 2>/dev/null; then
-        printf "\n${COLOR_YELLOW}PostgreSQL startup issue detected${COLOR_RESET}\n"
-        printf "Check logs with: ${COLOR_DIM}docker logs demo-app_postgres${COLOR_RESET}\n"
-      fi
-    fi
-
-    # In verbose mode, show full output
-    if [[ "$VERBOSE" == "true" ]] && [[ -s "$start_output" ]]; then
-      printf "\n${COLOR_DIM}Full output:${COLOR_RESET}\n"
-      cat "$start_output"
-    fi
-
-    printf "\n💡 ${COLOR_DIM}Tip: Run with --verbose for detailed output${COLOR_RESET}\n\n"
-
-    rm -f "$start_output" "$error_output"
     return 1
   fi
 
