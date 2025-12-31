@@ -480,7 +480,6 @@ generate_aio_stack() {
     depends_on:
       aio-db:
         condition: service_healthy
-        condition: service_healthy
       aio-init:
         condition: service_completed_successfully
     volumes:
