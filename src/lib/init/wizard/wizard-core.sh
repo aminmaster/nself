@@ -428,6 +428,9 @@ wizard_custom_services() {
         echo "  • Knowledge: Neo4j (Structural Graph)"
         echo "  • Ops: MLFlow (Model Management)"
         echo "  • Infrastructure: Shared Postgres, Redis, ES, Minio"
+        echo ""
+        echo "  [NOTE] Admin Dashboard credentials will be used"
+        echo "         for Langflow and stack-wide authentication."
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         
         local aio_version aio_subdomain aio_secret
