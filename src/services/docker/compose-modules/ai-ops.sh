@@ -463,13 +463,6 @@ generate_aio_stack() {
       --host 0.0.0.0
       --port 5000
       --no-serve-artifacts"
-      # Note: Artifacts are served by Nginx or MinIO in production usually, 
-      # but if using local artifacts, we need --serve-artifacts. 
-      # However, for the header issue, we add --allowed-hosts "*" if supported, 
-      # relying on Nginx for auth.
-      # Actually, let's just accept the risk of all hosts since we are behind Nginx.
-      # Older MLflow versions might not support --allowed-hosts in CLI directly if it's via uvicorn.
-      # But the log suggested it. Let's try appending it.
     environment:
       MLFLOW_BACKEND_STORE_URI: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow
       MLFLOW_HOST: 0.0.0.0
