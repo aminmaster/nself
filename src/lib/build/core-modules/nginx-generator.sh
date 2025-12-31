@@ -561,8 +561,8 @@ EOF
 
     # Configure Basic Auth if enabled
     if [[ "${MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-      local auth_user="${MLFLOW_BASIC_AUTH_USER:-admin}"
-      local auth_pass="${MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
+      local auth_user="${MLFLOW_BASIC_AUTH_USER:-${NSELF_ADMIN_USER:-admin}}"
+      local auth_pass="${MLFLOW_BASIC_AUTH_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin}}"
       
       echo "Generating Basic Auth for MLFlow..."
       # Generate htpasswd file
@@ -755,8 +755,8 @@ NEO4J_CONF
     # MLFlow Tracking
     local mlflow_auth_config=""
     if [[ "${AIO_MLFLOW_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-      local mlflow_user="${AIO_MLFLOW_BASIC_AUTH_USER:-admin}"
-      local mlflow_pass="${AIO_MLFLOW_BASIC_AUTH_PASSWORD:-admin}"
+      local mlflow_user="${AIO_MLFLOW_BASIC_AUTH_USER:-${NSELF_ADMIN_USER:-admin}}"
+      local mlflow_pass="${AIO_MLFLOW_BASIC_AUTH_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin}}"
       
       echo "Generating Basic Auth for MLFlow..."
       echo "${mlflow_user}:$(openssl passwd -apr1 "${mlflow_pass}")" > nginx/conf.d/mlflow.htpasswd

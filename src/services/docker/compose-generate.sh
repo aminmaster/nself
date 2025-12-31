@@ -58,8 +58,8 @@ export MINIO_PORT="${MINIO_PORT:-9000}"
 export MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-9001}"
 
 # Source smart defaults to handle JWT construction
-if [[ -f "$COMPOSE_SCRIPT_DIR/../../services/auth/smart-defaults.sh" ]]; then
-  source "$COMPOSE_SCRIPT_DIR/../../services/auth/smart-defaults.sh"
+if [[ -f "$COMPOSE_SCRIPT_DIR/../../lib/config/smart-defaults.sh" ]]; then
+  source "$COMPOSE_SCRIPT_DIR/../../lib/config/smart-defaults.sh"
   apply_smart_defaults
 fi
 

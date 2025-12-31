@@ -55,7 +55,7 @@ EOF
 
 # Generate Hasura GraphQL Engine service
 generate_hasura_service() {
-  local enabled="${HASURA_ENABLED:-false}"
+  local enabled="${HASURA_ENABLED:-true}"
   [[ "$enabled" != "true" ]] && return 0
 
   cat <<EOF
@@ -118,7 +118,7 @@ EOF
 
 # Generate Auth service configuration
 generate_auth_service() {
-  local enabled="${AUTH_ENABLED:-false}"
+  local enabled="${AUTH_ENABLED:-true}"
   [[ "$enabled" != "true" ]] && return 0
 
   # Check if we should use fallback auth service
@@ -246,7 +246,7 @@ EOF
 
 # Generate Database Seeder service (waits for Auth migrations)
 generate_db_seed_service() {
-  local enabled="${AUTH_ENABLED:-false}"
+  local enabled="${AUTH_ENABLED:-true}"
   [[ "$enabled" != "true" ]] && return 0
 
   cat <<EOF
@@ -282,7 +282,7 @@ EOF
 
 # Generate MinIO service configuration
 generate_minio_service() {
-  local enabled="${MINIO_ENABLED:-false}"
+  local enabled="${MINIO_ENABLED:-true}"
   [[ "$enabled" != "true" ]] && return 0
 
   cat <<EOF
@@ -295,7 +295,7 @@ generate_minio_service() {
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     environment:
-      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-\${NSELF_ADMIN_USER:-minioadmin}}
+      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-\${NSELF_ADMIN_USER:-admin}}
       MINIO_ROOT_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${MINIO_ROOT_PASSWORD:-minioadmin}}
       MINIO_DEFAULT_BUCKETS: \${MINIO_DEFAULT_BUCKETS:-uploads}
       MINIO_REGION: \${MINIO_REGION:-us-east-1}
@@ -346,7 +346,7 @@ EOF
       /bin/sh -c "
       set -e;
       echo '→ Initializing MinIO buckets...';
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-minioadmin};
       for bucket in $(echo ${MINIO_DEFAULT_BUCKETS:-uploads} | tr ',' ' '); do
         /usr/bin/mc mb -p myminio/$$bucket 2>/dev/null || echo \"  Bucket $$bucket exists\";
         /usr/bin/mc anonymous set download myminio/$$bucket 2>/dev/null || true;

@@ -379,8 +379,8 @@ generate_aio_stack() {
       PORT: 8000
       OPENAI_API_KEY: \${OPENAI_API_KEY}
       NEO4J_URI: bolt://aio-neo4j:7687
-      NEO4J_USER: ${NSELF_ADMIN_USER:-admin}
-      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${NEO4J_PASSWORD:-aiopassword}}
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       GRAPHITI_DATABASE: neo4j
       GRAPH_DRIVER_TYPE: falkordb
       FALKORDB_HOST: aio-falkordb
@@ -402,7 +402,7 @@ generate_aio_stack() {
     container_name: \${PROJECT_NAME}_aio_neo4j
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: ${NSELF_ADMIN_USER:-admin}/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      NEO4J_AUTH: neo4j/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       NEO4J_dbms_memory_pagecache_size: 512m
       NEO4J_dbms_memory_heap_max__size: 1G
     volumes:
