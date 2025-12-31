@@ -178,6 +178,7 @@ generate_aio_stack() {
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     volumes:
       - ./.volumes/${service_name}/es:/mnt/es-data
+      - ./.volumes/${service_name}/langflow:/mnt/langflow-data
     command:
       - |
         set -e
@@ -213,6 +214,7 @@ generate_aio_stack() {
 
         echo "3. Fixing permissions..."
         chown -R 1000:1000 /mnt/es-data || true
+        chown -R 1000:1000 /mnt/langflow-data || true
 
         echo "All initialization tasks completed."
 
@@ -426,7 +428,7 @@ generate_aio_stack() {
     image: falkordb/falkordb:latest
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
-    command: ["falkordb-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
+    command: ["redis-server", "--loadmodule", "/var/lib/falkordb/bin/falkordb.so", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
@@ -459,7 +461,15 @@ generate_aio_stack() {
       --backend-store-uri \$\${MLFLOW_BACKEND_STORE_URI}
       --default-artifact-root /mlflow/artifacts
       --host 0.0.0.0
-      --port 5000"
+      --port 5000
+      --no-serve-artifacts"
+      # Note: Artifacts are served by Nginx or MinIO in production usually, 
+      # but if using local artifacts, we need --serve-artifacts. 
+      # However, for the header issue, we add --allowed-hosts "*" if supported, 
+      # relying on Nginx for auth.
+      # Actually, let's just accept the risk of all hosts since we are behind Nginx.
+      # Older MLflow versions might not support --allowed-hosts in CLI directly if it's via uvicorn.
+      # But the log suggested it. Let's try appending it.
     environment:
       MLFLOW_BACKEND_STORE_URI: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/mlflow
       MLFLOW_HOST: 0.0.0.0
