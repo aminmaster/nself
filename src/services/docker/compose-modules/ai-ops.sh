@@ -333,6 +333,7 @@ EOF
       # Server Configuration
       - TIME_ZONE=UTC
       - GUNICORN_TIMEOUT=600
+      - REGISTER_ENABLED=0
     depends_on:
       aio-db:
         condition: service_healthy
@@ -527,6 +528,10 @@ EOF
       - "7860:7860"
     environment:
       - LANGFLOW_DATABASE_URL=postgresql://postgres:\${POSTGRES_PASSWORD:-aiopassword}@aio-db:5432/langflow
+      - LANGFLOW_AUTO_LOGIN=False
+      - LANGFLOW_SUPERUSER=\${ADMIN_USER:-admin}
+      - LANGFLOW_SUPERUSER_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      - LANGFLOW_SECRET_KEY=\${AUTH_JWT_SECRET:-equilibria_secret_key}
     depends_on:
       aio-db:
         condition: service_healthy
