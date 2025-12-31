@@ -1,50 +1,100 @@
-# Generate RAGFlow specific configurations
+# Generate RAGFlow specific configurations (Official InfiniFlow Setup)
 generate_ragflow_configs() {
   local service_name="$1"
   local ragflow_vol_dir="./.volumes/${service_name}/ragflow"
-  mkdir -p "$ragflow_vol_dir"
+  local nginx_dir="${ragflow_vol_dir}/nginx"
+  
+  mkdir -p "$nginx_dir"
 
-  # 1. Internal Nginx Config (Optimized for application delivery)
-  rm -rf "$ragflow_vol_dir/ragflow-internal.conf"
-  cat <<'NGINX_CONF' > "$ragflow_vol_dir/ragflow-internal.conf"
+  # 1. Official Nginx Server Block (ragflow.conf)
+  cat <<'NGINX_CONF' > "${nginx_dir}/ragflow.conf"
 server {
     listen 80;
     server_name _;
-
     root /ragflow/web/dist;
-    index index.html;
 
-    # Handle Frontend SPA Routing
+    gzip on;
+    gzip_min_length 1k;
+    gzip_comp_level 9;
+    gzip_types text/plain application/javascript application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
+    gzip_vary on;
+    gzip_disable "MSIE [1-6]\.";
+
+    location ~ ^/api/v1/admin {
+        proxy_pass http://localhost:9381;
+        include proxy.conf;
+    }
+
+    location ~ ^/(v1|api) {
+        proxy_pass http://localhost:9380;
+        include proxy.conf;
+    }
+
     location / {
+        index index.html;
         try_files $uri $uri/ /index.html;
     }
 
-    # Proxy API requests to Python Backend
-    location ~ ^/(v1|api)/ {
-        proxy_pass http://127.0.0.1:9380;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Increase timeouts for long-running RAG tasks
-        proxy_read_timeout 600s;
-        proxy_connect_timeout 600s;
-        proxy_send_timeout 600s;
+    # Cache-Control: max-age~@~AExpires
+    location ~ ^/static/(css|js|media)/ {
+        expires 10y;
+        access_log off;
     }
-
-    # Max body size for file uploads
-    client_max_body_size 128M;
-
-    # Gzip for faster asset loading
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 }
 NGINX_CONF
 
-  # 2. Service Configuration (Postgres + Redis Auth)
-  rm -rf "$ragflow_vol_dir/service_conf.yaml"
-  cat > "$ragflow_vol_dir/service_conf.yaml" <<'EOF'
+  # 2. Official Proxy Configuration (proxy.conf)
+  cat <<'PROXY_CONF' > "${nginx_dir}/proxy.conf"
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_http_version 1.1;
+proxy_set_header Connection "";
+proxy_buffering off;
+proxy_read_timeout 3600s;
+proxy_send_timeout 3600s;
+proxy_buffer_size 1024k;
+proxy_buffers 16 1024k;
+proxy_busy_buffers_size 2048k;
+proxy_temp_file_write_size 2048k;
+PROXY_CONF
+
+  # 3. Official Main Nginx Config (nginx.conf)
+  cat <<'MAIN_NGINX_CONF' > "${nginx_dir}/nginx.conf"
+user  root;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+    client_max_body_size 1024M;
+
+    include /etc/nginx/conf.d/ragflow.conf;
+}
+MAIN_NGINX_CONF
+
+  # 4. Official Service Configuration Template (Adapted for Postgres)
+  cat > "${ragflow_vol_dir}/service_conf.yaml.template" <<'SERVICE_CONF'
 ragflow:
   host: 0.0.0.0
   http_port: 9380
@@ -52,38 +102,38 @@ admin:
   host: 0.0.0.0
   http_port: 9381
 mysql:
-  name: '${MYSQL_DBNAME:-ragflow}'
-  user: '${MYSQL_USER:-postgres}'
-  password: '${MYSQL_PASSWORD:-aiopassword}'
-  host: '${MYSQL_HOST:-aio-db}'
-  port: ${MYSQL_PORT:-5432}
+  name: 'ragflow'
+  user: 'postgres'
+  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  host: 'aio-db'
+  port: 5432
   max_connections: 900
   stale_timeout: 300
   max_allowed_packet: 1073741824
 postgres:
-  name: '${POSTGRES_DBNAME:-ragflow}'
-  user: '${POSTGRES_USER:-postgres}'
-  password: '${POSTGRES_PASSWORD:-aiopassword}'
-  host: '${POSTGRES_HOST:-aio-db}'
-  port: ${POSTGRES_PORT:-5432}
+  name: 'ragflow'
+  user: 'postgres'
+  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  host: 'aio-db'
+  port: 5432
   max_connections: 100
   stale_timeout: 30
 minio:
   user: 'admin'
-  password: '${MINIO_PASSWORD:-aiopassword}'
+  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
   host: 'aio-minio:9000'
   bucket: ''
   prefix_path: ''
 es:
   hosts: 'http://aio-es:9200'
-  username: 'elastic'
-  password: '${ES_PASSWORD:-aiopassword}'
+  username: ''
+  password: ''
 redis:
   db: 1
   username: ''
-  password: '${REDIS_PASSWORD:-aiopassword}'
+  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
   host: 'aio-redis:6379'
-EOF
+SERVICE_CONF
 }
 
 # Generate AIO Stack (RAGFlow + Langflow + Graphiti + Neo4j + MLFlow + FalkorDB)
@@ -233,15 +283,20 @@ EOF
       timeout: 20s
       retries: 3
 
-  # 4. AIO Ingestion (RAGFlow Server)
+  # 4. AIO Ingestion (RAGFlow Server - Official v0.23.0 Setup)
+  cat <<EOF
   aio-ragflow:
-    image: infiniflow/ragflow:latest
+    image: infiniflow/ragflow:v0.23.0
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
-    # Port 80 is handled by internal Nginx
-    # (Removed host port 80 mapping to avoid conflict with Nginx)
+    ports:
+      - "80:80"      # Internal Nginx for Web UI
+      - "9380:9380"  # Python API
+      - "9381:9381"  # Admin API
+    command:
+      - --enable-adminserver
     environment:
-      - DOC_ENGINE=elasticsearch
+      # Database Configuration (Using Postgres instead of MySQL)
       - DATABASE_TYPE=postgres
       - DB_TYPE=postgres
       - DB_NAME=ragflow
@@ -249,30 +304,35 @@ EOF
       - DB_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
       - DB_HOST=aio-db
       - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      - POSTGRES_HOST=aio-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DBNAME=ragflow
+      # Storage Configuration
       - STORAGE_TYPE=minio
       - STORAGE_IMPL=MINIO
       - MINIO_HOST=aio-minio
       - MINIO_PORT=9000
       - MINIO_USER=admin
       - MINIO_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      # Search Configuration
+      - DOC_ENGINE=elasticsearch
       - ES_HOST=aio-es
       - ES_PORT=9200
+      - ES_USER=
+      - ES_PASSWORD=
+      # Cache Configuration
       - REDIS_HOST=aio-redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${redis_password}
-      - RAGFLOW_CONF=/ragflow/conf/service_conf.yaml
-      - MYSQL_USER=postgres
-      - MYSQL_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
-      - POSTGRES_HOST=aio-db
-      - POSTGRES_PORT=5432
-      - POSTGRES_DBNAME=ragflow
-      - TIME_ZONE=UTC
-      - GUNICORN_TIMEOUT=600
+      - REDIS_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      # Sandbox Configuration
       - SANDBOX_ENABLED=1
       - SANDBOX_HOST=aio-ragflow-sandbox
       - SANDBOX_PORT=9385
+      # Server Configuration
+      - TIME_ZONE=UTC
+      - GUNICORN_TIMEOUT=600
     depends_on:
       aio-db:
         condition: service_healthy
@@ -287,9 +347,12 @@ EOF
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     volumes:
-      - ./.volumes/${service_name}/ragflow/service_conf.yaml:/ragflow/conf/service_conf.yaml.template:ro
-      - ./.volumes/${service_name}/ragflow/ragflow-internal.conf:/etc/nginx/conf.d/ragflow.conf:ro
-      - /dev/null:/etc/nginx/sites-enabled/default:ro
+      # Official Nginx Configs (3 files)
+      - ./.volumes/${service_name}/ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf:ro
+      - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
+      - ./.volumes/${service_name}/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Service Configuration Template
+      - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
       interval: 30s
