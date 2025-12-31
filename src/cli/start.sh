@@ -146,47 +146,6 @@ update_progress() {
 # Track lines printed for recursive status updates
 LAST_LINE_COUNT=0
 
-# Clean pull progress renderer
-render_pull_progress() {
-  local start_output="$1"
-  local spin_char="$2"
-  
-  # Find all unique images being pulled
-  local pulling_images=$(grep "Pulling from\|Pulled" "$start_output" | sed -E 's/.*Pulling from //;s/.*Pulled //' | sort -u || echo "")
-  
-  if [[ -z "$pulling_images" ]]; then
-    return 0
-  fi
-
-  # Move cursor back up if we already printed lines
-  if [[ $LAST_LINE_COUNT -gt 0 ]]; then
-    printf "\033[%dA" "$LAST_LINE_COUNT"
-  fi
-
-  local current_count=0
-  for img in $pulling_images; do
-    # Check status of this image
-    local status="Pending"
-    local color="${COLOR_BLUE}"
-    local icon="${spin_char}"
-    
-    if grep -q "Pulled\|Pull complete.*$img\|Already exists.*$img" "$start_output" 2>/dev/null; then
-      status="Done"
-      color="${COLOR_GREEN}"
-      icon="✓"
-    elif grep -q "Extracting.*$img" "$start_output" 2>/dev/null; then
-      status="Extracting"
-    elif grep -q "Downloading.*$img" "$start_output" 2>/dev/null; then
-      status="Downloading"
-    fi
-    
-    printf "\r${color}%s${COLOR_RESET} %-45s [%s]\033[K\n" "$icon" "$img" "$status"
-    current_count=$((current_count + 1))
-  done
-  
-  LAST_LINE_COUNT=$current_count
-}
-
 # Check firewall configuration
 check_firewall_rules() {
   # Skip if UFW not installed
@@ -584,8 +543,6 @@ start_services() {
     scaffold_frontend_apps || true
   fi
 
-  # Clean up temp files
-  rm -f "$start_output" "$error_output"
   
   # Check firewall configuration
   check_firewall_rules
