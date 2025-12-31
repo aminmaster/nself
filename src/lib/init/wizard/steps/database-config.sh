@@ -27,18 +27,8 @@ wizard_database_config() {
 
   echo ""
 
-  # Database Password
-  local postgres_password
-  if confirm_action "Use auto-generated secure password for database?"; then
-    postgres_password=$(generate_password 24)
-    echo "Generated: [hidden for security]"
-    echo "(This will be saved in .env file)"
-  else
-    prompt_password "Database password" postgres_password
-  fi
-  add_wizard_secret "$config_array_name" "POSTGRES_PASSWORD" "$postgres_password"
-
-  echo ""
+  # Database Password: Unified with global admin password
+  # Values will be injected during compose generation
 
   # Port Configuration
   echo "Database port (default: 5432):"

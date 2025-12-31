@@ -850,8 +850,8 @@ EOF
     # Basic Auth Configuration for Prometheus
     local auth_config=""
     if [[ "${PROMETHEUS_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-      local auth_user="${PROMETHEUS_BASIC_AUTH_USER:-admin}"
-      local auth_pass="${PROMETHEUS_BASIC_AUTH_PASSWORD:-admin}"
+      local auth_user="${PROMETHEUS_BASIC_AUTH_USER:-${NSELF_ADMIN_USER:-admin}}"
+      local auth_pass="${PROMETHEUS_BASIC_AUTH_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin}}"
       
       echo "Generating Basic Auth for Prometheus..."
       # Generate htpasswd file using openssl (available everywhere)

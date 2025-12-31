@@ -328,8 +328,8 @@ generate_superadmin_seed_sql() {
     
     # Render variables
     sed -i "s/{{POSTGRES_DB}}/${POSTGRES_DB:-nself}/g" "$output"
-    sed -i "s/{{SUPERADMIN_EMAIL}}/${SUPERADMIN_EMAIL:-admin@localhost}/g" "$output"
-    sed -i "s/{{SUPERADMIN_PASSWORD}}/${SUPERADMIN_PASSWORD:-admin123}/g" "$output"
+    sed -i "s/{{SUPERADMIN_EMAIL}}/${SUPERADMIN_EMAIL:-${NSELF_ADMIN_USER:-admin}@${BASE_DOMAIN:-localhost}}/g" "$output"
+    sed -i "s/{{SUPERADMIN_PASSWORD}}/${SUPERADMIN_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin123}}/g" "$output"
   else
     log_warning "Superadmin seed template not found at $template"
   fi
