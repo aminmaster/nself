@@ -240,6 +240,10 @@ check_firewall_rules() {
 start_services() {
   # Initialize UI state
   LAST_LINE_COUNT=0
+  local saved_tty_settings=""
+  if [[ -t 0 ]]; then
+    saved_tty_settings=$(stty -g 2>/dev/null || echo "")
+  fi
   
   # 1. Detect environment and project
   local env="${ENV:-dev}"
