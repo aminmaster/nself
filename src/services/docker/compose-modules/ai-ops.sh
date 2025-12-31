@@ -284,7 +284,6 @@ EOF
       retries: 3
 
   # 4. AIO Ingestion (RAGFlow Server - Official v0.23.0 Setup)
-  cat <<EOF
   aio-ragflow:
     image: infiniflow/ragflow:v0.23.0
     container_name: \${PROJECT_NAME}_aio_ragflow
