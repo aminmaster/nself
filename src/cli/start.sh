@@ -433,6 +433,9 @@ start_services() {
 
       printf "Waiting for services to become healthy (threshold: %d%%)...\n" "$required_threshold"
 
+      # Populate STATUS_TARGETS for health monitoring
+      local STATUS_TARGETS=$($compose_cmd config --services 2>/dev/null | xargs)
+
       while true; do
         current_time=$(date +%s)
         elapsed=$((current_time - start_time))
