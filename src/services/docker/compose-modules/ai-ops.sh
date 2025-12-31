@@ -152,9 +152,9 @@ generate_aio_stack() {
   # Clone Graphiti source code if missing
   local graphiti_dir="./services/${service_name}/graphiti"
   if [[ ! -d "$graphiti_dir" ]]; then
-    echo "Cloning Graphiti source code..."
+    echo "Cloning Graphiti source code..." >&2
     mkdir -p "$(dirname "$graphiti_dir")"
-    git clone https://github.com/getzep/graphiti.git "$graphiti_dir"
+    git clone https://github.com/getzep/graphiti.git "$graphiti_dir" >&2
   fi
 
   # ============================================
