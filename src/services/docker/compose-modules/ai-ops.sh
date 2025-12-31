@@ -93,8 +93,8 @@ http {
 }
 MAIN_NGINX_CONF
 
-  # 4. Official Service Configuration Template (Adapted for Postgres)
-  cat > "${ragflow_vol_dir}/service_conf.yaml.template" <<'SERVICE_CONF'
+  # 4. Official Service Configuration Template (Hydrated during generation)
+  cat <<SERVICE_CONF > "${ragflow_vol_dir}/service_conf.yaml.template"
 ragflow:
   host: 0.0.0.0
   http_port: 9380
@@ -104,7 +104,7 @@ admin:
 mysql:
   name: 'ragflow'
   user: 'postgres'
-  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
   host: 'aio-db'
   port: 5432
   max_connections: 900
@@ -113,14 +113,14 @@ mysql:
 postgres:
   name: 'ragflow'
   user: 'postgres'
-  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
   host: 'aio-db'
   port: 5432
   max_connections: 100
   stale_timeout: 30
 minio:
-  user: 'admin'
-  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  user: '${NSELF_ADMIN_USER:-admin}'
+  password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
   host: 'aio-minio:9000'
   bucket: ''
   prefix_path: ''
@@ -131,7 +131,7 @@ es:
 redis:
   db: 1
   username: ''
-  password: 'POSTGRES_PASSWORD_PLACEHOLDER'
+  password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
   host: 'aio-redis:6379'
 SERVICE_CONF
 }
@@ -243,7 +243,12 @@ generate_aio_stack() {
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      bootstrap.memory_lock: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
@@ -403,14 +408,15 @@ generate_aio_stack() {
     restart: unless-stopped
     environment:
       NEO4J_AUTH: neo4j/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      NEO4J_dbms_memory_pagecache_size: 512m
-      NEO4J_dbms_memory_heap_max__size: 1G
+      NEO4J_server_memory_pagecache_size: 512m
+      NEO4J_server_memory_heap_max_size: 1G
+      NEO4J_PLUGINS: '["apoc"]'
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7474/-/health/ready"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/browser/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -463,6 +469,8 @@ generate_aio_stack() {
         condition: service_healthy
       aio-init:
         condition: service_completed_successfully
+    volumes:
+      - ./.volumes/${service_name}/mlflow/artifacts:/mlflow/artifacts
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
@@ -479,6 +487,9 @@ generate_aio_stack() {
       LANGFLOW_SUPERUSER: ${NSELF_ADMIN_USER:-admin}
       LANGFLOW_SUPERUSER_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
+      LANGFLOW_CONFIG_DIR: /app/langflow
+    volumes:
+      - ./.volumes/${service_name}/langflow:/app/langflow
     depends_on:
       aio-db:
         condition: service_healthy
