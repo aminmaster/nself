@@ -6,6 +6,24 @@
 WIZARD_CORE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STEPS_DIR="$WIZARD_CORE_DIR/steps"
 
+# Helper functions for config and secrets
+add_wizard_config() {
+  local array_name="$1"
+  local key="$2"
+  local value="$3"
+  eval "$array_name+=('CONF:$key=$value')"
+}
+
+add_wizard_secret() {
+  local array_name="$1"
+  local key="$2"
+  local value="$3"
+  eval "$array_name+=('SECR:$key=$value')"
+}
+
+export -f add_wizard_config
+export -f add_wizard_secret
+
 # Source step modules
 source_wizard_steps() {
   local steps_dir="${1:-$STEPS_DIR}"
@@ -548,22 +566,6 @@ wizard_frontend_apps() {
   return 0
 }
 
-# Review and generate configuration
-# Add configuration item
-add_wizard_config() {
-  local array_name="$1"
-  local key="$2"
-  local value="$3"
-  eval "$array_name+=('CONF:$key=$value')"
-}
-
-# Add secret item
-add_wizard_secret() {
-  local array_name="$1"
-  local key="$2"
-  local value="$3"
-  eval "$array_name+=('SECR:$key=$value')"
-}
 
 # Review and generate configuration
 wizard_review_generate() {
