@@ -336,7 +336,8 @@ orchestrate_build() {
       fi
       # Dump all variables, escaping $ to prevent expansion during sourcing
       # This is critical for passwords containing $ (like bcrypt hashes)
-      env | grep -v "^_" | grep -v "^PWD=" | grep -v "^SHLVL=" | grep -v "^HOME=" | grep -v "^PATH=" | sed 's/\$/\\$/g' > ".env.runtime"
+      # Exclude bash function exports (BASH_FUNC_*) which break docker-compose
+      env | grep -v "^_" | grep -v "^PWD=" | grep -v "^SHLVL=" | grep -v "^HOME=" | grep -v "^PATH=" | grep -v "^BASH_FUNC_" | sed 's/\$/\\$/g' > ".env.runtime"
     # If no .env, check if we have environment specific files that imply the environment
     elif [[ -z "${ENV:-}" ]]; then
       if [[ -f ".env.prod" ]]; then
