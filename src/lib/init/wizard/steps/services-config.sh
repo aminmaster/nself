@@ -7,7 +7,7 @@ wizard_core_services() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 3 10 "Core Services"
+  show_wizard_step 4 10 "Core Services"
 
   echo "🔧 Select Core Services"
   echo ""
@@ -63,20 +63,8 @@ wizard_core_services() {
     add_wizard_config "$config_array_name" "MINIO_PORT" "9000"
     add_wizard_config "$config_array_name" "MINIO_CONSOLE_PORT" "9001"
 
-    echo ""
-    local minio_user minio_pass
-    prompt_input "MinIO root user" "minioadmin" minio_user
-    
-    if confirm_action "Use auto-generated secure password for MinIO?"; then
-      minio_pass=$(generate_password 24)
-      echo "Generated: [hidden for security]"
-      echo "(This will be saved in .env.secrets file)"
-    else
-      prompt_input "MinIO root password" "minioadmin" minio_pass
-    fi
-    
-    add_wizard_config "$config_array_name" "MINIO_ROOT_USER" "$minio_user"
-    add_wizard_secret "$config_array_name" "MINIO_ROOT_PASSWORD" "$minio_pass"
+    add_wizard_config "$config_array_name" "MINIO_ROOT_USER" "admin"
+    # Unified password will be used via NSELF_ADMIN_PASSWORD
   else
     add_wizard_config "$config_array_name" "MINIO_ENABLED" "false"
   fi
@@ -158,22 +146,8 @@ wizard_optional_services() {
         add_wizard_config "$config_array_name" "RABBITMQ_ENABLED" "true"
         add_wizard_config "$config_array_name" "RABBITMQ_PORT" "5672"
         
-        echo ""
-        local rabbitmq_mgmt_port rabbitmq_user
-        prompt_input "RabbitMQ Management Port" "15672" rabbitmq_mgmt_port "^[0-9]+$"
-        prompt_input "RabbitMQ User" "admin" rabbitmq_user
-        
-        add_wizard_config "$config_array_name" "RABBITMQ_MANAGEMENT_PORT" "$rabbitmq_mgmt_port"
-        add_wizard_config "$config_array_name" "RABBITMQ_USER" "$rabbitmq_user"
-        
-        local rabbitmq_password
-        if confirm_action "Use auto-generated password for RabbitMQ?"; then
-          rabbitmq_password=$(generate_password 32)
-          echo "Generated: [hidden for security]"
-        else
-          prompt_password "RabbitMQ password" rabbitmq_password
-        fi
-        add_wizard_secret "$config_array_name" "RABBITMQ_PASSWORD" "$rabbitmq_password"
+        add_wizard_config "$config_array_name" "RABBITMQ_USER" "admin"
+        # Unified password will be used
         ;;
       2)
         add_wizard_config "$config_array_name" "QUEUE_ENABLED" "true"
@@ -226,15 +200,7 @@ wizard_optional_services() {
       add_wizard_config "$config_array_name" "GRAFANA_ENABLED" "true"
       add_wizard_config "$config_array_name" "GRAFANA_PORT" "3001"
       
-      echo ""
-      local grafana_pass
-      if confirm_action "Use auto-generated password for Grafana?"; then
-        grafana_pass=$(generate_password 24)
-        echo "Generated: [hidden for security]"
-      else
-        prompt_password "Grafana Admin Password" grafana_pass
-      fi
-      add_wizard_secret "$config_array_name" "GRAFANA_ADMIN_PASSWORD" "$grafana_pass"
+      # Grafana Admin Password unified to global credentials
     fi
 
     echo ""

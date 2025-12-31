@@ -127,17 +127,17 @@ EOF
     fi
   done
 
-  # Step 2: Database Configuration
+  # Step 2: Global Admin Credentials (MOVED)
+  wizard_admin_credentials config
+
+  # Step 3: Database Configuration
   wizard_database_config config "$project_name"
 
-  # Step 3: Core Services
+  # Step 4: Core Services
   wizard_core_services config
 
-  # Step 4: Service Passwords
+  # Step 5: Service Passwords
   wizard_service_passwords config "$base_domain"
-
-  # Step 5: Admin Dashboard
-  wizard_admin_dashboard config
 
   # Step 6: Optional Services
   wizard_optional_services config
@@ -168,7 +168,7 @@ wizard_service_passwords() {
   local base_domain="${2:-localhost}"
 
   clear
-  show_wizard_step 4 10 "Service Passwords"
+  show_wizard_step 5 10 "Service Passwords"
 
   echo "🔑 Service Authentication"
   echo ""
@@ -217,71 +217,12 @@ wizard_service_passwords() {
 
   echo ""
 
-  # Redis Password
-  local redis_enabled=false
-  eval "local config_values=(\"\${${config_array_name}[@]}\")"
-  for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:REDIS_ENABLED=true" ]] || [[ "$cfg_item" == "REDIS_ENABLED=true" ]]; then
-      redis_enabled=true
-      break
-    fi
-  done
-
-  if [[ "$redis_enabled" == "true" ]]; then
-    echo "Redis Authentication:"
-    local redis_password
-    if confirm_action "Use auto-generated secure password for Redis?"; then
-      redis_password=$(generate_password 32)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "Redis password" redis_password
-    fi
-    add_wizard_secret "$config_array_name" "REDIS_PASSWORD" "$redis_password"
-    echo ""
-  fi
-
-  # Nhost Webhook Secret
-  if [[ "$hasura_enabled" == "true" ]]; then
-    echo "Nhost Webhook Secret:"
-    local nhost_secret
-    if confirm_action "Use auto-generated secure secret for webhooks?"; then
-      nhost_secret=$(generate_password 32)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "Webhook secret" nhost_secret
-    fi
     add_wizard_secret "$config_array_name" "NHOST_WEBHOOK_SECRET" "$nhost_secret"
     echo ""
   fi
 
-  # Storage/MinIO credentials
-  local storage_enabled=false
-  # Storage/MinIO credentials
-  local storage_enabled=false
-  eval "local config_values=(\"\${${config_array_name}[@]}\")"
-  for cfg_item in "${config_values[@]}"; do
-    if [[ "$cfg_item" == "CONF:STORAGE_ENABLED=true" ]] || [[ "$cfg_item" == "STORAGE_ENABLED=true" ]]; then
-      storage_enabled=true
-      break
-    fi
-  done
-
-  if [[ "$storage_enabled" == "true" ]]; then
-    echo "Storage Service Credentials:"
-    local storage_access_key storage_secret_key
-
-    prompt_input "Access key" "minioadmin" storage_access_key
-    if confirm_action "Use auto-generated secret key?"; then
-      storage_secret_key=$(generate_password 40)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "Secret key" storage_secret_key
-    fi
-
-    add_wizard_config "$config_array_name" "STORAGE_ACCESS_KEY" "$storage_access_key"
-    add_wizard_secret "$config_array_name" "STORAGE_SECRET_KEY" "$storage_secret_key"
-    echo ""
-  fi
+  return 0
+}
 
 
 
@@ -290,63 +231,67 @@ wizard_service_passwords() {
   return 0
 }
 
-# Configure admin dashboard
-wizard_admin_dashboard() {
+# Configure global admin credentials
+wizard_admin_credentials() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 5 10 "Admin Dashboard"
+  show_wizard_step 2 10 "Global Admin Credentials"
 
-  echo "🎛 Admin Dashboard"
+  echo "👤 Global Admin Credentials"
+  echo "These credentials will be the 'Single Key' for the entire stack,"
+  echo "including the Admin Dashboard, Grafana, MinIO, RabbitMQ, and AIO services."
   echo ""
 
-  if confirm_action "Enable nself admin dashboard?"; then
+  local admin_user admin_password
+
+  prompt_input "Admin username" "admin" admin_user
+  if confirm_action "Use auto-generated password?"; then
+    admin_password=$(generate_password 16)
+    echo "Generated: [hidden for security]"
+  else
+    prompt_password "Admin password" admin_password
+  fi
+
+  add_wizard_config "$config_array_name" "NSELF_ADMIN_USER" "$admin_user"
+  add_wizard_secret "$config_array_name" "NSELF_ADMIN_PASSWORD" "$admin_password"
+
+  # Generate admin password hash for nself-admin service
+  local admin_hash=""
+  if command -v python3 >/dev/null 2>&1; then
+    # Use python/bcrypt if available
+    # We use || true to prevent script exit if python command fails (e.g. missing module)
+    admin_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$admin_password', bcrypt.gensalt()).decode())" 2>/dev/null || true)
+  fi
+  
+  # Fallback if python/bcrypt failed or returned empty
+  if [[ -z "$admin_hash" ]]; then
+     # Try htpasswd with bcrypt (available on most systems)
+     if command -v htpasswd >/dev/null 2>&1; then
+       admin_hash=$(htpasswd -bnBC 10 "" "$admin_password" | tr -d ':\n' | sed 's/^//')
+     # Try openssl with SHA-512 crypt as second fallback (nself-admin should support this)
+     elif command -v openssl >/dev/null 2>&1; then
+       admin_hash=$(openssl passwd -6 "$admin_password")
+     else
+       # Last resort: warn user and use plaintext (nself-admin will prompt for password reset)
+       echo ""
+       echo "⚠️  Warning: Could not generate password hash (bcrypt/htpasswd/openssl unavailable)"
+       echo "   You'll need to set the admin password on first login"
+       admin_hash="$admin_password"
+     fi
+  fi
+  
+  add_wizard_secret "$config_array_name" "ADMIN_PASSWORD_HASH" "$admin_hash"
+  add_wizard_secret "$config_array_name" "ADMIN_SECRET_KEY" "$(generate_password 64)"
+
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "Admin Dashboard Configuration"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  if confirm_action "Enable nself Admin Dashboard UI?"; then
     add_wizard_config "$config_array_name" "NSELF_ADMIN_ENABLED" "true"
     add_wizard_config "$config_array_name" "NSELF_ADMIN_PORT" "3021"
-
-    echo ""
-    echo "Dashboard authentication:"
-    local admin_user admin_password
-
-    prompt_input "Admin username" "admin" admin_user
-    if confirm_action "Use auto-generated password?"; then
-      admin_password=$(generate_password 16)
-      echo "Generated: [hidden for security]"
-    else
-      prompt_password "Admin password" admin_password
-    fi
-
-    add_wizard_config "$config_array_name" "NSELF_ADMIN_USER" "$admin_user"
-    add_wizard_secret "$config_array_name" "NSELF_ADMIN_PASSWORD" "$admin_password"
-
-    # Generate admin password hash for nself-admin service
-    local admin_hash=""
-    if command -v python3 >/dev/null 2>&1; then
-      # Use python/bcrypt if available
-      # We use || true to prevent script exit if python command fails (e.g. missing module)
-      admin_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$admin_password', bcrypt.gensalt()).decode())" 2>/dev/null || true)
-    fi
-    
-    
-    # Fallback if python/bcrypt failed or returned empty
-    if [[ -z "$admin_hash" ]]; then
-       # Try htpasswd with bcrypt (available on most systems)
-       if command -v htpasswd >/dev/null 2>&1; then
-         admin_hash=$(htpasswd -bnBC 10 "" "$admin_password" | tr -d ':\n' | sed 's/^//')
-       # Try openssl with SHA-512 crypt as second fallback (nself-admin should support this)
-       elif command -v openssl >/dev/null 2>&1; then
-         admin_hash=$(openssl passwd -6 "$admin_password")
-       else
-         # Last resort: warn user and use plaintext (nself-admin will prompt for password reset)
-         echo ""
-         echo "⚠️  Warning: Could not generate password hash (bcrypt/htpasswd/openssl unavailable)"
-         echo "   You'll need to set the admin password on first login"
-         admin_hash="$admin_password"
-       fi
-    fi
-    
-    add_wizard_secret "$config_array_name" "ADMIN_PASSWORD_HASH" "$admin_hash"
-    add_wizard_secret "$config_array_name" "ADMIN_SECRET_KEY" "$(generate_password 64)"
 
     echo ""
     echo "Dashboard features to enable:"
@@ -444,21 +389,12 @@ wizard_custom_services() {
         aio_secret=$(generate_password 32)
         add_wizard_secret "$config_array_name" "AIO_SECRET_KEY" "$aio_secret"
         
-        # Generate Redis Password
-        local aio_redis_password
-        aio_redis_password=$(generate_password 24)
-        add_wizard_secret "$config_array_name" "AIO_REDIS_PASSWORD" "$aio_redis_password"
-        
-        # Neo4j Credentials
-        local neo4j_password
-        neo4j_password=$(generate_password 24)
+        # AIO Database Credentials - Managed by Global Admin Password
         add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
-        add_wizard_secret "$config_array_name" "NEO4J_PASSWORD" "$neo4j_password"
-
-        # FalkorDB Database Credentials
-        local falkordb_pass=$(generate_password 24)
-        add_wizard_secret "$config_array_name" "FALKORDB_PASSWORD" "$falkordb_pass"
-        # Provide URL without credentials for browser manual login
+        add_wizard_config "$config_array_name" "AIO_STACK_PRESENT" "true"
+        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
+        
+        # FalkorDB Database Credentials (managed by global password)
         add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://aio-falkordb:6379"
 
         # MLFlow Config (Auto-Enable)
@@ -788,7 +724,7 @@ export -f add_wizard_secret
 export -f source_wizard_steps
 export -f run_modular_wizard
 export -f wizard_service_passwords
-export -f wizard_admin_dashboard
+export -f wizard_admin_credentials
 export -f wizard_custom_services
 export -f wizard_frontend_apps
 export -f wizard_review_generate
