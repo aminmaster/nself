@@ -252,8 +252,8 @@ EOF
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      - MINIO_ROOT_USER=\${NSELF_ADMIN_USER:-admin}
+      - MINIO_ROOT_PASSWORD=\${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/minio:/data
     networks:
@@ -381,7 +381,7 @@ EOF
     container_name: \${PROJECT_NAME}_aio_db
     restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      - POSTGRES_PASSWORD=\${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}
       - POSTGRES_DB=postgres
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
@@ -399,13 +399,13 @@ EOF
     image: redis:7-alpine
     container_name: \${PROJECT_NAME}_aio_redis
     restart: unless-stopped
-    command: redis-server --requirepass \${POSTGRES_PASSWORD:-aiopassword}
+    command: redis-server --requirepass \${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "\${POSTGRES_PASSWORD:-aiopassword}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "\${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -448,7 +448,7 @@ EOF
     container_name: \${PROJECT_NAME}_aio_neo4j
     restart: unless-stopped
     environment:
-      - NEO4J_AUTH=neo4j/\${NEO4J_PASSWORD:-aiopassword}
+      - NEO4J_AUTH=\${NSELF_ADMIN_USER:-admin}/\${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}
       - NEO4J_dbms_memory_pagecache_size=512m
       - NEO4J_dbms_memory_heap_max__size=1G
     volumes:
@@ -469,7 +469,7 @@ EOF
     container_name: \${PROJECT_NAME}_aio_falkordb
     restart: unless-stopped
     environment:
-      - REDIS_ARGS=--requirepass \${FALKORDB_PASSWORD:-aioredispass}
+      - REDIS_ARGS=--requirepass \${NSELF_ADMIN_PASSWORD:-\${FALKORDB_PASSWORD:-aioredispass}}
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
@@ -529,8 +529,8 @@ EOF
     environment:
       - LANGFLOW_DATABASE_URL=postgresql://postgres:\${POSTGRES_PASSWORD:-aiopassword}@aio-db:5432/langflow
       - LANGFLOW_AUTO_LOGIN=False
-      - LANGFLOW_SUPERUSER=\${ADMIN_USER:-admin}
-      - LANGFLOW_SUPERUSER_PASSWORD=\${POSTGRES_PASSWORD:-aiopassword}
+      - LANGFLOW_SUPERUSER=\${NSELF_ADMIN_USER:-admin}
+      - LANGFLOW_SUPERUSER_PASSWORD=\${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD:-aiopassword}}
       - LANGFLOW_SECRET_KEY=\${AUTH_JWT_SECRET:-equilibria_secret_key}
     depends_on:
       aio-db:

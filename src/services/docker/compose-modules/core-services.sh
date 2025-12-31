@@ -23,8 +23,8 @@ generate_postgres_service() {
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     environment:
-      POSTGRES_USER: \${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
+      POSTGRES_USER: \${POSTGRES_USER:-\${NSELF_ADMIN_USER:-postgres}}
+      POSTGRES_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD}}
       POSTGRES_DB: \${POSTGRES_DB:-\${PROJECT_NAME}}
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
@@ -295,8 +295,8 @@ generate_minio_service() {
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     environment:
-      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: \${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-\${NSELF_ADMIN_USER:-minioadmin}}
+      MINIO_ROOT_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${MINIO_ROOT_PASSWORD:-minioadmin}}
       MINIO_DEFAULT_BUCKETS: \${MINIO_DEFAULT_BUCKETS:-uploads}
       MINIO_REGION: \${MINIO_REGION:-us-east-1}
     command: server /data --console-address ":9001"

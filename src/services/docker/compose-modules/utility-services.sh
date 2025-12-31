@@ -170,8 +170,8 @@ generate_rabbitmq_service() {
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
     environment:
-      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: \${RABBITMQ_PASSWORD:-changeme}
+      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-\${NSELF_ADMIN_USER:-admin}}
+      RABBITMQ_DEFAULT_PASS: \${NSELF_ADMIN_PASSWORD:-\${RABBITMQ_PASSWORD:-changeme}}
       RABBITMQ_DEFAULT_VHOST: \${RABBITMQ_VHOST:-/}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
