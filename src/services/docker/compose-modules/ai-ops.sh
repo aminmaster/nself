@@ -281,7 +281,8 @@ EOF
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
       interval: 30s
       timeout: 20s
-      retries: 3
+      retries: 10
+      start_period: 60s
 
   # 4. AIO Ingestion (RAGFlow Server - Official v0.23.0 Setup)
   aio-ragflow:
@@ -289,7 +290,7 @@ EOF
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
     ports:
-      - "80:80"      # Internal Nginx for Web UI
+      # - "80:80"      # Internal Nginx handles this via internal network
       - "9380:9380"  # Python API
       - "9381:9381"  # Admin API
     command:
