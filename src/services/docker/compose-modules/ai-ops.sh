@@ -149,6 +149,14 @@ generate_aio_stack() {
   # Generate RAGFlow specific configurations
   generate_ragflow_configs "$service_name"
   
+  # Clone Graphiti source code if missing
+  local graphiti_dir="./services/${service_name}/graphiti"
+  if [[ ! -d "$graphiti_dir" ]]; then
+    echo "Cloning Graphiti source code..."
+    mkdir -p "$(dirname "$graphiti_dir")"
+    git clone https://github.com/getzep/graphiti.git "$graphiti_dir"
+  fi
+
   # ============================================
   # AI Operating System (AIO) Stack
   # Core: RAGFlow (Ingestion) & Langflow (Orchestration)
@@ -454,9 +462,7 @@ generate_aio_stack() {
 
   # 10. AIO MLFlow (Tracking)
   aio-mlflow:
-    build:
-      context: ./services/${service_name}/mlflow
-      dockerfile: Dockerfile
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
     command: >
@@ -473,6 +479,7 @@ generate_aio_stack() {
       MLFLOW_PORT: 5000
     depends_on:
       aio-db:
+        condition: service_healthy
         condition: service_healthy
       aio-init:
         condition: service_completed_successfully
