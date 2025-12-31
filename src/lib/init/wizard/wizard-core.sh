@@ -181,6 +181,7 @@ EOF
 }
 
 # Configure service passwords
+# Configure service passwords
 wizard_service_passwords() {
   local config_array_name="$1"
   local base_domain="${2:-localhost}"
@@ -193,8 +194,6 @@ wizard_service_passwords() {
   echo "Set secure passwords for services:"
   echo ""
 
-  # Hasura Admin Secret
-  local hasura_enabled=false
   # Hasura Admin Secret
   local hasura_enabled=false
   eval "local config_values=(\"\${${config_array_name}[@]}\")"
@@ -235,16 +234,19 @@ wizard_service_passwords() {
 
   echo ""
 
+  # Nhost Webhook Secret
+  if [[ "$hasura_enabled" == "true" ]]; then
+    echo "Nhost Webhook Secret:"
+    local nhost_secret
+    if confirm_action "Use auto-generated secure secret for webhooks?"; then
+      nhost_secret=$(generate_password 32)
+      echo "Generated: [hidden for security]"
+    else
+      prompt_password "Webhook secret" nhost_secret
+    fi
     add_wizard_secret "$config_array_name" "NHOST_WEBHOOK_SECRET" "$nhost_secret"
     echo ""
   fi
-
-  return 0
-}
-
-
-
-
 
   return 0
 }

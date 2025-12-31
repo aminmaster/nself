@@ -132,7 +132,7 @@ wizard_core_settings() {
             add_wizard_config "$config_array_name" "DNS_PROVIDER" "cloudflare"
             echo ""
             local cf_token cf_email
-            prompt_input "Cloudflare API Token (DNS:Edit permission)" "" cf_token
+            prompt_password "Cloudflare API Token (DNS:Edit permission)" cf_token
             prompt_input "Cloudflare Email" "$cert_email" cf_email
             add_wizard_secret "$config_array_name" "DNS_API_TOKEN" "$cf_token"
             add_wizard_config "$config_array_name" "CF_EMAIL" "$cf_email"
@@ -142,7 +142,7 @@ wizard_core_settings() {
             echo ""
             local aws_key aws_secret
             prompt_input "AWS Access Key ID" "" aws_key
-            prompt_input "AWS Secret Access Key" "" aws_secret
+            prompt_password "AWS Secret Access Key" aws_secret
             add_wizard_secret "$config_array_name" "AWS_ACCESS_KEY_ID" "$aws_key"
             add_wizard_secret "$config_array_name" "AWS_SECRET_ACCESS_KEY" "$aws_secret"
             ;;
@@ -150,7 +150,7 @@ wizard_core_settings() {
             add_wizard_config "$config_array_name" "DNS_PROVIDER" "digitalocean"
             echo ""
             local do_token
-            prompt_input "DigitalOcean API Key" "" do_token
+            prompt_password "DigitalOcean API Key" do_token
             add_wizard_secret "$config_array_name" "DO_API_KEY" "$do_token"
             ;;
         esac
