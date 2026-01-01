@@ -3,6 +3,8 @@ pydantic>=2.11.5
 neo4j>=5.26.0
 falkordb>=1.1.2,<2.0.0
 google-genai>=1.8.0
-openai>=1.91.0
+openai>=1.91.0,<2.0.0
+redis<6.0.0
+tenacity<9.0.0
 voyageai>=0.2.3
 mermaid-python
