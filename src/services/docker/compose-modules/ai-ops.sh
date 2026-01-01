@@ -136,6 +136,37 @@ redis:
 SERVICE_CONF
 }
 
+# Generate Langflow specific configurations (Custom Orchestration Setup)
+generate_langflow_configs() {
+  local service_name="$1"
+  local langflow_dir="./services/${service_name}/langflow"
+  
+  # Ensure target directory exists
+  mkdir -p "${langflow_dir}"
+
+  # Find templates using COMPOSE_SCRIPT_DIR (from compose-generate.sh)
+  local template_dir="${COMPOSE_SCRIPT_DIR}/../../templates/services/py/langflow"
+  local graphiti_template_dir="${COMPOSE_SCRIPT_DIR}/../../templates/services/py/graphiti/graphiti_core"
+  
+  if [[ -d "$template_dir" ]]; then
+    echo "Hydrating Langflow build context from templates..." >&2
+    cp -r "$template_dir"/* "${langflow_dir}/"
+    
+    # Copy graphiti_core library
+    if [[ -d "$graphiti_template_dir" ]]; then
+        echo "Including graphiti_core in Langflow build context..." >&2
+        cp -r "$graphiti_template_dir" "${langflow_dir}/"
+    fi
+
+    # Rename Dockerfile.template to Dockerfile if it exists
+    if [[ -f "${langflow_dir}/Dockerfile.template" ]]; then
+      mv "${langflow_dir}/Dockerfile.template" "${langflow_dir}/Dockerfile"
+    fi
+  else
+    echo "Warning: Langflow template not found at $template_dir" >&2
+  fi
+}
+
 # Generate AIO Stack (RAGFlow + Langflow + Graphiti + Neo4j + MLFlow + FalkorDB)
 generate_aio_stack() {
   local index="$1"
@@ -148,6 +179,9 @@ generate_aio_stack() {
 
   # Generate RAGFlow specific configurations
   generate_ragflow_configs "$service_name"
+  
+  # Generate Langflow specific configurations
+  generate_langflow_configs "$service_name"
   
   # Clone Graphiti source code if missing
   local graphiti_dir="./services/${service_name}/graphiti"
