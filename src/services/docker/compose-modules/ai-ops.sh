@@ -460,6 +460,8 @@ generate_aio_stack() {
     networks:
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
+EOF
+
   # 10. AIO MLFlow (Tracking)
   local mlflow_dir="./services/${service_name}/mlflow"
   if [[ ! -d "$mlflow_dir" ]]; then
@@ -467,6 +469,7 @@ generate_aio_stack() {
     printf "FROM ghcr.io/mlflow/mlflow:latest\nRUN pip install --no-cache-dir psycopg2-binary\n" > "$mlflow_dir/Dockerfile"
   fi
 
+  cat <<EOF
   aio-mlflow:
     build:
       context: ./services/${service_name}/mlflow
