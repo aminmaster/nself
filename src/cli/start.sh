@@ -281,14 +281,14 @@ start_services() {
 
   if [[ "$should_cleanup" == "true" ]]; then
     # Clean up containers with both potential naming patterns
-    local existing_containers=$(docker ps -aq --filter "name=${actual_project_name}_" 2>/dev/null)
+    local existing_containers=$(docker ps -a --format "{{.Names}}" | grep -E "^${actual_project_name}[_-]" | xargs)
     if [[ -n "$existing_containers" ]]; then
       docker rm -f $existing_containers >/dev/null 2>&1 || true
     fi
 
     # Also clean up with directory-based name if different
     if [[ "$project_name" != "$actual_project_name" ]]; then
-      existing_containers=$(docker ps -aq --filter "name=${project_name}_" 2>/dev/null)
+      existing_containers=$(docker ps -a --format "{{.Names}}" | grep -E "^${project_name}[_-]" | xargs)
       if [[ -n "$existing_containers" ]]; then
         docker rm -f $existing_containers >/dev/null 2>&1 || true
       fi

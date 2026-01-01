@@ -202,6 +202,7 @@ generate_aio_stack() {
   cat <<EOF
   ${service_name}:
     image: alpine:latest
+    container_name: \${PROJECT_NAME}_${service_name}
     command: "true"
     networks:
       - ${DOCKER_NETWORK}
