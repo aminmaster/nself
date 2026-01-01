@@ -348,6 +348,11 @@ generate_aio_stack() {
       TIME_ZONE: UTC
       GUNICORN_TIMEOUT: 600
       REGISTER_ENABLED: 0
+      # Stability: Stable secret key based on admin password to prevent JWT invalidation
+      RAGFLOW_SECRET_KEY: ${NSELF_ADMIN_PASSWORD:-aiopassword}${NSELF_ADMIN_PASSWORD:-aiopassword}
+      # Security/Stability: Browser session headers
+      QUART_SESSION_COOKIE_SAMESITE: Lax
+      QUART_SESSION_COOKIE_SECURE: "true"
     depends_on:
       aio-db:
         condition: service_healthy
