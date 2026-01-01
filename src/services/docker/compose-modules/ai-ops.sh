@@ -507,8 +507,10 @@ EOF
       - "7860:7860"
     environment:
       LANGFLOW_DATABASE_URL: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow
-      LANGFLOW_AUTO_LOGIN: "False"
-      LANGFLOW_NEW_USER_SIGNUP: "False"
+      LANGFLOW_AUTO_LOGIN: "false"
+      LANGFLOW_NEW_USER_SIGNUP: "false"
+      LANGFLOW_NEW_USER_IS_ACTIVE: "false"
+      LANGFLOW_ALLOW_SIGNUP: "false"
       LANGFLOW_SUPERUSER: ${NSELF_ADMIN_USER:-admin}
       LANGFLOW_SUPERUSER_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
