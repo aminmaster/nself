@@ -39,6 +39,12 @@ COPY --chown=langflow:langflow ./ragflow_to_graphiti.py /app/ragflow_to_graphiti
 # Install the local graphiti_core
 RUN pip install --no-cache-dir -e /app/graphiti_core
 
+# Fix permission issue for alembic logs
+RUN mkdir -p /app/.venv/lib/python3.12/site-packages/langflow/alembic/ && \
+    touch /app/.venv/lib/python3.12/site-packages/langflow/alembic/alembic.log && \
+    chown -R langflow:langflow /app/.venv/lib/python3.12/site-packages/langflow/alembic/ && \
+    chmod -R 775 /app/.venv/lib/python3.12/site-packages/langflow/alembic/
+
 # Switch back to the langflow user
 USER langflow
 
