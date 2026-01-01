@@ -439,7 +439,7 @@ generate_aio_stack() {
     entrypoint: ["/bin/sh", "-c"]
     command: 
       - |
-        redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}" --protected-mode yes --user default on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all --user admin on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all
+        redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} --protected-mode yes --user default on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all --user admin on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
