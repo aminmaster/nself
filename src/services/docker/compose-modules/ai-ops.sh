@@ -256,7 +256,9 @@ generate_aio_stack() {
 
         echo "3. Fixing permissions..."
         chown -R 1000:1000 /mnt/es-data || true
-        chown -R 1000:1000 /mnt/langflow-data || true
+        # Grant access to both host admin (1000) and container langflow (1001)
+        chown -R 1001:1001 /mnt/langflow-data || true
+        chmod -R 775 /mnt/langflow-data || true
 
         echo "All initialization tasks completed."
 
