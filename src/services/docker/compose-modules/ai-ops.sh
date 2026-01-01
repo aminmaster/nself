@@ -461,9 +461,18 @@ generate_aio_stack() {
       - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
 
   # 10. AIO MLFlow (Tracking)
+  local mlflow_dir="./services/${service_name}/mlflow"
+  if [[ ! -d "$mlflow_dir" ]]; then
+    mkdir -p "$mlflow_dir"
+    cat > "$mlflow_dir/Dockerfile" <<EOF
+FROM ghcr.io/mlflow/mlflow:latest
+RUN pip install --no-cache-dir psycopg2-binary
+EOF
+  fi
+
   aio-mlflow:
     build:
-      context: ./src/services/docker/compose-modules/mlflow
+      context: ./services/${service_name}/mlflow
       dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
