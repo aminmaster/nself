@@ -15,7 +15,7 @@ generate_mailpit_service() {
     container_name: \${PROJECT_NAME}_mailpit
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
@@ -47,7 +47,7 @@ generate_nself_admin_service() {
     container_name: \${PROJECT_NAME}_admin
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,7 +100,7 @@ generate_functions_service() {
     container_name: \${PROJECT_NAME}_functions
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -127,7 +127,7 @@ EOF
     container_name: \${PROJECT_NAME}_functions
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,7 +168,7 @@ generate_rabbitmq_service() {
     container_name: \${PROJECT_NAME}_rabbitmq
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-\${NSELF_ADMIN_USER:-admin}}
       RABBITMQ_DEFAULT_PASS: \${NSELF_ADMIN_PASSWORD:-\${RABBITMQ_PASSWORD:-changeme}}
@@ -202,7 +202,7 @@ generate_backup_service() {
     container_name: \${PROJECT_NAME}_backup
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -255,7 +255,7 @@ DOCKERFILE
     container_name: \${PROJECT_NAME}_mlflow
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -295,7 +295,7 @@ generate_search_services() {
     container_name: \${PROJECT_NAME}_meilisearch
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       MEILI_MASTER_KEY: \${MEILISEARCH_MASTER_KEY:-changeme}
       MEILI_ENV: \${MEILI_ENV:-production}

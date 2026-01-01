@@ -31,7 +31,7 @@ EOF
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 EOF
       ;;
 
@@ -43,7 +43,7 @@ EOF
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 EOF
       ;;
 
@@ -56,7 +56,7 @@ EOF
     container_name: \${PROJECT_NAME}_${service_name}
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 EOF
       ;;
   esac

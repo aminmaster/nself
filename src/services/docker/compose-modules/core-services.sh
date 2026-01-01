@@ -21,7 +21,7 @@ generate_postgres_service() {
     restart: unless-stopped
     shm_size: 256mb
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       POSTGRES_USER: \${POSTGRES_USER:-\${NSELF_ADMIN_USER:-postgres}}
       POSTGRES_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${POSTGRES_PASSWORD}}
@@ -66,7 +66,7 @@ generate_hasura_service() {
     container_name: \${PROJECT_NAME}_hasura
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,7 +137,7 @@ generate_auth_service() {
     container_name: \${PROJECT_NAME}_auth
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -157,7 +157,7 @@ EOF
     container_name: \${PROJECT_NAME}_auth
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -257,7 +257,7 @@ generate_db_seed_service() {
     container_name: \${PROJECT_NAME}_db_seed
     restart: "no"
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -293,7 +293,7 @@ generate_minio_service() {
     container_name: \${PROJECT_NAME}_minio
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       MINIO_ROOT_USER: \${MINIO_ROOT_USER:-\${NSELF_ADMIN_USER:-admin}}
       MINIO_ROOT_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${MINIO_ROOT_PASSWORD:-minioadmin}}
@@ -335,7 +335,7 @@ EOF
     profiles:
       - init-containers
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       minio:
         condition: service_healthy
@@ -369,7 +369,7 @@ generate_redis_service() {
     container_name: \${PROJECT_NAME}_redis
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data

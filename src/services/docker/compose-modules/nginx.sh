@@ -30,7 +30,7 @@ generate_nginx_service() {
       - PROJECT_NAME=\${PROJECT_NAME:-myproject}
       - ENV=\${ENV:-dev}
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME:-myproject}_network}
+      - ${DOCKER_NETWORK}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

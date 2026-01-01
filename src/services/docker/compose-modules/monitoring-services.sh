@@ -15,7 +15,7 @@ generate_grafana_service() {
     container_name: \${PROJECT_NAME}_grafana
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     environment:
       GF_SECURITY_ADMIN_USER: \${GRAFANA_ADMIN_USER:-\${NSELF_ADMIN_USER:-admin}}
       GF_SECURITY_ADMIN_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${GRAFANA_ADMIN_PASSWORD:-admin}}
@@ -50,7 +50,7 @@ generate_prometheus_service() {
     container_name: \${PROJECT_NAME}_prometheus
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -83,7 +83,7 @@ generate_loki_service() {
     container_name: \${PROJECT_NAME}_loki
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data:/loki
@@ -111,7 +111,7 @@ generate_promtail_service() {
     container_name: \${PROJECT_NAME}_promtail
     restart: unless-stopped
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     depends_on:
       - loki
     command: -config.file=/etc/promtail/config.yml
