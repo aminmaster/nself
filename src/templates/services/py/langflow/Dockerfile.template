@@ -27,8 +27,10 @@ RUN pip install --no-cache-dir \
     "mermaid-python"
 
 # Copy local graphiti_core if available in build context
-# (The nself build system should handle populating this)
 ADD --chown=langflow:langflow ./graphiti_core /app/graphiti_core
+
+# Copy custom components
+ADD --chown=langflow:langflow ./custom_components /app/custom_components
 
 # Install the local graphiti_core
 RUN pip install --no-cache-dir -e /app/graphiti_core
