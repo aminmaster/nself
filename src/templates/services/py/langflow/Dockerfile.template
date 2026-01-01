@@ -24,7 +24,8 @@ RUN pip install --no-cache-dir \
     "redis<6.0.0" \
     "tenacity<9.0.0" \
     "voyageai>=0.2.3" \
-    "mermaid-python"
+    "mermaid-python" \
+    "elasticsearch>=8.11.0"
 
 # Copy local graphiti_core if available in build context
 ADD --chown=langflow:langflow ./graphiti_core /app/graphiti_core
