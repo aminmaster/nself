@@ -204,7 +204,7 @@ generate_aio_stack() {
     image: alpine:latest
     command: "true"
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 
   # 1. AIO Init (Database & Permission Setup)
   aio-init:
@@ -217,7 +217,7 @@ generate_aio_stack() {
       DB_PORT: 5432
     entrypoint: ["/bin/sh", "-c"]
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     volumes:
       - ./.volumes/${service_name}/es:/mnt/es-data
       - ./.volumes/${service_name}/langflow:/mnt/langflow-data
@@ -274,7 +274,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/minio:/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -298,7 +298,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
       interval: 30s
@@ -359,7 +359,7 @@ generate_aio_stack() {
       aio-redis:
         condition: service_healthy
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     volumes:
       - ./.volumes/${service_name}/ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
@@ -382,7 +382,7 @@ generate_aio_stack() {
     ports:
       - "9385:9385"
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 
   # 5. AIO Metadata (Postgres)
   aio-db:
@@ -396,7 +396,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/db:/var/lib/postgresql/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD", "pg_isready"]
       interval: 10s
@@ -412,7 +412,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/redis:/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
       interval: 10s
@@ -445,7 +445,7 @@ generate_aio_stack() {
       aio-falkordb:
         condition: service_healthy
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 
   # 8. AIO Neo4j (Structural Graph)
   aio-neo4j:
@@ -460,7 +460,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/neo4j/data:/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/browser/ || exit 1"]
       interval: 30s
@@ -479,7 +479,7 @@ generate_aio_stack() {
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
       interval: 30s
@@ -494,7 +494,7 @@ generate_aio_stack() {
       REDIS_HOST: aio-falkordb
       REDIS_PORT: 6379
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 
 EOF
 
@@ -532,7 +532,7 @@ EOF
     volumes:
       - ./.volumes/${service_name}/mlflow/artifacts:/mlflow/artifacts
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 
   # 11. AIO Langflow (Orchestration Brain)
   aio-langflow:
@@ -562,7 +562,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     networks:
-      - \${DOCKER_NETWORK:-\${PROJECT_NAME}_network}
+      - ${DOCKER_NETWORK}
 EOF
 }
 
