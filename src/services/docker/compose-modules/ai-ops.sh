@@ -310,7 +310,7 @@ generate_aio_stack() {
       SANDBOX_PORT: 9385
       TIME_ZONE: UTC
       GUNICORN_TIMEOUT: 600
-      REGISTER_ENABLED: 0
+      REGISTER_ENABLED: 1
     depends_on:
       aio-db:
         condition: service_healthy
