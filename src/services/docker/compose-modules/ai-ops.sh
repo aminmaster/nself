@@ -310,7 +310,7 @@ generate_aio_stack() {
       SANDBOX_PORT: 9385
       TIME_ZONE: UTC
       GUNICORN_TIMEOUT: 600
-      REGISTER_ENABLED: 1
+      REGISTER_ENABLED: 0
     depends_on:
       aio-db:
         condition: service_healthy
@@ -439,7 +439,7 @@ generate_aio_stack() {
     entrypoint: ["/bin/sh", "-c"]
     command: 
       - |
-        redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass "\${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}" --protected-mode yes
+        redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}" --protected-mode yes --user default on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} ~* &* +@all --user admin on >${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} ~* &* +@all
     volumes:
       - ./.volumes/${service_name}/falkordb/data:/data
     networks:
@@ -508,6 +508,7 @@ EOF
     environment:
       LANGFLOW_DATABASE_URL: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@aio-db:5432/langflow
       LANGFLOW_AUTO_LOGIN: "False"
+      LANGFLOW_NEW_USER_SIGNUP: "False"
       LANGFLOW_SUPERUSER: ${NSELF_ADMIN_USER:-admin}
       LANGFLOW_SUPERUSER_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}

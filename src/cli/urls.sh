@@ -511,15 +511,16 @@ output_table() {
                 echo -e "  ${padded_name} ${COLOR_GREEN}${protocol}://${route}.${domain}${COLOR_RESET} ${COLOR_GRAY}(${template})${COLOR_RESET}"
                 
                 # Expand AI-OPS details
-                if [[ "$template" == "ai-ops" ]]; then
-                   local ragflow_sub="${AIO_SUBDOMAIN:-brain}"
-                   echo -e "    ├─ RAGFlow:    ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
-                   echo -e "    ├─ Langflow:   ${COLOR_GREEN}${protocol}://langflow.${domain}${COLOR_RESET}"
-                   echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
-                   echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
-                   echo -e "    ├─ FalkorDB:   ${COLOR_GREEN}${protocol}://falkordb.${domain}${COLOR_RESET}"
-                   echo -e "    └─ Neo4j:      ${COLOR_GREEN}${protocol}://neo4j.${domain}${COLOR_RESET}"
-                fi
+                 if [[ "$template" == "ai-ops" ]]; then
+                    local ragflow_sub="${AIO_SUBDOMAIN:-brain}"
+                    echo -e "    ├─ RAGFlow:    ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ RF Admin:   ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}/admin${COLOR_RESET}"
+                    echo -e "    ├─ Langflow:   ${COLOR_GREEN}${protocol}://langflow.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ FalkorDB:   ${COLOR_GREEN}${protocol}://falkordb.${domain}${COLOR_RESET}"
+                    echo -e "    └─ Neo4j:      ${COLOR_GREEN}${protocol}://neo4j.${domain}${COLOR_RESET}"
+                 fi
             elif [[ "$show_all" == "true" ]]; then
                 local padded_name=$(printf "%-15s" "$service_name:")
                 echo -e "  ${padded_name} ${COLOR_GRAY}Internal only - port ${port}${COLOR_RESET}"
