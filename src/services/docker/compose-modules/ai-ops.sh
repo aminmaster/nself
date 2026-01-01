@@ -500,7 +500,9 @@ EOF
 
   # 11. AIO Langflow (Orchestration Brain)
   aio-langflow:
-    image: langflowai/langflow:latest
+    build:
+      context: ./services/${service_name}/langflow
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_langflow
     restart: unless-stopped
     ports:

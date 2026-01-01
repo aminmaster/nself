@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1
+FROM langflowai/langflow:latest
+
+USER root
+
+# Install system dependencies for Graphiti and potential Illustrator tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pre-install specific versions of core dependencies to avoid conflicts
+RUN pip install --no-cache-dir \
+    "pydantic>=2.11.5" \
+    "neo4j>=5.26.0" \
+    "falkordb>=1.1.2,<2.0.0" \
+    "google-genai>=1.8.0" \
+    "openai>=1.91.0" \
+    "voyageai>=0.2.3" \
+    "mermaid-python"
+
+# Copy local graphiti_core if available in build context
+# (The nself build system should handle populating this)
+ADD --chown=langflow:langflow ./graphiti_core /app/graphiti_core
+
+# Install the local graphiti_core
+RUN pip install --no-cache-dir -e /app/graphiti_core
+
+# Switch back to the langflow user
+USER langflow
+
+# Langflow default port
+EXPOSE 7860
+
+CMD ["python", "-m", "langflow", "run", "--host", "0.0.0.0", "--port", "7860"]
