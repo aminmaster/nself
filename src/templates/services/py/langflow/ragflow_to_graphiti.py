@@ -38,9 +38,9 @@ def run_extraction():
             content = hit['_source'].get('content_with_weight', '')
             if content:
                 messages.append({
-                    "role": "system",
+                    "role_type": "system",
+                    "role": "RAGFlow",
                     "content": content,
-                    "name": "RAGFlow",
                     "timestamp": hit['_source'].get('create_time', None)
                 })
         
