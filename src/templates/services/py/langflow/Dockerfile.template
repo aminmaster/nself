@@ -3,6 +3,9 @@ FROM langflowai/langflow:latest
 
 USER root
 
+# Ensure langflow user exists
+RUN useradd -m -s /bin/bash langflow || true
+
 # Install system dependencies for Graphiti and potential Illustrator tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
