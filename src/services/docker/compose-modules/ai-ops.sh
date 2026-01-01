@@ -464,10 +464,7 @@ generate_aio_stack() {
   local mlflow_dir="./services/${service_name}/mlflow"
   if [[ ! -d "$mlflow_dir" ]]; then
     mkdir -p "$mlflow_dir"
-    cat > "$mlflow_dir/Dockerfile" <<EOF
-FROM ghcr.io/mlflow/mlflow:latest
-RUN pip install --no-cache-dir psycopg2-binary
-EOF
+    printf "FROM ghcr.io/mlflow/mlflow:latest\nRUN pip install --no-cache-dir psycopg2-binary\n" > "$mlflow_dir/Dockerfile"
   fi
 
   aio-mlflow:
