@@ -462,7 +462,9 @@ generate_aio_stack() {
 
   # 10. AIO MLFlow (Tracking)
   aio-mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    build:
+      context: ./src/services/docker/compose-modules/mlflow
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_mlflow
     restart: unless-stopped
     command: >
