@@ -346,6 +346,9 @@ generate_aio_stack() {
       TIME_ZONE: UTC
       GUNICORN_TIMEOUT: 600
       REGISTER_ENABLED: 0
+      # Database compatibility (Peewee/MySQL)
+      MYSQL_USER: postgres
+      MYSQL_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       # Stability: Stable secret key based on admin password to prevent JWT invalidation
       RAGFLOW_SECRET_KEY: ${NSELF_ADMIN_PASSWORD:-aiopassword}${NSELF_ADMIN_PASSWORD:-aiopassword}
       # Security/Stability: Browser session headers
