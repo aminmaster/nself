@@ -353,6 +353,36 @@ generate_aio_stack() {
       # Security/Stability: Browser session headers
       QUART_SESSION_COOKIE_SAMESITE: Lax
       QUART_SESSION_COOKIE_SECURE: "true"
+      # NLTK data path for pre-downloaded language models
+      NLTK_DATA: /ragflow/nltk_data
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        echo "[INIT] Ensuring NLTK data is available..."
+        mkdir -p /ragflow/nltk_data
+        export NLTK_DATA=/ragflow/nltk_data
+        
+        # Download NLTK data if not already present
+        if [ ! -d "/ragflow/nltk_data/corpora" ]; then
+          echo "[INIT] Downloading NLTK data (one-time setup)..."
+          python3 -c "
+        import nltk
+        import os
+        os.makedirs('/ragflow/nltk_data', exist_ok=True)
+        nltk.data.path = ['/ragflow/nltk_data']
+        try:
+            nltk.download('punkt', download_dir='/ragflow/nltk_data', quiet=False)
+            nltk.download('averaged_perceptron_tagger', download_dir='/ragflow/nltk_data', quiet=False)
+            nltk.download('stopwords', download_dir='/ragflow/nltk_data', quiet=False)
+            print('[INIT] NLTK data download complete')
+        except Exception as e:
+            print(f'[INIT] WARNING: NLTK download failed: {e}. Continuing anyway...')
+        " || echo "[INIT] NLTK download failed, but continuing..."
+        fi
+        
+        echo "[INIT] Starting RAGFlow services..."
+        exec /ragflow/entrypoint.sh --enable-adminserver
     depends_on:
       aio-db:
         condition: service_healthy
@@ -371,6 +401,7 @@ generate_aio_stack() {
       - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
+      - ./.volumes/${service_name}/ragflow/nltk_data:/ragflow/nltk_data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
       interval: 30s
