@@ -316,8 +316,8 @@ generate_aio_stack() {
       - "9380:9380"  # Python API
       - "9381:9381"  # Admin API
     environment:
-      # DATABASE_TYPE: postgres
-      # DB_TYPE: postgres
+      DATABASE_TYPE: postgres
+      DB_TYPE: postgres
       DB_NAME: ragflow
       DB_USER: postgres
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -407,7 +407,7 @@ generate_aio_stack() {
       - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
       - ./.volumes/${service_name}/ragflow/nltk_data:/ragflow/nltk_data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/v1/system/config"]
+      test: ["CMD", "curl", "-f", "http://localhost:9380/v1/system/config"]
       interval: 30s
       timeout: 10s
       retries: 5
