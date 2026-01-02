@@ -318,8 +318,8 @@ generate_aio_stack() {
     command:
       - --enable-adminserver
     environment:
-      DATABASE_TYPE: postgres
-      DB_TYPE: postgres
+      # DATABASE_TYPE: postgres
+      # DB_TYPE: postgres
       DB_NAME: ragflow
       DB_USER: postgres
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
