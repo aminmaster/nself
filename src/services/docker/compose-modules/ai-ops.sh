@@ -371,8 +371,11 @@ generate_aio_stack() {
         nltk.data.path = ['/ragflow/nltk_data']
         try:
             nltk.download('punkt', download_dir='/ragflow/nltk_data', quiet=False)
+            nltk.download('punkt_tab', download_dir='/ragflow/nltk_data', quiet=False)
             nltk.download('averaged_perceptron_tagger', download_dir='/ragflow/nltk_data', quiet=False)
             nltk.download('stopwords', download_dir='/ragflow/nltk_data', quiet=False)
+            nltk.download('wordnet', download_dir='/ragflow/nltk_data', quiet=False)
+            nltk.download('omw-1.4', download_dir='/ragflow/nltk_data', quiet=False)
             print('[INIT] NLTK data download complete')
         except Exception as e:
             print(f'[INIT] WARNING: NLTK download failed: {e}. Continuing anyway...')
