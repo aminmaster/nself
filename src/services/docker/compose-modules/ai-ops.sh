@@ -439,7 +439,7 @@ generate_aio_stack() {
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
