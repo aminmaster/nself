@@ -315,8 +315,6 @@ generate_aio_stack() {
     ports:
       - "9380:9380"  # Python API
       - "9381:9381"  # Admin API
-    command:
-      - --enable-adminserver
     environment:
       # DATABASE_TYPE: postgres
       # DB_TYPE: postgres
