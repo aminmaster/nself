@@ -376,14 +376,13 @@ generate_aio_stack() {
             nltk.download(res, download_dir='/ragflow/nltk_data', quiet=True)
         "
           echo "[INIT] Unzipping resources..."
-          find /ragflow/nltk_data -name "*.zip" | while read -r zip; do
-            dir=\$(dirname "\$zip")
-            base=\$(basename "\$zip" .zip)
-            if [ ! -d "\$dir/\$base" ]; then
-              echo "[INIT] Unzipping \$zip..."
-              unzip -q -o "\$zip" -d "\$dir"
-            fi
-          done
+          # Explicitly unzip all downloaded resources to ensure they are ready
+          unzip -q -o /ragflow/nltk_data/corpora/wordnet.zip -d /ragflow/nltk_data/corpora || true
+          unzip -q -o /ragflow/nltk_data/corpora/omw-1.4.zip -d /ragflow/nltk_data/corpora || true
+          unzip -q -o /ragflow/nltk_data/corpora/stopwords.zip -d /ragflow/nltk_data/corpora || true
+          unzip -q -o /ragflow/nltk_data/tokenizers/punkt.zip -d /ragflow/nltk_data/tokenizers || true
+          unzip -q -o /ragflow/nltk_data/tokenizers/punkt_tab.zip -d /ragflow/nltk_data/tokenizers || true
+          unzip -q -o /ragflow/nltk_data/taggers/averaged_perceptron_tagger.zip -d /ragflow/nltk_data/taggers || true
           echo "[INIT] NLTK setup complete."
         fi
         
