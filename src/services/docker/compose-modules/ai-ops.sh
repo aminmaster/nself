@@ -309,7 +309,7 @@ generate_aio_stack() {
 
   # 4. AIO Ingestion (RAGFlow Server - Official v0.23.0 Setup)
   aio-ragflow:
-    image: infiniflow/ragflow:v0.23.0
+    image: infiniflow/ragflow:${RAGFLOW_IMAGE_TAG:-v0.23.1}
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
     ports:

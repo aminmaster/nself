@@ -398,9 +398,12 @@ wizard_custom_services() {
         echo "         for Langflow and stack-wide authentication."
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         
-        local aio_version aio_subdomain aio_secret
+        local aio_version aio_subdomain aio_secret ragflow_tag
         prompt_input "AIO Version" "1.0.0" aio_version
         add_wizard_config "$config_array_name" "AIO_VERSION" "$aio_version"
+
+        prompt_input "RAGFlow Image Tag" "v0.23.1" ragflow_tag
+        add_wizard_config "$config_array_name" "RAGFLOW_IMAGE_TAG" "$ragflow_tag"
 
         prompt_input "AIO Subdomain (e.g. brain)" "brain" aio_subdomain
         add_wizard_config "$config_array_name" "AIO_SUBDOMAIN" "$aio_subdomain"
