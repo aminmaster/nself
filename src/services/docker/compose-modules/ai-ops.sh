@@ -377,11 +377,11 @@ generate_aio_stack() {
         "
           echo "[INIT] Unzipping resources..."
           find /ragflow/nltk_data -name "*.zip" | while read -r zip; do
-            dir=$(dirname "$zip")
-            base=$(basename "$zip" .zip)
-            if [ ! -d "$dir/$base" ]; then
-              echo "[INIT] Unzipping $zip..."
-              unzip -q -o "$zip" -d "$dir"
+            dir=\$(dirname "\$zip")
+            base=\$(basename "\$zip" .zip)
+            if [ ! -d "\$dir/\$base" ]; then
+              echo "[INIT] Unzipping \$zip..."
+              unzip -q -o "\$zip" -d "\$dir"
             fi
           done
           echo "[INIT] NLTK setup complete."
