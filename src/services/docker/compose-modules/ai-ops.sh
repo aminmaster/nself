@@ -365,24 +365,26 @@ generate_aio_stack() {
         export NLTK_DATA=/ragflow/nltk_data
         
         # Download NLTK data if not already present
-        if [ ! -d "/ragflow/nltk_data/corpora" ]; then
-          echo "[INIT] Downloading NLTK data (one-time setup)..."
+        if [ ! -d "/ragflow/nltk_data/corpora/wordnet" ]; then
+          echo "[INIT] Downloading NLTK data (synchronous)..."
           python3 -c "
         import nltk
         import os
-        os.makedirs('/ragflow/nltk_data', exist_ok=True)
         nltk.data.path = ['/ragflow/nltk_data']
-        try:
-            nltk.download('punkt', download_dir='/ragflow/nltk_data', quiet=False)
-            nltk.download('punkt_tab', download_dir='/ragflow/nltk_data', quiet=False)
-            nltk.download('averaged_perceptron_tagger', download_dir='/ragflow/nltk_data', quiet=False)
-            nltk.download('stopwords', download_dir='/ragflow/nltk_data', quiet=False)
-            nltk.download('wordnet', download_dir='/ragflow/nltk_data', quiet=False)
-            nltk.download('omw-1.4', download_dir='/ragflow/nltk_data', quiet=False)
-            print('[INIT] NLTK data download complete')
-        except Exception as e:
-            print(f'[INIT] WARNING: NLTK download failed: {e}. Continuing anyway...')
-        " || echo "[INIT] NLTK download failed, but continuing..."
+        for res in ['punkt', 'punkt_tab', 'averaged_perceptron_tagger', 'stopwords', 'wordnet', 'omw-1.4']:
+            print(f'[INIT] Downloading {res}...')
+            nltk.download(res, download_dir='/ragflow/nltk_data', quiet=True)
+        "
+          echo "[INIT] Unzipping resources..."
+          find /ragflow/nltk_data -name "*.zip" | while read -r zip; do
+            dir=$(dirname "$zip")
+            base=$(basename "$zip" .zip)
+            if [ ! -d "$dir/$base" ]; then
+              echo "[INIT] Unzipping $zip..."
+              unzip -q -o "$zip" -d "$dir"
+            fi
+          done
+          echo "[INIT] NLTK setup complete."
         fi
         
         echo "[INIT] Starting RAGFlow services..."
@@ -411,7 +413,7 @@ generate_aio_stack() {
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 120s
+      start_period: 300s
 
   aio-ragflow-sandbox:
     image: infiniflow/sandbox-executor-manager:latest
