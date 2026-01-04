@@ -470,11 +470,19 @@ generate_aio_stack() {
     restart: unless-stopped
     environment:
       PORT: 8000
+      # OpenRouter for LLM (Gemini Flash for entity extraction)
+      OPENROUTER_API_KEY: \${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
+      MODEL_NAME: google/gemini-flash-3.5-preview
+      # OpenAI for embeddings only
       OPENAI_API_KEY: \${OPENAI_API_KEY}
+      EMBEDDING_MODEL_NAME: text-embedding-3-small
+      # Neo4j configuration
       NEO4J_URI: bolt://aio-neo4j:7687
       NEO4J_USER: neo4j
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       GRAPHITI_DATABASE: neo4j
+      # FalkorDB configuration
       GRAPH_DRIVER_TYPE: falkordb
       FALKORDB_HOST: aio-falkordb
       FALKORDB_PORT: 6379
