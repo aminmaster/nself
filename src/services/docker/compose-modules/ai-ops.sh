@@ -497,6 +497,48 @@ generate_aio_stack() {
     networks:
       - ${DOCKER_NETWORK}
 
+  # 7b. AIO Graphiti Worker (Background Tasks)
+  aio-graphiti-worker:
+    build:
+      context: ./services/${service_name}/graphiti
+      dockerfile: Dockerfile
+    container_name: \${PROJECT_NAME}_aio_graphiti_worker
+    restart: unless-stopped
+    command: ["uv", "run", "celery", "-A", "graph_service.worker", "worker", "--loglevel=info"]
+    environment:
+      # OpenRouter for LLM (Gemini Flash for entity extraction)
+      OPENROUTER_API_KEY: \${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
+      MODEL_NAME: google/gemini-flash-3.5-preview
+      # OpenAI for embeddings only
+      OPENAI_API_KEY: \${OPENAI_API_KEY}
+      EMBEDDING_MODEL_NAME: text-embedding-3-small
+      # Neo4j configuration
+      NEO4J_URI: bolt://aio-neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      GRAPHITI_DATABASE: neo4j
+      # FalkorDB configuration
+      GRAPH_DRIVER_TYPE: falkordb
+      FALKORDB_HOST: aio-falkordb
+      FALKORDB_PORT: 6379
+      FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
+      # RabbitMQ configuration
+      RABBITMQ_USER: \${RABBITMQ_USER:-\${NSELF_ADMIN_USER:-admin}}
+      RABBITMQ_PASSWORD: \${NSELF_ADMIN_PASSWORD:-\${RABBITMQ_PASSWORD:-changeme}}
+      RABBITMQ_HOST: rabbitmq
+      # Elasticsearch configuration for RAGFlow sync
+      ELASTICSEARCH_HOST: http://aio-es:9200
+    volumes:
+      - ./.volumes/${service_name}/graphiti/data:/app/data
+    depends_on:
+      aio-graphiti:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
   # 8. AIO Neo4j (Structural Graph)
   aio-neo4j:
     image: neo4j:5.26

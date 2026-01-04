@@ -118,6 +118,10 @@ generate_frontend_app() {
       - VITE_RAGFLOW_URL=\${AIO_URL:-https://${AIO_SUBDOMAIN:-brain}.${BASE_DOMAIN:-equilibria.org}}
       - VITE_LANGFLOW_URL=\${LANGFLOW_URL:-https://langflow.${BASE_DOMAIN:-equilibria.org}}
       - VITE_GRAPHITI_URL=\${GRAPHITI_URL:-https://graphiti.${BASE_DOMAIN:-equilibria.org}}
+      # RabbitMQ for task orchestration
+      - RABBITMQ_USER=\${RABBITMQ_USER:-\${NSELF_ADMIN_USER:-admin}}
+      - RABBITMQ_PASSWORD=\${NSELF_ADMIN_PASSWORD:-\${RABBITMQ_PASSWORD:-changeme}}
+      - RABBITMQ_HOST=rabbitmq
 ${volumes_block}
     networks:
       - ${DOCKER_NETWORK}
