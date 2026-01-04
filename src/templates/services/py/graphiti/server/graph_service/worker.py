@@ -4,8 +4,8 @@ from celery import Celery
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from graphiti_core.nodes import EpisodeType
-from graph_service.zep_graphiti import initialize_graphiti, get_settings, create_llm_client, ZepGraphiti
-from graph_service.config import Settings
+from graph_service.config import get_settings, Settings
+from graph_service.zep_graphiti import initialize_graphiti, create_llm_client, ZepGraphiti
 from graph_service.utils.model_factory import ModelFactory
 
 # Initialize Celery

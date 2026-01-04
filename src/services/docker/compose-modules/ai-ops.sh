@@ -482,13 +482,18 @@ generate_aio_stack() {
       NEO4J_USER: neo4j
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       GRAPHITI_DATABASE: neo4j
-      # FalkorDB configuration
       GRAPH_DRIVER_TYPE: falkordb
       FALKORDB_HOST: aio-falkordb
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
     volumes:
       - ./.volumes/${service_name}/graphiti/data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
       aio-neo4j:
         condition: service_healthy
