@@ -38,12 +38,27 @@ EOF
 generate_nself_admin_service() {
   local enabled="${NSELF_ADMIN_ENABLED:-false}"
   [[ "$enabled" != "true" ]] && return 0
+  
+  # Setup nself-admin source code
+  local admin_dir="./services/admin"
+  local repo_url="https://github.com/acamarata/nself-admin.git"
+  
+  if [[ ! -d "$admin_dir" ]]; then
+    echo "Cloning nself-admin source code..." >&2
+    mkdir -p "$(dirname "$admin_dir")"
+    git clone "$repo_url" "$admin_dir" >&2
+  else
+    echo "Updating nself-admin source code..." >&2
+    (cd "$admin_dir" && git pull origin main) >&2
+  fi
 
   cat <<EOF
 
   # nself Admin - Project Management Dashboard
   nself-admin:
-    image: equilibriango/nself-admin:${NSELF_ADMIN_VERSION:-latest}
+    build:
+      context: ./services/admin
+      dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_admin
     restart: unless-stopped
     networks:
