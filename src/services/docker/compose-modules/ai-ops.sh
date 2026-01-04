@@ -479,6 +479,7 @@ generate_aio_stack() {
     build:
       context: ./services/${service_name}/graphiti
       dockerfile: Dockerfile
+    container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
     command: ["/app/server/.venv/bin/uvicorn", "graph_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
