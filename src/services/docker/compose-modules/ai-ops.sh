@@ -468,6 +468,7 @@ generate_aio_stack() {
       dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
+    command: ["uvicorn", "graph_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       PORT: 8000
       # OpenRouter for LLM (Gemini Flash for entity extraction)
@@ -509,7 +510,7 @@ generate_aio_stack() {
       dockerfile: Dockerfile
     container_name: \${PROJECT_NAME}_aio_graphiti_worker
     restart: unless-stopped
-    command: ["uv", "run", "celery", "-A", "graph_service.worker", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "graph_service.worker", "worker", "--loglevel=info"]
     environment:
       # OpenRouter for LLM (Gemini Flash for entity extraction)
       OPENROUTER_API_KEY: \${OPENROUTER_API_KEY}
