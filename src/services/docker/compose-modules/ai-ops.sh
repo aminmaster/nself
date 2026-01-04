@@ -182,13 +182,26 @@ generate_aio_stack() {
   
   # Generate Langflow specific configurations
   generate_langflow_configs "$service_name"
-  
   # Clone Graphiti source code if missing
   local graphiti_dir="./services/${service_name}/graphiti"
   if [[ ! -d "$graphiti_dir" ]]; then
     echo "Cloning Graphiti source code..." >&2
     mkdir -p "$(dirname "$graphiti_dir")"
     git clone https://github.com/getzep/graphiti.git "$graphiti_dir" >&2
+  fi
+
+  # Sync Graphiti templates (overwrites core files with nself customizations)
+  # This ensures worker.py, pyproject.toml, and Dockerfile are up to date
+  local aio_module_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local graphiti_template_dir="$(dirname "$(dirname "$(dirname "$aio_module_dir")")")/templates/services/py/graphiti"
+  
+  if [[ -d "$graphiti_template_dir" ]]; then
+    echo "Syncing Graphiti templates from $graphiti_template_dir..." >&2
+    cp "$graphiti_template_dir/Dockerfile.template" "$graphiti_dir/Dockerfile"
+    mkdir -p "$graphiti_dir/server"
+    cp -r "$graphiti_template_dir/server/"* "$graphiti_dir/server/"
+    mkdir -p "$graphiti_dir/graphiti_core"
+    cp -r "$graphiti_template_dir/graphiti_core/"* "$graphiti_dir/graphiti_core/"
   fi
 
   # ============================================
