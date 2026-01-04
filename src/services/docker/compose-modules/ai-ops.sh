@@ -497,7 +497,7 @@ generate_aio_stack() {
       NEO4J_USER: neo4j
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       GRAPHITI_DATABASE: neo4j
-      GRAPH_DRIVER_TYPE: falkordb
+      GRAPH_DRIVER_TYPE: neo4j
       FALKORDB_HOST: aio-falkordb
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
@@ -537,7 +537,7 @@ generate_aio_stack() {
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       GRAPHITI_DATABASE: neo4j
       # FalkorDB configuration
-      GRAPH_DRIVER_TYPE: falkordb
+      GRAPH_DRIVER_TYPE: neo4j
       FALKORDB_HOST: aio-falkordb
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
