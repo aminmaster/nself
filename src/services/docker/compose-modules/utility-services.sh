@@ -356,9 +356,12 @@ generate_certbot_service() {
     volumes:
       - ./nginx/certbot:/var/www/certbot
       - ./ssl/certificates:/etc/nginx/ssl
-      - ./ssl/letsencrypt:/etc/letsencrypt
+      - \${PROJECT_NAME}_certbot_data:/etc/letsencrypt
       - ./ssl/credentials:/etc/letsencrypt/credentials
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait \$\${!}; done;'"
+
+  # Top-level named volumes
+  \\${PROJECT_NAME}_certbot_data:
 EOF
 }
 

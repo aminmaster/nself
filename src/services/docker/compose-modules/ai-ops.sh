@@ -286,7 +286,7 @@ generate_aio_stack() {
       MINIO_ROOT_USER: ${NSELF_ADMIN_USER:-admin}
       MINIO_ROOT_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
-      - ./.volumes/${service_name}/minio:/data
+      - \${PROJECT_NAME}_aio_minio_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -310,7 +310,7 @@ generate_aio_stack() {
         soft: -1
         hard: -1
     volumes:
-      - ./.volumes/${service_name}/es:/usr/share/elasticsearch/data
+      - \${PROJECT_NAME}_aio_es_data:/usr/share/elasticsearch/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -419,7 +419,7 @@ generate_aio_stack() {
       - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
-      - ./.volumes/${service_name}/ragflow/nltk_data:/ragflow/nltk_data
+      - \${PROJECT_NAME}_aio_ragflow_data:/ragflow/rag
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9380/v1/system/config"]
       interval: 30s
@@ -449,7 +449,7 @@ generate_aio_stack() {
       POSTGRES_DB: postgres
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./.volumes/${service_name}/db:/var/lib/postgresql/data
+      - \${PROJECT_NAME}_aio_db_data:/var/lib/postgresql/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -465,7 +465,7 @@ generate_aio_stack() {
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
-      - ./.volumes/${service_name}/redis:/data
+      - \${PROJECT_NAME}_aio_redis_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -568,7 +568,8 @@ generate_aio_stack() {
       NEO4J_server_memory_heap_max__size: 1G
       NEO4J_PLUGINS: '["apoc"]'
     volumes:
-      - ./.volumes/${service_name}/neo4j/data:/data
+      - \${PROJECT_NAME}_aio_neo4j_data:/data
+      - \${PROJECT_NAME}_aio_neo4j_logs:/logs
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -587,7 +588,7 @@ generate_aio_stack() {
       - |
         redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} --protected-mode yes --user default on \>${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all --user admin on \>${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all
     volumes:
-      - ./.volumes/${service_name}/falkordb/data:/data
+      - \${PROJECT_NAME}_aio_falkordb_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -640,7 +641,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     volumes:
-      - ./.volumes/${service_name}/mlflow/artifacts:/mlflow/artifacts
+      - \${PROJECT_NAME}_aio_mlflow_artifacts:/mlflow/artifacts
     networks:
       - ${DOCKER_NETWORK}
 
@@ -665,7 +666,7 @@ EOF
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
       LANGFLOW_CONFIG_DIR: /app/langflow
     volumes:
-      - ./.volumes/${service_name}/langflow:/app/langflow
+      - \${PROJECT_NAME}_aio_langflow_data:/app/langflow
     depends_on:
       aio-db:
         condition: service_healthy
@@ -673,6 +674,18 @@ EOF
         condition: service_completed_successfully
     networks:
       - ${DOCKER_NETWORK}
+  
+  # Top-level named volumes
+  \${PROJECT_NAME}_aio_neo4j_data:
+  \${PROJECT_NAME}_aio_neo4j_logs:
+  \${PROJECT_NAME}_aio_falkordb_data:
+  \${PROJECT_NAME}_aio_es_data:
+  \${PROJECT_NAME}_aio_db_data:
+  \${PROJECT_NAME}_aio_redis_data:
+  \${PROJECT_NAME}_aio_minio_data:
+  \${PROJECT_NAME}_aio_ragflow_data:
+  \${PROJECT_NAME}_aio_langflow_data:
+  \${PROJECT_NAME}_aio_mlflow_artifacts:
 EOF
 }
 
