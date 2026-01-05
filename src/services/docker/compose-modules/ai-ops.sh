@@ -519,6 +519,9 @@ generate_aio_stack() {
 
   # 7b. AIO Graphiti Worker (Background Tasks)
   aio-graphiti-worker:
+    build:
+      context: ./services/${service_name}/graphiti
+      dockerfile: Dockerfile
     image: \${PROJECT_NAME}_aio_graphiti:latest
     container_name: \${PROJECT_NAME}_aio_graphiti_worker
     restart: unless-stopped
