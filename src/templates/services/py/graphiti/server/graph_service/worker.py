@@ -93,7 +93,6 @@ def sync_ragflow(group_id="equilibria_whitepaper"):
                     
                     logger.info(f"📝 Ingesting chunk {i+1}/{len(chunks)} (doc: {doc_id})")
                     await client.add_episode(
-                        uuid=f"ragflow_chunk_{doc_id}_{i}",
                         group_id=group_id,
                         name=f"Chunk {i+1}",
                         episode_body=f"RAGFlow RAPTOR Chunk: {content}",
