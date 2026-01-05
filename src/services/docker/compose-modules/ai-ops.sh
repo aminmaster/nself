@@ -480,6 +480,7 @@ generate_aio_stack() {
       context: ./services/${service_name}/graphiti
       dockerfile: Dockerfile
     image: \${PROJECT_NAME}_aio_graphiti:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_aio_graphiti
     restart: unless-stopped
     command: ["/app/server/.venv/bin/uvicorn", "graph_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
@@ -523,6 +524,7 @@ generate_aio_stack() {
       context: ./services/${service_name}/graphiti
       dockerfile: Dockerfile
     image: \${PROJECT_NAME}_aio_graphiti:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_aio_graphiti_worker
     restart: unless-stopped
     command: ["/app/server/.venv/bin/celery", "-A", "graph_service.worker", "worker", "--loglevel=info", "--pool=threads"]
