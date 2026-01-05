@@ -118,10 +118,34 @@ class BaseOpenAIClient(LLMClient):
         else:
             raise Exception(f'Invalid response from LLM: {response_object.model_dump()}')
 
-    def _handle_json_response(self, response: Any) -> dict[str, Any]:
+    def _handle_json_response(
+        self, response: Any, response_model: type[BaseModel] | None = None
+    ) -> dict[str, Any]:
         """Handle JSON response parsing."""
         result = response.choices[0].message.content or '{}'
-        return json.loads(result)
+        # Clean up code blocks if present
+        if result.startswith("```"):
+            result = result.strip("`").replace("json\n", "", 1).strip()
+
+        parsed = json.loads(result)
+
+        # Patch for models returning list instead of expected dict container
+        if isinstance(parsed, list) and response_model:
+            # Check pydantic version for fields
+            try:
+                fields = response_model.model_fields
+            except AttributeError:
+                try:
+                    fields = response_model.__fields__
+                except AttributeError:
+                    logger.warning("Could not determine fields for response_model")
+                    fields = {}
+
+            if len(fields) == 1:
+                key = next(iter(fields))
+                return {key: parsed}
+
+        return parsed
 
     def _is_openrouter(self) -> bool:
         """Check if the base URL corresponds to OpenRouter."""
@@ -150,7 +174,7 @@ class BaseOpenAIClient(LLMClient):
                 
                 # If we're using OpenRouter or a fallback was triggered, handle as JSON
                 if self._is_openrouter() or not hasattr(response, 'output_text'):
-                    return self._handle_json_response(response)
+                    return self._handle_json_response(response, response_model)
                 
                 return self._handle_structured_response(response)
             else:
