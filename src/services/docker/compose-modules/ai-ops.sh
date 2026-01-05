@@ -233,8 +233,8 @@ generate_aio_stack() {
     networks:
       - ${DOCKER_NETWORK}
     volumes:
-      - ./.volumes/${service_name}/es:/mnt/es-data
-      - ./.volumes/${service_name}/langflow:/mnt/langflow-data
+      - \${PROJECT_NAME}_aio_es_data:/mnt/es-data
+      - \${PROJECT_NAME}_aio_langflow_data:/mnt/langflow-data
     command:
       - |
         set -e
