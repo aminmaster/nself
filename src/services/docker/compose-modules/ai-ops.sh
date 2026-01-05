@@ -675,17 +675,6 @@ EOF
     networks:
       - ${DOCKER_NETWORK}
   
-  # Top-level named volumes
-  \${PROJECT_NAME}_aio_neo4j_data:
-  \${PROJECT_NAME}_aio_neo4j_logs:
-  \${PROJECT_NAME}_aio_falkordb_data:
-  \${PROJECT_NAME}_aio_es_data:
-  \${PROJECT_NAME}_aio_db_data:
-  \${PROJECT_NAME}_aio_redis_data:
-  \${PROJECT_NAME}_aio_minio_data:
-  \${PROJECT_NAME}_aio_ragflow_data:
-  \${PROJECT_NAME}_aio_langflow_data:
-  \${PROJECT_NAME}_aio_mlflow_artifacts:
 EOF
 }
 
