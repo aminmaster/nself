@@ -488,7 +488,7 @@ generate_aio_stack() {
       # OpenRouter for LLM (Gemini Flash for entity extraction)
       OPENROUTER_API_KEY: \${OPENROUTER_API_KEY}
       OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
-      MODEL_NAME: google/gemini-flash-3.5-preview
+      MODEL_NAME: google/gemini-2.0-flash-001
       # OpenAI for embeddings only
       OPENAI_API_KEY: \${OPENAI_API_KEY}
       EMBEDDING_MODEL_NAME: text-embedding-3-small
@@ -527,7 +527,7 @@ generate_aio_stack() {
       # OpenRouter for LLM (Gemini Flash for entity extraction)
       OPENROUTER_API_KEY: \${OPENROUTER_API_KEY}
       OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
-      MODEL_NAME: google/gemini-flash-3.5-preview
+      MODEL_NAME: google/gemini-2.0-flash-001
       # OpenAI for embeddings only
       OPENAI_API_KEY: \${OPENAI_API_KEY}
       EMBEDDING_MODEL_NAME: text-embedding-3-small
