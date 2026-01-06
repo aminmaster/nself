@@ -224,7 +224,7 @@ EOF
   [[ "${ALERTMANAGER_ENABLED:-false}" == "true" ]] && echo "  alertmanager_data:" >> docker-compose.yml
   [[ "${PGADMIN_ENABLED:-false}" == "true" ]] && echo "  pgadmin_data:" >> docker-compose.yml
   [[ "${PORTAINER_ENABLED:-false}" == "true" ]] && echo "  portainer_data:" >> docker-compose.yml
-  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  ${PROJECT_NAME}_certbot_data:" >> docker-compose.yml
+  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_data:" >> docker-compose.yml
   # Add volumes for custom services with pre-built templates
   # These need named volumes since they don't use host mounts
   for i in $(seq 1 ${CUSTOM_SERVICE_COUNT:-0}); do
@@ -251,16 +251,17 @@ EOF
       ai-ops)
         export AIO_STACK_PRESENT="true"
         cat >> docker-compose.yml <<VOL
-  ${PROJECT_NAME}_aio_neo4j_data:
-  ${PROJECT_NAME}_aio_neo4j_logs:
-  ${PROJECT_NAME}_aio_falkordb_data:
-  ${PROJECT_NAME}_aio_es_data:
-  ${PROJECT_NAME}_aio_db_data:
-  ${PROJECT_NAME}_aio_redis_data:
-  ${PROJECT_NAME}_aio_minio_data:
-  ${PROJECT_NAME}_aio_ragflow_data:
-  ${PROJECT_NAME}_aio_langflow_data:
-  ${PROJECT_NAME}_aio_mlflow_artifacts:
+  aio_neo4j_data:
+  aio_neo4j_logs:
+  aio_falkordb_data:
+  aio_es_data:
+  aio_db_data:
+  aio_redis_data:
+  aio_minio_data:
+  aio_ragflow_data:
+  aio_langflow_data:
+  aio_mlflow_artifacts:
+  aio_graphiti_data:
 VOL
         ;;
     esac

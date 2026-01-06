@@ -233,8 +233,8 @@ generate_aio_stack() {
     networks:
       - ${DOCKER_NETWORK}
     volumes:
-      - \${PROJECT_NAME}_aio_es_data:/mnt/es-data
-      - \${PROJECT_NAME}_aio_langflow_data:/mnt/langflow-data
+      - aio_es_data:/mnt/es-data
+      - aio_langflow_data:/mnt/langflow-data
     command:
       - |
         set -e
@@ -286,7 +286,7 @@ generate_aio_stack() {
       MINIO_ROOT_USER: ${NSELF_ADMIN_USER:-admin}
       MINIO_ROOT_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
     volumes:
-      - \${PROJECT_NAME}_aio_minio_data:/data
+      - aio_minio_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -419,7 +419,7 @@ generate_aio_stack() {
       - ./.volumes/${service_name}/ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf:ro
       - ./.volumes/${service_name}/ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./.volumes/${service_name}/ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
-      - \${PROJECT_NAME}_aio_ragflow_data:/ragflow/rag
+      - aio_ragflow_data:/ragflow/rag
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9380/v1/system/config"]
       interval: 30s
@@ -449,7 +449,7 @@ generate_aio_stack() {
       POSTGRES_DB: postgres
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - \${PROJECT_NAME}_aio_db_data:/var/lib/postgresql/data
+      - aio_db_data:/var/lib/postgresql/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -465,7 +465,7 @@ generate_aio_stack() {
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
-      - \${PROJECT_NAME}_aio_redis_data:/data
+      - aio_redis_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -503,7 +503,7 @@ generate_aio_stack() {
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
     volumes:
-      - ./.volumes/${service_name}/graphiti/data:/app/data
+      - aio_graphiti_data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck"]
       interval: 15s
@@ -553,7 +553,7 @@ generate_aio_stack() {
       # Elasticsearch configuration for RAGFlow sync
       ELASTICSEARCH_HOST: http://aio-es:9200
     volumes:
-      - ./.volumes/${service_name}/graphiti/data:/app/data
+      - aio_graphiti_data:/app/data
     depends_on:
       aio-graphiti:
         condition: service_healthy
@@ -573,8 +573,8 @@ generate_aio_stack() {
       NEO4J_server_memory_heap_max__size: 1G
       NEO4J_PLUGINS: '["apoc"]'
     volumes:
-      - \${PROJECT_NAME}_aio_neo4j_data:/data
-      - \${PROJECT_NAME}_aio_neo4j_logs:/logs
+      - aio_neo4j_data:/data
+      - aio_neo4j_logs:/logs
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -593,7 +593,7 @@ generate_aio_stack() {
       - |
         redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --requirepass ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} --protected-mode yes --user default on \>${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all --user admin on \>${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}} allkeys allchannels +@all
     volumes:
-      - \${PROJECT_NAME}_aio_falkordb_data:/data
+      - aio_falkordb_data:/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -646,7 +646,7 @@ EOF
       aio-init:
         condition: service_completed_successfully
     volumes:
-      - \${PROJECT_NAME}_aio_mlflow_artifacts:/mlflow/artifacts
+      - aio_mlflow_artifacts:/mlflow/artifacts
     networks:
       - ${DOCKER_NETWORK}
 
@@ -671,7 +671,7 @@ EOF
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
       LANGFLOW_CONFIG_DIR: /app/langflow
     volumes:
-      - \${PROJECT_NAME}_aio_langflow_data:/app/langflow
+      - aio_langflow_data:/app/langflow
     depends_on:
       aio-db:
         condition: service_healthy
