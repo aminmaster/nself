@@ -310,7 +310,7 @@ generate_aio_stack() {
         soft: -1
         hard: -1
     volumes:
-      - \${PROJECT_NAME}_aio_es_data:/usr/share/elasticsearch/data
+      - aio_es_data:/usr/share/elasticsearch/data
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
