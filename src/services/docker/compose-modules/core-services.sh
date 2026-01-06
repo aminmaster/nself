@@ -265,6 +265,8 @@ generate_db_seed_service() {
         condition: service_healthy
     environment:
       PGPASSWORD: \${POSTGRES_PASSWORD:-postgres}
+    tmpfs:
+      - /var/lib/postgresql/data
     volumes:
       - ./postgres/init/99-seed-superadmin.sql:/seed.sql:ro
     entrypoint: >

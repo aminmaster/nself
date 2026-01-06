@@ -232,6 +232,8 @@ generate_aio_stack() {
     entrypoint: ["/bin/sh", "-c"]
     networks:
       - ${DOCKER_NETWORK}
+    tmpfs:
+      - /var/lib/postgresql/data
     volumes:
       - aio_es_data:/mnt/es-data
       - aio_langflow_data:/mnt/langflow-data

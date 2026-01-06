@@ -225,6 +225,7 @@ EOF
   [[ "${PGADMIN_ENABLED:-false}" == "true" ]] && echo "  pgadmin_data:" >> docker-compose.yml
   [[ "${PORTAINER_ENABLED:-false}" == "true" ]] && echo "  portainer_data:" >> docker-compose.yml
   [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_data:" >> docker-compose.yml
+  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_lib:" >> docker-compose.yml
   # Add volumes for custom services with pre-built templates
   # These need named volumes since they don't use host mounts
   for i in $(seq 1 ${CUSTOM_SERVICE_COUNT:-0}); do
