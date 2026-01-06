@@ -327,6 +327,10 @@ generate_aio_stack() {
     image: infiniflow/ragflow:${RAGFLOW_IMAGE_TAG:-v0.23.1}
     container_name: \${PROJECT_NAME}_aio_ragflow
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - "9380:9380"  # Python API
       - "9381:9381"  # Admin API
