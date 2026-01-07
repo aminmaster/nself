@@ -42,29 +42,35 @@ if [[ "$MODE" == "backup" ]]; then
 
     # 2. RAGFlow Artifacts (Minio)
     echo "Archiving RAGFlow Minio Artifacts..."
+    docker stop equilibria_aio_minio || true
     # Using correct volume name: equilibria_aio_minio_data
     docker run --rm \
       -v equilibria_aio_minio_data:/data \
       -v "${BACKUP_DIR}:/backup" \
       alpine tar -czf "/backup/ragflow_minio_data.tar.gz" -C /data .
+    docker start equilibria_aio_minio
     echo "✔ RAGFlow Minio Artifacts backed up."
 
     # 3. RAGFlow Vectors (Elasticsearch)
     echo "Archiving RAGFlow Vectors (Elasticsearch)..."
+    docker stop equilibria_aio_es || true
     # Using correct volume name: equilibria_aio_es_data
     docker run --rm \
       -v equilibria_aio_es_data:/data \
       -v "${BACKUP_DIR}:/backup" \
       alpine tar -czf "/backup/ragflow_es_data.tar.gz" -C /data .
+    docker start equilibria_aio_es
     echo "✔ RAGFlow Vector Indices backed up."
 
     # 4. Neo4j Database (Graph)
     echo "Archiving Neo4j Database..."
+    docker stop equilibria_aio_neo4j || true
     # Using correct volume name: equilibria_aio_neo4j_data
     docker run --rm \
       -v equilibria_aio_neo4j_data:/data \
       -v "${BACKUP_DIR}:/backup" \
       alpine tar -czf "/backup/neo4j_data.tar.gz" -C /data .
+    docker start equilibria_aio_neo4j
     echo "✔ Neo4j Data Volume backed up."
 
     # 5. Final compression
