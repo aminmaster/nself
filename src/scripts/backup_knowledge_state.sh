@@ -12,51 +12,103 @@ set -e
 # ==============================================================================
 
 BACKUP_ROOT="${HOME}/backups/knowledge_graph"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_DIR="${BACKUP_ROOT}/${TIMESTAMP}"
-mkdir -p "$BACKUP_DIR"
-
-echo "📂 Starting Backup to: $BACKUP_DIR"
-
 # -------------------------------------------------------------
-# 1. RAGFlow Database (Postgres)
+# ARGUMENT PARSING
 # -------------------------------------------------------------
-echo "Creating RAGFlow Database Dump..."
-docker exec equilibria_aio_db pg_dump -U postgres -d ragflow > "${BACKUP_DIR}/ragflow_db.sql"
-echo "✔ RAGFlow DB backed up."
+MODE="backup"
+ARCHIVE_PATH=""
 
-# -------------------------------------------------------------
-# 2. RAGFlow Artifacts (Minio)
-# -------------------------------------------------------------
-echo "Archiving RAGFlow Minio Artifacts..."
-# We backup the docker volume directly using a temporary container to avoid installing mc client
-# Assuming volume name is aio_minio_data based on ai-ops.sh
-docker run --rm \
-  -v aio_ragflow_data:/data \
-  -v "${BACKUP_DIR}:/backup" \
-  alpine tar -czf "/backup/ragflow_data.tar.gz" -C /data .
+if [[ "$1" == "--restore" ]]; then
+  MODE="restore"
+  ARCHIVE_PATH="$2"
+  if [[ -z "$ARCHIVE_PATH" ]]; then
+    echo "❌ Error: You must provide the archive path for restore."
+    echo "Usage: $0 --restore /path/to/archive.tar.gz"
+    exit 1
+  fi
+fi
 
-echo "✔ RAGFlow Data Volume backed up."
+if [[ "$MODE" == "backup" ]]; then
+    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+    BACKUP_DIR="${BACKUP_ROOT}/${TIMESTAMP}"
+    mkdir -p "$BACKUP_DIR"
 
-# -------------------------------------------------------------
-# 3. Neo4j Database (Graph)
-# -------------------------------------------------------------
-echo "Archiving Neo4j Database..."
-docker run --rm \
-  -v aio_neo4j_data:/data \
-  -v "${BACKUP_DIR}:/backup" \
-  alpine tar -czf "/backup/neo4j_data.tar.gz" -C /data .
+    echo "📂 Starting Backup to: $BACKUP_DIR"
 
-echo "✔ Neo4j Data Volume backed up."
+    # 1. RAGFlow Database (Postgres)
+    echo "Creating RAGFlow Database Dump..."
+    docker exec equilibria_aio_db pg_dump -U postgres -c -d ragflow > "${BACKUP_DIR}/ragflow_db.sql"
+    echo "✔ RAGFlow DB backed up."
 
-# -------------------------------------------------------------
-# 4. Final compression
-# -------------------------------------------------------------
-echo "Finalizing archive..."
-cd "$BACKUP_ROOT"
-tar -czf "kg_backup_${TIMESTAMP}.tar.gz" "${TIMESTAMP}"
-rm -rf "${TIMESTAMP}"
+    # 2. RAGFlow Artifacts (Minio)
+    echo "Archiving RAGFlow Minio Artifacts..."
+    docker run --rm \
+      -v aio_ragflow_data:/data \
+      -v "${BACKUP_DIR}:/backup" \
+      alpine tar -czf "/backup/ragflow_data.tar.gz" -C /data .
+    echo "✔ RAGFlow Data Volume backed up."
 
-echo "✅ Backup Complete!"
-echo "📍 Location: ${BACKUP_ROOT}/kg_backup_${TIMESTAMP}.tar.gz"
-echo "To restore, extract this archive and restore the SQL/Volumes."
+    # 3. Neo4j Database (Graph)
+    echo "Archiving Neo4j Database..."
+    docker run --rm \
+      -v aio_neo4j_data:/data \
+      -v "${BACKUP_DIR}:/backup" \
+      alpine tar -czf "/backup/neo4j_data.tar.gz" -C /data .
+    echo "✔ Neo4j Data Volume backed up."
+
+    # 4. Final compression
+    echo "Finalizing archive..."
+    cd "$BACKUP_ROOT"
+    tar -czf "kg_backup_${TIMESTAMP}.tar.gz" "${TIMESTAMP}"
+    rm -rf "${TIMESTAMP}"
+
+    echo "✅ Backup Complete!"
+    echo "📍 Location: ${BACKUP_ROOT}/kg_backup_${TIMESTAMP}.tar.gz"
+
+elif [[ "$MODE" == "restore" ]]; then
+    echo "⚠️  WARNING: This will OVERWRITE current RAGFlow and Neo4j data."
+    echo "    Archive: $ARCHIVE_PATH"
+    read -p "Are you sure? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 1
+    fi
+
+    echo "📂 Extracting archive..."
+    WORK_DIR=$(mktemp -d)
+    tar -xzf "$ARCHIVE_PATH" -C "$WORK_DIR"
+    # Find the directory inside (it matches the timestamp)
+    EXTRACTED_DIR=$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+
+    # 1. Restore Postgres
+    echo "Restoring RAGFlow Database..."
+    cat "${EXTRACTED_DIR}/ragflow_db.sql" | docker exec -i equilibria_aio_db psql -U postgres -d ragflow
+    echo "✔ RAGFlow DB restored."
+
+    # 2. Restore Minio Volume
+    echo "Restoring RAGFlow Data Volume..."
+    # Clean volume first
+    docker run --rm -v aio_ragflow_data:/data alpine sh -c 'rm -rf /data/*'
+    # Restore
+    docker run --rm \
+      -v aio_ragflow_data:/data \
+      -v "${EXTRACTED_DIR}:/backup" \
+      alpine tar -xzf "/backup/ragflow_data.tar.gz" -C /data
+    echo "✔ RAGFlow Data Volume restored."
+
+    # 3. Restore Neo4j Volume
+    echo "Restoring Neo4j Data Volume..."
+    docker stop equilibria_aio_neo4j || true
+    docker run --rm -v aio_neo4j_data:/data alpine sh -c 'rm -rf /data/*'
+    docker run --rm \
+      -v aio_neo4j_data:/data \
+      -v "${EXTRACTED_DIR}:/backup" \
+      alpine tar -xzf "/backup/neo4j_data.tar.gz" -C /data
+    docker start equilibria_aio_neo4j
+    echo "✔ Neo4j Data Volume restored."
+
+    rm -rf "$WORK_DIR"
+    echo "✅ Restoration Complete! You may need to restart RAGFlow container."
+    echo "   nself start --fresh (without build)"
+fi
