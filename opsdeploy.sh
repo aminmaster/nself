@@ -87,18 +87,18 @@ pre_pull_images() {
     echo "Checking for missing Docker images..."
     
     # Source project .env for variables like RAGFLOW_IMAGE_TAG
-    # Priority: .env (Active Shim) -> .env.prod (Fallback) -> .env.dev (Fallback)
+    # Priority: .env.$WEB_DEPLOY_MODE -> .env.prod -> .env (shim)
     # PRO TIP: We use 'set -a' to automatically export sourced variables so 'docker compose config' sees them!
     set -a
-    if [ -f "$TARGET_DIR/.env" ]; then
-        echo "📄 Sourcing environment from: .env"
-        source "$TARGET_DIR/.env"
-    elif [ -n "$WEB_DEPLOY_MODE" ] && [ -f "$TARGET_DIR/.env.$WEB_DEPLOY_MODE" ]; then
+    if [ -n "$WEB_DEPLOY_MODE" ] && [ -f "$TARGET_DIR/.env.$WEB_DEPLOY_MODE" ]; then
         echo "📄 Sourcing environment from: .env.$WEB_DEPLOY_MODE"
         source "$TARGET_DIR/.env.$WEB_DEPLOY_MODE"
     elif [ -f "$TARGET_DIR/.env.prod" ]; then
         echo "📄 Sourcing environment from: .env.prod (Fallback)"
         source "$TARGET_DIR/.env.prod"
+    elif [ -f "$TARGET_DIR/.env" ]; then
+        echo "📄 Sourcing environment from: .env (Shim)"
+        source "$TARGET_DIR/.env"
     else
         echo "⚠️  No .env file found. Using default image tags."
     fi
@@ -125,45 +125,46 @@ pre_pull_images() {
         # Ensure we are in the target directory for .env pickup and relative path resolution
         pushd "$TARGET_DIR" > /dev/null
         
-        # 1. Get External Images defined in 'image:' key
-        if DETECTED_IMAGES=$(docker compose config --images 2>/dev/null); then
-            # Clean up the output, dedup, and remove empty lines
-            DETECTED_IMAGES=$(echo "$DETECTED_IMAGES" | sort | uniq | grep -v "^$")
-            mapfile -t RAW_IMAGES <<< "$DETECTED_IMAGES"
-        else
-            echo "⚠️  'docker compose config' failed. Falling back to defaults."
-            RAW_IMAGES=()
-        fi
-
-        # 2. Get Base Images from 'build:' contexts (Dockerfile scraping)
-        echo "🔍 Scanning Dockerfiles for base images..."
-        BASE_IMAGES=()
-        
-        # Parse docker-compose config to find build contexts and dockerfiles
-        # We look for the pattern: service -> build -> context, dockerfile
-        # Using a simple grep/awk approach as 'docker compose config' expands everything to absolute paths usually
-        # But to be safe, we iterate through services that have a build context.
-        
-        
-        # Robust Implementation:
-        # We will dump the full config and iterate through 'build:' blocks.
-        # Since we are in bash, we can use a small python snippet if python3 is available (common on ubuntu)
-        # to correctly parse the YAML and extract all (context, dockerfile) tuples.
+        # 1. Structural Image Discovery
+        # - IF 'build' exists -> Scrape Dockerfile for base image (Dependency)
+        # - IF 'build' missing -> Use 'image' key (Direct Pull)
         
         FULL_CONFIG=$(docker compose config)
         
         if command -v python3 &>/dev/null; then
-             # Python script to extract dockerfile paths
-             DOCKERFILES=$(echo "$FULL_CONFIG" | python3 -c "
-import sys, yaml, os
+             echo "🔍 analyzing stack configuration..."
+             
+             # Python script to extract TRUE source images
+             DETECTED_IMAGES=$(echo "$FULL_CONFIG" | python3 -c "
+import sys, yaml, os, re
+
+def get_base_images(dockerfile_path):
+    images = []
+    if os.path.exists(dockerfile_path):
+        with open(dockerfile_path, 'r') as f:
+            for line in f:
+                # Simple parser for 'FROM image AS alias' or 'FROM image'
+                if line.strip().upper().startswith('FROM'):
+                    parts = line.split()
+                    if len(parts) > 1:
+                        img = parts[1]
+                        # Skip usage of aliases (FROM base AS builder -> FROM builder)
+                        # This is a naive check; ideally we track aliases. 
+                        # But standard FROM usually points to external image or previous stage.
+                        # If it points to previous stage alias, 'docker pull' will fail safely/quickly.
+                        if img.lower() != 'scratch':
+                            images.append(img)
+    return images
 
 try:
     data = yaml.safe_load(sys.stdin)
+    to_pull = set()
+    
     if 'services' in data:
         for svc_name, svc_data in data['services'].items():
+            # STRATEGY 1: IT IS A BUILD
             if 'build' in svc_data:
                 build = svc_data['build']
-                # build can be a string (path) or dict
                 if isinstance(build, str):
                     context = build
                     dockerfile = 'Dockerfile'
@@ -171,53 +172,52 @@ try:
                     context = build.get('context', '.')
                     dockerfile = build.get('dockerfile', 'Dockerfile')
                 
-                # Print absolute or relative path
-                print(os.path.join(context, dockerfile))
+                # Context is usually absolute from 'docker compose config'
+                df_path = os.path.join(context, dockerfile)
+                
+                # Scrape the Dockerfile
+                bases = get_base_images(df_path)
+                for b in bases:
+                    to_pull.add(b)
+
+            # STRATEGY 2: IT IS A PULL (No Build)
+            elif 'image' in svc_data:
+                to_pull.add(svc_data['image'])
+
+    for img in to_pull:
+        print(img)
+        
 except Exception as e:
-    pass # valid yaml might not possess build keys
+    sys.exit(1)
 ")
-             
-             # Now read each Dockerfile found
-             for df_path in $DOCKERFILES; do
-                 # Resolve path (it might be relative to TARGET_DIR if not absolute)
-                 # docker compose config usually outputs absolute paths for contexts
-                 if [ -f "$df_path" ]; then
-                     # Extract FROM images, handle 'AS' aliases (e.g. FROM node:20 AS builder -> node:20)
-                     # Also ignore scratch
-                     FROM_IMAGES=$(grep "^FROM" "$df_path" | awk '{print $2}' | grep -v "^scratch$")
-                     for base in $FROM_IMAGES; do
-                         BASE_IMAGES+=("$base")
-                     done
-                 fi
-             done
-        fi
-        
-        # Combine External and Base images
-        ALL_IMAGES=("${RAW_IMAGES[@]}" "${BASE_IMAGES[@]}")
-        
-        # Filter out local project images (build targets) and dedup
-        FILTERED_IMAGES=()
-        # Use an associative array for dedup if bash 4, or verify unique
-        # Simple loop with sort -u equivalent
-        
-        SORTED_UNIQUE=$(printf "%s\n" "${ALL_IMAGES[@]}" | sort | uniq)
-        
-        mapfile -t CANDIDATES <<< "$SORTED_UNIQUE"
-        
-        for img in "${CANDIDATES[@]}"; do
-            # Skip images that start with the project name or 'equilibria' (assumed local targets)
-            # Also skip empty lines or variables that failed to resolve
-            if [[ -z "$img" ]]; then continue; fi
-            if [[ "$img" == "${PROJECT_NAME}_"* ]] || [[ "$img" == "equilibria_"* ]]; then
-                echo "⏭️  Skipping local build target: $img"
+            
+            # Convert to array
+            if [ $? -eq 0 ]; then
+                mapfile -t RAW_IMAGES <<< "$DETECTED_IMAGES"
             else
-                FILTERED_IMAGES+=("$img")
+                 echo "⚠️  Python parsing failed. Falling back to simple config."
+                 DETECTED_IMAGES=$(docker compose config --images 2>/dev/null | sort | uniq | grep -v "^$")
+                 mapfile -t RAW_IMAGES <<< "$DETECTED_IMAGES"
             fi
-        done
-        
-        if [ ${#FILTERED_IMAGES[@]} -gt 0 ]; then
-            IMAGES=("${FILTERED_IMAGES[@]}")
-            echo "📋 Detected ${#IMAGES[@]} total images (run-time + build-base) to pull."
+            
+            # Simple deduplication and cleanup (no filtering needed!)
+            FILTERED_IMAGES=()
+            SORTED_UNIQUE=$(printf "%s\n" "${RAW_IMAGES[@]}" | sort | uniq)
+            mapfile -t CANDIDATES <<< "$SORTED_UNIQUE"
+            
+            for img in "${CANDIDATES[@]}"; do
+                if [[ -z "$img" ]]; then continue; fi
+                # We still ignore 'scratch' or obvious variable failures if any crept in
+                if [[ "$img" == "scratch" ]]; then continue; fi
+                FILTERED_IMAGES+=("$img")
+            done
+
+            if [ ${#FILTERED_IMAGES[@]} -gt 0 ]; then
+                IMAGES=("${FILTERED_IMAGES[@]}")
+                echo "📋 Detected ${#IMAGES[@]} source images to pull."
+            fi
+        else
+            echo "⚠️  Python3 not found. Falling back to default list."
         fi
         
         popd > /dev/null
