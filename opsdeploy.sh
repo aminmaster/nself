@@ -100,7 +100,7 @@ pre_pull_images() {
         echo "⚠️  No .env file found. Using default image tags."
     fi
 
-    # List of images to check
+    # List of images to check (Defaults, will be overwritten if docker-compose.yml is found)
     IMAGES=(
         "alpine:latest"
         "postgres:15-alpine"
@@ -113,6 +113,21 @@ pre_pull_images() {
         "falkordb/falkordb:latest"
         "falkordb/falkordb-browser:latest"
     )
+
+    # Dynamic Parsing: Try to find images dynamically from generated docker-compose.yml
+    if [ -f "$TARGET_DIR/docker-compose.yml" ]; then
+        echo "🔍 Found docker-compose.yml, extracting images..."
+        # Extract images, remove quotes/whitespace, remove empty lines, sort and uniq
+        DETECTED_IMAGES=$(grep "image:" "$TARGET_DIR/docker-compose.yml" | awk '{print $2}' | tr -d '"' | tr -d "'" | sort | uniq)
+        
+        # Convert to array
+        mapfile -t DYNAMIC_IMAGES <<< "$DETECTED_IMAGES"
+        
+        if [ ${#DYNAMIC_IMAGES[@]} -gt 0 ]; then
+            IMAGES=("${DYNAMIC_IMAGES[@]}")
+            echo "📋 Detected ${#IMAGES[@]} images from configuration."
+        fi
+    fi
 
     for img in "${IMAGES[@]}"; do
         # Check if image exists locally
@@ -197,7 +212,7 @@ fi
 update_nself
 update_nself
 update_repos
-pre_pull_images
+# pre_pull_images removed from here, moved to inside case blocks to run AFTER build
 
 case $MODE in
     update)
@@ -212,6 +227,7 @@ case $MODE in
             docker compose build --no-cache $REBUILD_SERVICES
         fi
         
+        pre_pull_images
         $NSELF_BIN start --verbose --fresh
         ;;
     partial)
@@ -231,6 +247,7 @@ case $MODE in
         fi
         
         restore_ssl
+        pre_pull_images
         $NSELF_BIN start --verbose --fresh
         ;;
     full)
@@ -251,6 +268,7 @@ case $MODE in
         fi
         
         restore_ssl
+        pre_pull_images
         $NSELF_BIN start --verbose --fresh
         ;;
     deep)
@@ -266,6 +284,7 @@ case $MODE in
         $NSELF_BIN init --wizard
         $NSELF_BIN build --force
         restore_ssl
+        pre_pull_images
         $NSELF_BIN start --verbose --fresh
         ;;
 esac
