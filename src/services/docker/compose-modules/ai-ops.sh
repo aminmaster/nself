@@ -447,7 +447,7 @@ generate_aio_stack() {
 
   # 5. AIO Metadata (Postgres)
   aio-db:
-    image: postgres:15-alpine
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: \${PROJECT_NAME}_aio_db
     restart: unless-stopped
     environment:
