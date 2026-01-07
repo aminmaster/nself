@@ -41,7 +41,7 @@ generate_nself_admin_service() {
   
   # Setup nself-admin source code
   local admin_dir="./services/admin"
-  local repo_url="https://github.com/acamarata/nself-admin.git"
+  local repo_url="git@github.com:aminmaster/nself-admin.git"
   
   if [[ ! -d "$admin_dir" ]]; then
     echo "Cloning nself-admin source code..." >&2

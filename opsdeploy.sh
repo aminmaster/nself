@@ -116,17 +116,127 @@ pre_pull_images() {
 
     # Dynamic Parsing: Try to find images dynamically from generated docker-compose.yml
     if [ -f "$TARGET_DIR/docker-compose.yml" ]; then
-        echo "🔍 Found docker-compose.yml, extracting images..."
-        # Extract images, remove quotes/whitespace, remove empty lines, sort and uniq
-        DETECTED_IMAGES=$(grep "image:" "$TARGET_DIR/docker-compose.yml" | awk '{print $2}' | tr -d '"' | tr -d "'" | sort | uniq)
+        echo "🔍 Found docker-compose.yml, processing configuration..."
         
-        # Convert to array
-        mapfile -t DYNAMIC_IMAGES <<< "$DETECTED_IMAGES"
+        # Ensure we are in the target directory for .env pickup and relative path resolution
+        pushd "$TARGET_DIR" > /dev/null
         
-        if [ ${#DYNAMIC_IMAGES[@]} -gt 0 ]; then
-            IMAGES=("${DYNAMIC_IMAGES[@]}")
-            echo "📋 Detected ${#IMAGES[@]} images from configuration."
+        # 1. Get External Images defined in 'image:' key
+        if DETECTED_IMAGES=$(docker compose config --images 2>/dev/null); then
+            # Clean up the output, dedup, and remove empty lines
+            DETECTED_IMAGES=$(echo "$DETECTED_IMAGES" | sort | uniq | grep -v "^$")
+            mapfile -t RAW_IMAGES <<< "$DETECTED_IMAGES"
+        else
+            echo "⚠️  'docker compose config' failed. Falling back to defaults."
+            RAW_IMAGES=()
         fi
+
+        # 2. Get Base Images from 'build:' contexts (Dockerfile scraping)
+        echo "🔍 Scanning Dockerfiles for base images..."
+        BASE_IMAGES=()
+        
+        # Parse docker-compose config to find build contexts and dockerfiles
+        # We look for the pattern: service -> build -> context, dockerfile
+        # Using a simple grep/awk approach as 'docker compose config' expands everything to absolute paths usually
+        # But to be safe, we iterate through services that have a build context.
+        
+        # Get list of services that have a build section
+        SERVICES_WITH_BUILD=$(docker compose config --services 2>/dev/null)
+        
+        for sv in $SERVICES_WITH_BUILD; do
+            # Check if service actually has a build context (by asking docker compose to output json for that service if possible, or parsing)
+            # Simpler approach: Look for directory existence. 
+            # Generating full config allows us to see the absolute path to contexts.
+            
+            # Using grep to find build context in the full config for this service might be tricky.
+            # Let's rely on the standard layout: ./services/NAME/Dockerfile or defined in compose.
+            
+            # Better approach: Use python/grep one-liner to parse the full config if available, 
+            # but since we don't assume external tools, let's try to parse the file structure.
+            # Actually, 'docker compose config' outputs a resolved YAML. We can look for 'context:' lines.
+            
+            # Let's try to extract paths to Dockerfiles from the resolved YAML
+            # Grep context and dockerfile lines.
+            # Warning: YAML parsing with grep is fragile. 
+            pass
+        done
+        
+        # Robust Implementation:
+        # We will dump the full config and iterate through 'build:' blocks.
+        # Since we are in bash, we can use a small python snippet if python3 is available (common on ubuntu)
+        # to correctly parse the YAML and extract all (context, dockerfile) tuples.
+        
+        FULL_CONFIG=$(docker compose config)
+        
+        if command -v python3 &>/dev/null; then
+             # Python script to extract dockerfile paths
+             DOCKERFILES=$(echo "$FULL_CONFIG" | python3 -c "
+import sys, yaml, os
+
+try:
+    data = yaml.safe_load(sys.stdin)
+    if 'services' in data:
+        for svc_name, svc_data in data['services'].items():
+            if 'build' in svc_data:
+                build = svc_data['build']
+                # build can be a string (path) or dict
+                if isinstance(build, str):
+                    context = build
+                    dockerfile = 'Dockerfile'
+                else:
+                    context = build.get('context', '.')
+                    dockerfile = build.get('dockerfile', 'Dockerfile')
+                
+                # Print absolute or relative path
+                print(os.path.join(context, dockerfile))
+except Exception as e:
+    pass # valid yaml might not possess build keys
+")
+             
+             # Now read each Dockerfile found
+             for df_path in $DOCKERFILES; do
+                 # Resolve path (it might be relative to TARGET_DIR if not absolute)
+                 # docker compose config usually outputs absolute paths for contexts
+                 if [ -f "$df_path" ]; then
+                     # Extract FROM images, handle 'AS' aliases (e.g. FROM node:20 AS builder -> node:20)
+                     # Also ignore scratch
+                     FROM_IMAGES=$(grep "^FROM" "$df_path" | awk '{print $2}' | grep -v "^scratch$")
+                     for base in $FROM_IMAGES; do
+                         BASE_IMAGES+=("$base")
+                     done
+                 fi
+             done
+        fi
+        
+        # Combine External and Base images
+        ALL_IMAGES=("${RAW_IMAGES[@]}" "${BASE_IMAGES[@]}")
+        
+        # Filter out local project images (build targets) and dedup
+        FILTERED_IMAGES=()
+        # Use an associative array for dedup if bash 4, or verify unique
+        # Simple loop with sort -u equivalent
+        
+        SORTED_UNIQUE=$(printf "%s\n" "${ALL_IMAGES[@]}" | sort | uniq)
+        
+        mapfile -t CANDIDATES <<< "$SORTED_UNIQUE"
+        
+        for img in "${CANDIDATES[@]}"; do
+            # Skip images that start with the project name or 'equilibria' (assumed local targets)
+            # Also skip empty lines or variables that failed to resolve
+            if [[ -z "$img" ]]; then continue; fi
+            if [[ "$img" == "${PROJECT_NAME}_"* ]] || [[ "$img" == "equilibria_"* ]]; then
+                echo "⏭️  Skipping local build target: $img"
+            else
+                FILTERED_IMAGES+=("$img")
+            fi
+        done
+        
+        if [ ${#FILTERED_IMAGES[@]} -gt 0 ]; then
+            IMAGES=("${FILTERED_IMAGES[@]}")
+            echo "📋 Detected ${#IMAGES[@]} total images (run-time + build-base) to pull."
+        fi
+        
+        popd > /dev/null
     fi
 
     for img in "${IMAGES[@]}"; do
