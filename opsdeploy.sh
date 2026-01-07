@@ -118,7 +118,28 @@ pre_pull_images() {
         # Check if image exists locally
         if [[ "$(docker images -q "$img" 2> /dev/null)" == "" ]]; then
              echo "⬇️  Pulling missing image: $img"
-             docker pull "$img"
+             
+             # Retry logic for unstable connections
+             count=0
+             max_retries=5
+             pulled=false
+             
+             while [ $count -lt $max_retries ]; do
+                if docker pull "$img"; then
+                    echo "✅ Successfully pulled $img"
+                    pulled=true
+                    break
+                else
+                    count=$((count+1))
+                    echo "❌ Failed to pull $img. Retrying ($count/$max_retries) in 5s..."
+                    sleep 5
+                fi
+             done
+             
+             if [ "$pulled" = false ]; then
+                echo "🚨 FATAL: Could not pull $img after $max_retries attempts. Aborting deployment."
+                exit 1
+             fi
         else
              echo "✅ Image present: $img"
         fi
