@@ -81,6 +81,50 @@ update_repos() {
     fi
 }
 
+# Function to pre-pull Docker images
+pre_pull_images() {
+    echo "Checking for missing Docker images..."
+    
+    # Source project .env for variables like RAGFLOW_IMAGE_TAG
+    # Priority: .env (Active Shim) -> .env.prod (Fallback) -> .env.dev (Fallback)
+    if [ -f "$TARGET_DIR/.env" ]; then
+        echo "📄 Sourcing environment from: .env"
+        source "$TARGET_DIR/.env"
+    elif [ -n "$WEB_DEPLOY_MODE" ] && [ -f "$TARGET_DIR/.env.$WEB_DEPLOY_MODE" ]; then
+        echo "📄 Sourcing environment from: .env.$WEB_DEPLOY_MODE"
+        source "$TARGET_DIR/.env.$WEB_DEPLOY_MODE"
+    elif [ -f "$TARGET_DIR/.env.prod" ]; then
+        echo "📄 Sourcing environment from: .env.prod (Fallback)"
+        source "$TARGET_DIR/.env.prod"
+    else
+        echo "⚠️  No .env file found. Using default image tags."
+    fi
+
+    # List of images to check
+    IMAGES=(
+        "alpine:latest"
+        "postgres:15-alpine"
+        "minio/minio:latest"
+        "docker.elastic.co/elasticsearch/elasticsearch:8.11.3"
+        "infiniflow/ragflow:${RAGFLOW_IMAGE_TAG:-v0.23.1}"
+        "infiniflow/sandbox-executor-manager:latest"
+        "redis:7-alpine"
+        "neo4j:5.26"
+        "falkordb/falkordb:latest"
+        "falkordb/falkordb-browser:latest"
+    )
+
+    for img in "${IMAGES[@]}"; do
+        # Check if image exists locally
+        if [[ "$(docker images -q "$img" 2> /dev/null)" == "" ]]; then
+             echo "⬇️  Pulling missing image: $img"
+             docker pull "$img"
+        else
+             echo "✅ Image present: $img"
+        fi
+    done
+}
+
 # Parse arguments
 MODE=""
 export WEB_DEPLOY_MODE="" # Default empty, will prompt if not set via flag
@@ -130,7 +174,9 @@ fi
 
 # Always update nself and code before proceeding
 update_nself
+update_nself
 update_repos
+pre_pull_images
 
 case $MODE in
     update)
