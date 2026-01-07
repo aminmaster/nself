@@ -4,6 +4,7 @@
 
 # Configuration
 PROJECT_NAME="equilibria"
+export PROJECT_NAME
 PROJECTS_ROOT="$HOME/projects"
 NSELF_DIR="${HOME}/.nself"
 NSELF_BIN="${NSELF_DIR}/bin/nself"
@@ -87,6 +88,8 @@ pre_pull_images() {
     
     # Source project .env for variables like RAGFLOW_IMAGE_TAG
     # Priority: .env (Active Shim) -> .env.prod (Fallback) -> .env.dev (Fallback)
+    # PRO TIP: We use 'set -a' to automatically export sourced variables so 'docker compose config' sees them!
+    set -a
     if [ -f "$TARGET_DIR/.env" ]; then
         echo "📄 Sourcing environment from: .env"
         source "$TARGET_DIR/.env"
@@ -99,6 +102,7 @@ pre_pull_images() {
     else
         echo "⚠️  No .env file found. Using default image tags."
     fi
+    set +a
 
     # List of images to check (Defaults, will be overwritten if docker-compose.yml is found)
     IMAGES=(
@@ -140,26 +144,6 @@ pre_pull_images() {
         # Using a simple grep/awk approach as 'docker compose config' expands everything to absolute paths usually
         # But to be safe, we iterate through services that have a build context.
         
-        # Get list of services that have a build section
-        SERVICES_WITH_BUILD=$(docker compose config --services 2>/dev/null)
-        
-        for sv in $SERVICES_WITH_BUILD; do
-            # Check if service actually has a build context (by asking docker compose to output json for that service if possible, or parsing)
-            # Simpler approach: Look for directory existence. 
-            # Generating full config allows us to see the absolute path to contexts.
-            
-            # Using grep to find build context in the full config for this service might be tricky.
-            # Let's rely on the standard layout: ./services/NAME/Dockerfile or defined in compose.
-            
-            # Better approach: Use python/grep one-liner to parse the full config if available, 
-            # but since we don't assume external tools, let's try to parse the file structure.
-            # Actually, 'docker compose config' outputs a resolved YAML. We can look for 'context:' lines.
-            
-            # Let's try to extract paths to Dockerfiles from the resolved YAML
-            # Grep context and dockerfile lines.
-            # Warning: YAML parsing with grep is fragile. 
-            pass
-        done
         
         # Robust Implementation:
         # We will dump the full config and iterate through 'build:' blocks.
