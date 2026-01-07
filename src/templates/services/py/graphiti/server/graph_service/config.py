@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     nhost_webhook_secret: str = Field(
         'nhost-webhook-secret', validation_alias=AliasChoices('NHOST_WEBHOOK_SECRET')
     )
+    disable_schema_init: bool = Field(False, validation_alias=AliasChoices('DISABLE_SCHEMA_INIT'))
 
     model_config = SettingsConfigDict(
         env_file='.env', extra='ignore', populate_by_name=True

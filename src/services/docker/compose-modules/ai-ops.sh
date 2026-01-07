@@ -507,7 +507,11 @@ generate_aio_stack() {
       GRAPH_DRIVER_TYPE: neo4j
       FALKORDB_HOST: aio-falkordb
       FALKORDB_PORT: 6379
+      FALKORDB_HOST: aio-falkordb
+      FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${FALKORDB_PASSWORD:-aiopassword}}
+      # Disable auto-schema for RAGFlow native ingestion
+      DISABLE_SCHEMA_INIT: "true"
     volumes:
       - aio_graphiti_data:/app/data
     healthcheck:

@@ -170,7 +170,12 @@ async def initialize_graphiti(settings: ZepEnvDep):
             password=settings.neo4j_password or "password",
             llm_client=llm_client
         )
-    await client.build_indices_and_constraints()
+    
+    if not settings.disable_schema_init:
+        logger.info("Building indices and constraints...")
+        await client.build_indices_and_constraints()
+    else:
+        logger.info("Skipping schema initialization (DISABLE_SCHEMA_INIT=true)")
 
 
 
