@@ -42,21 +42,32 @@ if [[ "$MODE" == "backup" ]]; then
 
     # 2. RAGFlow Artifacts (Minio)
     echo "Archiving RAGFlow Minio Artifacts..."
+    # Using correct volume name: equilibria_aio_minio_data
     docker run --rm \
-      -v aio_ragflow_data:/data \
+      -v equilibria_aio_minio_data:/data \
       -v "${BACKUP_DIR}:/backup" \
-      alpine tar -czf "/backup/ragflow_data.tar.gz" -C /data .
-    echo "✔ RAGFlow Data Volume backed up."
+      alpine tar -czf "/backup/ragflow_minio_data.tar.gz" -C /data .
+    echo "✔ RAGFlow Minio Artifacts backed up."
 
-    # 3. Neo4j Database (Graph)
-    echo "Archiving Neo4j Database..."
+    # 3. RAGFlow Vectors (Elasticsearch)
+    echo "Archiving RAGFlow Vectors (Elasticsearch)..."
+    # Using correct volume name: equilibria_aio_es_data
     docker run --rm \
-      -v aio_neo4j_data:/data \
+      -v equilibria_aio_es_data:/data \
+      -v "${BACKUP_DIR}:/backup" \
+      alpine tar -czf "/backup/ragflow_es_data.tar.gz" -C /data .
+    echo "✔ RAGFlow Vector Indices backed up."
+
+    # 4. Neo4j Database (Graph)
+    echo "Archiving Neo4j Database..."
+    # Using correct volume name: equilibria_aio_neo4j_data
+    docker run --rm \
+      -v equilibria_aio_neo4j_data:/data \
       -v "${BACKUP_DIR}:/backup" \
       alpine tar -czf "/backup/neo4j_data.tar.gz" -C /data .
     echo "✔ Neo4j Data Volume backed up."
 
-    # 4. Final compression
+    # 5. Final compression
     echo "Finalizing archive..."
     cd "$BACKUP_ROOT"
     tar -czf "kg_backup_${TIMESTAMP}.tar.gz" "${TIMESTAMP}"
@@ -66,7 +77,7 @@ if [[ "$MODE" == "backup" ]]; then
     echo "📍 Location: ${BACKUP_ROOT}/kg_backup_${TIMESTAMP}.tar.gz"
 
 elif [[ "$MODE" == "restore" ]]; then
-    echo "⚠️  WARNING: This will OVERWRITE current RAGFlow and Neo4j data."
+    echo "⚠️  WARNING: This will OVERWRITE RAGFlow (DB/Minio/ES) and Neo4j data."
     echo "    Archive: $ARCHIVE_PATH"
     read -p "Are you sure? (y/N) " -n 1 -r
     echo
@@ -78,7 +89,6 @@ elif [[ "$MODE" == "restore" ]]; then
     echo "📂 Extracting archive..."
     WORK_DIR=$(mktemp -d)
     tar -xzf "$ARCHIVE_PATH" -C "$WORK_DIR"
-    # Find the directory inside (it matches the timestamp)
     EXTRACTED_DIR=$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
 
     # 1. Restore Postgres
@@ -87,22 +97,31 @@ elif [[ "$MODE" == "restore" ]]; then
     echo "✔ RAGFlow DB restored."
 
     # 2. Restore Minio Volume
-    echo "Restoring RAGFlow Data Volume..."
-    # Clean volume first
-    docker run --rm -v aio_ragflow_data:/data alpine sh -c 'rm -rf /data/*'
-    # Restore
+    echo "Restoring RAGFlow Minio Artifacts..."
+    docker run --rm -v equilibria_aio_minio_data:/data alpine sh -c 'rm -rf /data/*'
     docker run --rm \
-      -v aio_ragflow_data:/data \
+      -v equilibria_aio_minio_data:/data \
       -v "${EXTRACTED_DIR}:/backup" \
-      alpine tar -xzf "/backup/ragflow_data.tar.gz" -C /data
-    echo "✔ RAGFlow Data Volume restored."
+      alpine tar -xzf "/backup/ragflow_minio_data.tar.gz" -C /data
+    echo "✔ RAGFlow Minio Artifacts restored."
 
-    # 3. Restore Neo4j Volume
+    # 3. Restore Elasticsearch Volume
+    echo "Restoring RAGFlow Vector Indices..."
+    docker stop equilibria_aio_es || true
+    docker run --rm -v equilibria_aio_es_data:/data alpine sh -c 'rm -rf /data/*'
+    docker run --rm \
+      -v equilibria_aio_es_data:/data \
+      -v "${EXTRACTED_DIR}:/backup" \
+      alpine tar -xzf "/backup/ragflow_es_data.tar.gz" -C /data
+    docker start equilibria_aio_es
+    echo "✔ RAGFlow Vector Indices restored."
+
+    # 4. Restore Neo4j Volume
     echo "Restoring Neo4j Data Volume..."
     docker stop equilibria_aio_neo4j || true
-    docker run --rm -v aio_neo4j_data:/data alpine sh -c 'rm -rf /data/*'
+    docker run --rm -v equilibria_aio_neo4j_data:/data alpine sh -c 'rm -rf /data/*'
     docker run --rm \
-      -v aio_neo4j_data:/data \
+      -v equilibria_aio_neo4j_data:/data \
       -v "${EXTRACTED_DIR}:/backup" \
       alpine tar -xzf "/backup/neo4j_data.tar.gz" -C /data
     docker start equilibria_aio_neo4j
