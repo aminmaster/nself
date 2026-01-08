@@ -249,24 +249,27 @@ EOF
       graphrag|graph-builder|falkordb|graphiti)
         [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
         ;;
-      ai-ops)
-        export AIO_STACK_PRESENT="true"
-        cat >> docker-compose.yml <<VOL
-  aio_neo4j_data:
-  aio_neo4j_logs:
-  aio_falkordb_data:
-  aio_es_data:
-  aio_db_data:
-  aio_redis_data:
-  aio_minio_data:
-  aio_ragflow_data:
-  aio_langflow_data:
-  aio_mlflow_artifacts:
-  aio_graphiti_data:
-VOL
-        ;;
     esac
   done
+
+  # Add volumes for AIO Bundles
+  [[ "${RAGFLOW_ENABLED:-false}" == "true" ]] && cat >> docker-compose.yml <<VOL
+  rf_db_data:
+  rf_redis_data:
+  rf_es_data:
+  rf_minio_data:
+  rf_ragflow_data:
+VOL
+  [[ "${DIFY_ENABLED:-false}" == "true" ]] && cat >> docker-compose.yml <<VOL
+  df_db_data:
+  df_redis_data:
+  df_weaviate_data:
+VOL
+  [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && echo "  fw_db_data:" >> docker-compose.yml && echo "  fw_app_data:" >> docker-compose.yml
+  [[ "${KG_ENABLED:-false}" == "true" ]] && echo "  kg_neo4j_data:" >> docker-compose.yml
+  [[ "${MG_ENABLED:-false}" == "true" ]] && echo "  mg_falkordb_data:" >> docker-compose.yml && echo "  mg_graphiti_data:" >> docker-compose.yml
+  [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && echo "  lf_db_data:" >> docker-compose.yml && echo "  lf_app_data:" >> docker-compose.yml
+  [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && echo "  ml_db_data:" >> docker-compose.yml && echo "  ml_minio_data:" >> docker-compose.yml
 
   # Start services section
   echo "" >> docker-compose.yml
@@ -306,9 +309,55 @@ VOL
     generate_utility_services >> docker-compose.yml
     
     # Only generate standalone MLFlow if not part of AIO stack
-    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "${AIO_STACK_PRESENT:-false}" != "true" ]]; then
-      generate_mlflow_service_improved >> docker-compose.yml
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "${AIO_STACK_PRESENT:-false}" != "true" && "${MLFLOW_ENABLED:-false}" != "true" ]]; then
+       # (MLFlow is now handled by ml.sh bundle if enabled)
+       true
     fi
+  fi
+
+  # ============================================
+  # AIO Bundles (Isolated Stacks)
+  # ============================================
+  if [[ "${RAGFLOW_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # RAGFlow Stack" >> docker-compose.yml
+    generate_rf_stack >> docker-compose.yml
+  fi
+
+  if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # Dify Stack" >> docker-compose.yml
+    generate_df_stack >> docker-compose.yml
+  fi
+
+  if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # Flowise Stack" >> docker-compose.yml
+    generate_fw_stack >> docker-compose.yml
+  fi
+
+  if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # Knowledge Graph Stack" >> docker-compose.yml
+    generate_kg_stack >> docker-compose.yml
+  fi
+
+  if [[ "${MG_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # Memory Graph Stack" >> docker-compose.yml
+    generate_mg_stack >> docker-compose.yml
+  fi
+
+  if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # LangFlow Stack" >> docker-compose.yml
+    generate_lf_stack >> docker-compose.yml
+  fi
+
+  if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+    echo "" >> docker-compose.yml
+    echo "  # MLflow Stack" >> docker-compose.yml
+    generate_ml_stack >> docker-compose.yml
   fi
 
   # ============================================

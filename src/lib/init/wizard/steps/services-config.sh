@@ -342,7 +342,84 @@ wizard_email_search() {
   return 0
 }
 
+# Configure AIO Bundles
+wizard_aio_bundles() {
+  local config_array_name="$1"
+
+  clear
+  show_wizard_step 8 10 "AIO Bundles"
+
+  echo "🧠 AI Operations Bundles"
+  echo "  Select specialized AI/ML and Graph stacks"
+  echo ""
+
+  # RAGFlow
+  echo "🌊 RAGFlow"
+  if confirm_action "Enable RAGFlow Bundle?"; then
+    add_wizard_config "$config_array_name" "RAGFLOW_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "RAGFLOW_ENABLED" "false"
+  fi
+  echo ""
+
+  # Dify
+  echo "🚀 Dify"
+  if confirm_action "Enable Dify Bundle?"; then
+    add_wizard_config "$config_array_name" "DIFY_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "DIFY_ENABLED" "false"
+  fi
+  echo ""
+
+  # Flowise
+  echo "⛓️ Flowise"
+  if confirm_action "Enable Flowise Bundle?"; then
+    add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "false"
+  fi
+  echo ""
+
+  # Knowledge Graph
+  echo "🕸️ Knowledge Graph (Neo4j)"
+  if confirm_action "Enable Knowledge Graph Bundle?"; then
+    add_wizard_config "$config_array_name" "KG_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "KG_ENABLED" "false"
+  fi
+  echo ""
+
+  # Memory Graph
+  echo "🧠 Memory Graph (FalkorDB)"
+  if confirm_action "Enable Memory Graph Bundle?"; then
+    add_wizard_config "$config_array_name" "MG_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "MG_ENABLED" "false"
+  fi
+  echo ""
+
+  # LangFlow
+  echo "🎨 LangFlow"
+  if confirm_action "Enable LangFlow Bundle?"; then
+    add_wizard_config "$config_array_name" "LANGFLOW_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "LANGFLOW_ENABLED" "false"
+  fi
+  echo ""
+
+  # MLflow
+  echo "📊 MLflow"
+  if confirm_action "Enable MLflow Bundle?"; then
+    add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+  else
+    add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "false"
+  fi
+
+  return 0
+}
+
 # Export functions
 export -f wizard_core_services
 export -f wizard_optional_services
 export -f wizard_email_search
+export -f wizard_aio_bundles

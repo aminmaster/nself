@@ -8,8 +8,14 @@ has_ai_services_selected() {
   local -n config_ref=$config_array_name
   
   # Check for AI_SERVICES_SELECTED flag (set when Memobase or GraphRAG selected)
-  for item in "${config_ref[@]}"; do
-    if [[ "$item" == *"AI_SERVICES_SELECTED=true"* ]]; then
+    if [[ "$item" == *"AI_SERVICES_SELECTED=true"* ]] || \
+       [[ "$item" == *"RAGFLOW_ENABLED=true"* ]] || \
+       [[ "$item" == *"DIFY_ENABLED=true"* ]] || \
+       [[ "$item" == *"FLOWISE_ENABLED=true"* ]] || \
+       [[ "$item" == *"KG_ENABLED=true"* ]] || \
+       [[ "$item" == *"MG_ENABLED=true"* ]] || \
+       [[ "$item" == *"LANGFLOW_ENABLED=true"* ]] || \
+       [[ "$item" == *"MLFLOW_ENABLED=true"* ]]; then
       return 0
     fi
   done

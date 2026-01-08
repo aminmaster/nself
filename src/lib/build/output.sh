@@ -155,6 +155,26 @@ show_next_steps() {
     if [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]]; then
       echo "     • Admin: https://${NSELF_ADMIN_ROUTE:-admin.${base_domain}}"
     fi
+
+    # AIO Bundle Display
+    if [[ "${RAGFLOW_ENABLED:-false}" == "true" ]]; then
+       echo "     • RAGFlow: https://${base_domain}:9380"
+    fi
+    if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
+       echo "     • Dify: https://${base_domain}:80 (UI)"
+    fi
+    if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
+       echo "     • Flowise: http://${base_domain}:3001"
+    fi
+    if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+       echo "     • KG Builder: http://${base_domain}:8000"
+    fi
+    if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
+       echo "     • LangFlow: http://${base_domain}:7860"
+    fi
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+       echo "     • MLflow: http://${base_domain}:5000"
+    fi
   fi
 
   echo ""

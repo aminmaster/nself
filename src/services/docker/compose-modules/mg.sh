@@ -1,0 +1,64 @@
+# mg.sh - Memory Graph Stack Module (FalkorDB + Graphiti)
+
+generate_mg_stack() {
+  local service_name="mg"
+  
+  cat <<EOF
+
+  # Memory Graph Stack
+  mg-falkordb:
+    image: falkordb/falkordb:latest
+    container_name: \${PROJECT_NAME}_mg_falkordb
+    restart: unless-stopped
+    command: ["redis-server", "--loadmodule", "/var/lib/falkordb/bin/falkordb.so", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
+    volumes:
+      - mg_falkordb_data:/data
+    networks:
+      - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mg-graphiti:
+    build:
+      context: ./services/ai-ops/graphiti
+      dockerfile: Dockerfile
+    image: \${PROJECT_NAME}_mg_graphiti:latest
+    container_name: \${PROJECT_NAME}_mg_graphiti
+    restart: unless-stopped
+    environment:
+      NEO4J_URI: bolt://kg-neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: \${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      FALKORDB_HOST: mg-falkordb
+      FALKORDB_PASSWORD: \${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      OPENAI_API_KEY: \${OPENAI_API_KEY}
+    depends_on:
+      mg-falkordb:
+        condition: service_healthy
+      kg-neo4j:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  mg-graphiti-worker:
+    image: \${PROJECT_NAME}_mg_graphiti:latest
+    container_name: \${PROJECT_NAME}_mg_graphiti_worker
+    restart: unless-stopped
+    command: ["celery", "-A", "graphiti.worker", "worker", "--loglevel=info"]
+    environment:
+      NEO4J_URI: bolt://kg-neo4j:7687
+      FALKORDB_HOST: mg-falkordb
+      OPENAI_API_KEY: \${OPENAI_API_KEY}
+    depends_on:
+      mg-graphiti:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+EOF
+}
+
+export -f generate_mg_stack

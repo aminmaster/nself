@@ -163,7 +163,10 @@ EOF
   # Step 7: Email & Search
   wizard_email_search config
 
-  # Step 8: Custom Backend Services
+  # Step 8: AIO Bundles
+  wizard_aio_bundles config
+
+  # Step 9: Custom Backend Services
   wizard_custom_services config
 
   # Step 8b: AI Model Providers (conditional - only if AI services selected)

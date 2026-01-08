@@ -418,13 +418,21 @@ orchestrate_build() {
     export AUTH_ENABLED="${AUTH_ENABLED:-true}"
     export NGINX_ENABLED="${NGINX_ENABLED:-true}"
 
-    # Optional services
+    # AIO Bundles detection
+    export RAGFLOW_ENABLED="${RAGFLOW_ENABLED:-false}"
+    export DIFY_ENABLED="${DIFY_ENABLED:-false}"
+    export FLOWISE_ENABLED="${FLOWISE_ENABLED:-false}"
+    export KG_ENABLED="${KG_ENABLED:-false}"
+    export MG_ENABLED="${MG_ENABLED:-false}"
+    export LANGFLOW_ENABLED="${LANGFLOW_ENABLED:-false}"
+    export MLFLOW_ENABLED="${MLFLOW_ENABLED:-false}"
+
+    # Legacy Optional services (kept for backward compatibility)
     export NSELF_ADMIN_ENABLED="${NSELF_ADMIN_ENABLED:-false}"
     export MINIO_ENABLED="${MINIO_ENABLED:-${STORAGE_ENABLED:-false}}"
     export REDIS_ENABLED="${REDIS_ENABLED:-false}"
     export MEILISEARCH_ENABLED="${MEILISEARCH_ENABLED:-false}"
     export MAILPIT_ENABLED="${MAILPIT_ENABLED:-false}"
-    export MLFLOW_ENABLED="${MLFLOW_ENABLED:-false}"
     export FUNCTIONS_ENABLED="${FUNCTIONS_ENABLED:-false}"
 
     # Monitoring bundle
