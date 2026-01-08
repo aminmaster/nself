@@ -138,14 +138,19 @@ pre_pull_images() {
         # - IF 'build' exists -> Scrape Dockerfile for base image (Dependency)
         # - IF 'build' missing -> Use 'image' key (Direct Pull)
         
+        # Try to use environment files for accurate parsing if they exist
+        ENV_ARGS=""
+        [[ -f ".env.prod" ]] && ENV_ARGS="$ENV_ARGS --env-file .env.prod"
+        [[ -f ".env.secrets" ]] && ENV_ARGS="$ENV_ARGS --env-file .env.secrets"
+
         # Redirect stderr to /dev/null to hide warnings for non-critical internal variables
-        FULL_CONFIG=$(docker compose config 2>/dev/null)
+        FULL_CONFIG=$(docker compose $ENV_ARGS config 2>/dev/null)
         
         if command -v python3 &>/dev/null; then
              echo "🔍 analyzing stack configuration..."
              
              # Python script to extract TRUE source images
-             DETECTED_IMAGES=$(echo "$FULL_CONFIG" | python3 -c "
+             DETECTED_IMAGES=$(echo "$FULL_CONFIG" | PROJECT_NAME="$PROJECT_NAME" python3 -c "
 import sys, yaml, os, re
 
 def get_base_images(dockerfile_path):
@@ -159,9 +164,6 @@ def get_base_images(dockerfile_path):
                     if len(parts) > 1:
                         img = parts[1]
                         # Skip usage of aliases (FROM base AS builder -> FROM builder)
-                        # This is a naive check; ideally we track aliases. 
-                        # But standard FROM usually points to external image or previous stage.
-                        # If it points to previous stage alias, 'docker pull' will fail safely/quickly.
                         if img.lower() != 'scratch':
                             images.append(img)
     return images
@@ -170,6 +172,7 @@ try:
     data = yaml.safe_load(sys.stdin)
     to_pull = set()
     built_images = set()
+    project_prefix = (os.environ.get('PROJECT_NAME') or '').strip() + '_'
     
     services = data.get('services', {})
     
@@ -196,11 +199,17 @@ try:
             # Scrape the Dockerfile for BASE images
             bases = get_base_images(df_path)
             for b in bases:
+                # Never pull something that looks like it belongs to our project
+                if project_prefix != '_' and b.startswith(project_prefix):
+                    continue
                 to_pull.add(b)
 
         # STRATEGY 2: IT IS A PULL (No Build)
         elif 'image' in svc_data:
             img = svc_data['image']
+            # Safety: Never pull something that looks like it belongs to our project
+            if project_prefix != '_' and img.startswith(project_prefix):
+                continue
             # Only pull if it's NOT built locally by another service
             if img not in built_images:
                 to_pull.add(img)
