@@ -2,7 +2,15 @@
 
 generate_kg_stack() {
   local service_name="kg"
+  local kg_builder_dir="./services/kg/llm-graph-builder"
   
+  # Clone the Neo4j LLM Graph Builder repo if missing
+  if [[ ! -d "$kg_builder_dir" ]]; then
+    echo "Cloning Neo4j LLM Graph Builder source..." >&2
+    mkdir -p "$(dirname "$kg_builder_dir")"
+    git clone https://github.com/neo4j-labs/llm-graph-builder.git "$kg_builder_dir" >&2
+  fi
+
   cat <<EOF
 
   # Knowledge Graph Stack
@@ -26,12 +34,15 @@ generate_kg_stack() {
       timeout: 10s
       retries: 10
 
-  kg-builder:
-    image: neo4j/llm-graph-builder:latest
-    container_name: \${PROJECT_NAME}_kg_builder
+  kg-builder-backend:
+    build:
+      context: ${kg_builder_dir}/backend
+      dockerfile: Dockerfile
+    image: \${PROJECT_NAME}_kg_builder_backend:latest
+    container_name: \${PROJECT_NAME}_kg_builder_backend
     restart: unless-stopped
     ports:
-      - "8000:8000" # Frontend/API
+      - "8001:8000"
     environment:
       NEO4J_URI: bolt://kg-neo4j:7687
       NEO4J_USERNAME: neo4j
@@ -42,6 +53,25 @@ generate_kg_stack() {
     depends_on:
       kg-neo4j:
         condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  kg-builder-frontend:
+    build:
+      context: ${kg_builder_dir}/frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_API_URL=http://\${BASE_DOMAIN}:8001
+        - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash
+        - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
+        - VITE_ENV=PROD
+    image: \${PROJECT_NAME}_kg_builder_frontend:latest
+    container_name: \${PROJECT_NAME}_kg_builder_frontend
+    restart: unless-stopped
+    ports:
+      - "8000:8080"
+    depends_on:
+      - kg-builder-backend
     networks:
       - ${DOCKER_NETWORK}
 
