@@ -169,30 +169,41 @@ def get_base_images(dockerfile_path):
 try:
     data = yaml.safe_load(sys.stdin)
     to_pull = set()
+    built_images = set()
     
-    if 'services' in data:
-        for svc_name, svc_data in data['services'].items():
-            # STRATEGY 1: IT IS A BUILD
-            if 'build' in svc_data:
-                build = svc_data['build']
-                if isinstance(build, str):
-                    context = build
-                    dockerfile = 'Dockerfile'
-                else:
-                    context = build.get('context', '.')
-                    dockerfile = build.get('dockerfile', 'Dockerfile')
-                
-                # Context is usually absolute from 'docker compose config'
-                df_path = os.path.join(context, dockerfile)
-                
-                # Scrape the Dockerfile
-                bases = get_base_images(df_path)
-                for b in bases:
-                    to_pull.add(b)
+    services = data.get('services', {})
+    
+    # Pass 1: Identify all images that are built locally
+    for svc_data in services.values():
+        if 'build' in svc_data and 'image' in svc_data:
+            built_images.add(svc_data['image'])
 
-            # STRATEGY 2: IT IS A PULL (No Build)
-            elif 'image' in svc_data:
-                to_pull.add(svc_data['image'])
+    # Pass 2: Collect images to pull
+    for svc_name, svc_data in services.items():
+        # STRATEGY 1: IT IS A BUILD
+        if 'build' in svc_data:
+            build = svc_data['build']
+            if isinstance(build, str):
+                context = build
+                dockerfile = 'Dockerfile'
+            else:
+                context = build.get('context', '.')
+                dockerfile = build.get('dockerfile', 'Dockerfile')
+            
+            # Context is usually absolute from 'docker compose config'
+            df_path = os.path.join(context, dockerfile)
+            
+            # Scrape the Dockerfile for BASE images
+            bases = get_base_images(df_path)
+            for b in bases:
+                to_pull.add(b)
+
+        # STRATEGY 2: IT IS A PULL (No Build)
+        elif 'image' in svc_data:
+            img = svc_data['image']
+            # Only pull if it's NOT built locally by another service
+            if img not in built_images:
+                to_pull.add(img)
 
     for img in to_pull:
         print(img)
