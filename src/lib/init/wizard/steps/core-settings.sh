@@ -7,7 +7,7 @@ wizard_core_settings() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 1 10 "Core Project Settings"
+  show_wizard_step 1 12 "Core Project Settings"
 
   echo "📋 Basic Configuration"
   echo ""

@@ -190,7 +190,7 @@ wizard_service_passwords() {
   local base_domain="${2:-localhost}"
 
   clear
-  show_wizard_step 5 10 "Service Passwords"
+  show_wizard_step 5 12 "Service Passwords"
 
   echo "🔑 Service Authentication"
   echo ""
@@ -259,7 +259,7 @@ wizard_admin_credentials() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 2 10 "Global Admin Credentials"
+  show_wizard_step 2 12 "Global Admin Credentials"
 
   echo "👤 Global Admin Credentials"
   echo "These credentials will be the 'Single Key' for the entire stack,"
@@ -342,7 +342,7 @@ wizard_custom_services() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 8 10 "Custom Backend Services"
+  show_wizard_step 9 12 "Custom Backend Services"
 
   echo "🔧 Custom Backend Services"
   echo ""
@@ -416,7 +416,7 @@ wizard_frontend_apps() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 9 10 "Frontend Applications"
+  show_wizard_step 11 12 "Frontend Applications"
 
   echo "🎨 Frontend Applications (Containerized)"
   echo ""
@@ -513,7 +513,7 @@ wizard_review_generate() {
   local output_file="$2"
 
   clear
-  show_wizard_step 10 10 "Review Configuration"
+  show_wizard_step 12 12 "Review Configuration"
 
   echo "📋 Configuration Summary"
   echo ""

@@ -8,7 +8,7 @@ wizard_database_config() {
   local project_name="${2:-myproject}"
 
   clear
-  show_wizard_step 3 10 "Database Configuration"
+  show_wizard_step 3 12 "Database Configuration"
 
   echo "🗄 PostgreSQL Database"
   echo ""

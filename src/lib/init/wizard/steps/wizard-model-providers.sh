@@ -38,7 +38,7 @@ wizard_model_providers() {
   local config_array_name="$1"
   
   clear
-  show_wizard_step 8 10 "AI Model Providers"
+  show_wizard_step 10 12 "AI Model Providers"
   
   echo "🤖 AI Model Provider Configuration"
   echo ""

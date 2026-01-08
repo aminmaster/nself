@@ -7,7 +7,7 @@ wizard_core_services() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 4 10 "Core Services"
+  show_wizard_step 4 12 "Core Services"
 
   echo "🔧 Select Core Services"
   echo ""
@@ -89,7 +89,7 @@ wizard_optional_services() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 6 10 "Optional Services"
+  show_wizard_step 6 12 "Optional Services"
 
   echo "🔌 Additional Services"
   echo ""
@@ -218,7 +218,7 @@ wizard_email_search() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 7 10 "Email & Search"
+  show_wizard_step 7 12 "Email & Search"
 
   echo "📧 Email Service"
   echo ""
@@ -347,7 +347,7 @@ wizard_aio_bundles() {
   local config_array_name="$1"
 
   clear
-  show_wizard_step 8 10 "AIO Bundles"
+  show_wizard_step 8 12 "AIO Bundles"
 
   echo "🧠 AI Operations Bundles"
   echo "  Select specialized AI/ML and Graph stacks"
