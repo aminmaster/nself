@@ -88,8 +88,17 @@ pre_pull_images() {
     
     # Source project .env for variables like RAGFLOW_IMAGE_TAG
     # Priority: .env.$WEB_DEPLOY_MODE -> .env.prod -> .env (shim)
+    # SECRETS: Always source .env.secrets if it exists to resolve warnings
     # PRO TIP: We use 'set -a' to automatically export sourced variables so 'docker compose config' sees them!
     set -a
+    
+    # 1. Source SECRETS first (so they are available for everything)
+    if [ -f "$TARGET_DIR/.env.secrets" ]; then
+        echo "🔐 Sourcing secrets from: .env.secrets"
+        source "$TARGET_DIR/.env.secrets"
+    fi
+
+    # 2. Source ENVIRONMENT (prod, etc.)
     if [ -n "$WEB_DEPLOY_MODE" ] && [ -f "$TARGET_DIR/.env.$WEB_DEPLOY_MODE" ]; then
         echo "📄 Sourcing environment from: .env.$WEB_DEPLOY_MODE"
         source "$TARGET_DIR/.env.$WEB_DEPLOY_MODE"
@@ -100,7 +109,7 @@ pre_pull_images() {
         echo "📄 Sourcing environment from: .env (Shim)"
         source "$TARGET_DIR/.env"
     else
-        echo "⚠️  No .env file found. Using default image tags."
+        echo "⚠️  No environment file found. Using default image tags."
     fi
     set +a
 
@@ -129,7 +138,8 @@ pre_pull_images() {
         # - IF 'build' exists -> Scrape Dockerfile for base image (Dependency)
         # - IF 'build' missing -> Use 'image' key (Direct Pull)
         
-        FULL_CONFIG=$(docker compose config)
+        # Redirect stderr to /dev/null to hide warnings for non-critical internal variables
+        FULL_CONFIG=$(docker compose config 2>/dev/null)
         
         if command -v python3 &>/dev/null; then
              echo "🔍 analyzing stack configuration..."
