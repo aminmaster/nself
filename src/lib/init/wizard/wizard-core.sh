@@ -367,7 +367,6 @@ wizard_custom_services() {
         "fastapi - Python FastAPI"
         "bullmq-js - BullMQ job processor"
         "grpc - gRPC service"
-        "ai-ops - AI Operating System (RAGFlow + Langflow + Knowledge Graph)"
         "Custom Docker image"
       )
       local selected_type
@@ -378,64 +377,16 @@ wizard_custom_services() {
         1) service_type="fastapi" ;;
         2) service_type="bullmq-js" ;;
         3) service_type="grpc" ;;
-        4) service_type="ai-ops" ;;
-        5)
+        4)
           echo ""
           prompt_input "Docker image" "node:18" service_type
           ;;
       esac
 
-      # Prompt for service-specific credentials
-      if [[ "$service_type" == "ai-ops" ]]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "AI Operating System Configuration (Unified Stack):"
-        echo "  • Ingestion: RAGFlow (High-fidelity Logic)"
-        echo "  • Orchestration: Langflow (Agentic Brain)"
-        echo "  • Memory: Graphiti + FalkorDB (Temporal User State)"
-        echo "  • Knowledge: Neo4j (Structural Graph)"
-        echo "  • Ops: MLFlow (Model Management)"
-        echo "  • Infrastructure: Shared Postgres, Redis, ES, Minio"
-        echo ""
-        echo "  [NOTE] Admin Dashboard credentials will be used"
-        echo "         for Langflow and stack-wide authentication."
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        
-        local aio_version aio_subdomain aio_secret ragflow_tag
-        prompt_input "AIO Version" "1.0.0" aio_version
-        add_wizard_config "$config_array_name" "AIO_VERSION" "$aio_version"
-
-        prompt_input "RAGFlow Image Tag" "v0.23.1" ragflow_tag
-        add_wizard_config "$config_array_name" "RAGFLOW_IMAGE_TAG" "$ragflow_tag"
-
-        prompt_input "AIO Subdomain (e.g. brain)" "brain" aio_subdomain
-        add_wizard_config "$config_array_name" "AIO_SUBDOMAIN" "$aio_subdomain"
-
-        # Generate Secret Key
-        aio_secret=$(generate_password 32)
-        add_wizard_secret "$config_array_name" "AIO_SECRET_KEY" "$aio_secret"
-        
-        # AIO Database Credentials - Managed by Global Admin Password
-        add_wizard_config "$config_array_name" "NEO4J_USER" "neo4j"
-        add_wizard_config "$config_array_name" "AIO_STACK_PRESENT" "true"
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-        
-        # FalkorDB Database Credentials (managed by global password)
-        add_wizard_config "$config_array_name" "FALKORDB_URL" "falkor://aio-falkordb:6379"
-
-        # MLFlow Config (Auto-Enable)
-        add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
-        add_wizard_config "$config_array_name" "MLFLOW_PORT" "5000"
-
-        add_wizard_config "$config_array_name" "AI_SERVICES_SELECTED" "true"
-        add_wizard_config "$config_array_name" "AIO_STACK_PRESENT" "true"
-      fi
-
       # Service-specific default ports
       local default_port
       case "$service_type" in
         neo4j) default_port=7474 ;;
-
         graphiti) default_port=8000 ;;
         llamaindex) default_port=8000 ;;
         *) default_port=$((8000 + service_count)) ;;
