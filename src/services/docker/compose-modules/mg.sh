@@ -40,6 +40,8 @@ generate_mg_stack() {
         condition: service_healthy
       kg-neo4j:
         condition: service_healthy
+    volumes:
+      - mg_graphiti_data:/app/data
     networks:
       - ${DOCKER_NETWORK}
 
@@ -55,6 +57,8 @@ generate_mg_stack() {
     depends_on:
       mg-graphiti:
         condition: service_healthy
+    volumes:
+      - mg_graphiti_data:/app/data
     networks:
       - ${DOCKER_NETWORK}
 

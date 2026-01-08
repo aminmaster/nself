@@ -266,7 +266,7 @@ VOL
   df_weaviate_data:
 VOL
   [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && echo "  fw_db_data:" >> docker-compose.yml && echo "  fw_app_data:" >> docker-compose.yml
-  [[ "${KG_ENABLED:-false}" == "true" ]] && echo "  kg_neo4j_data:" >> docker-compose.yml
+  [[ "${KG_ENABLED:-false}" == "true" ]] && echo "  kg_neo4j_data:" >> docker-compose.yml && echo "  kg_neo4j_logs:" >> docker-compose.yml
   [[ "${MG_ENABLED:-false}" == "true" ]] && echo "  mg_falkordb_data:" >> docker-compose.yml && echo "  mg_graphiti_data:" >> docker-compose.yml
   [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && echo "  lf_db_data:" >> docker-compose.yml && echo "  lf_app_data:" >> docker-compose.yml
   [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && echo "  ml_db_data:" >> docker-compose.yml && echo "  ml_minio_data:" >> docker-compose.yml
