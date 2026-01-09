@@ -164,13 +164,30 @@ server {
 }
 EOF
     fi
-  done
+  # Modular Stack Neo4j support
+  if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+      local cs_name="kg-neo4j"
+      if [[ "$services_found" == "false" ]]; then
+          mkdir -p nginx/streams
+          services_found=true
+      fi
+      cat > "nginx/streams/${cs_name}.conf" <<EOF
+# Stream config for ${cs_name} (Bolt - Modular)
+server {
+    listen 7687 ssl;
+    proxy_pass ${cs_name}:7687;
+    
+    ssl_certificate /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${BASE_DOMAIN:-localhost}/privkey.pem;
+    
+    ssl_session_cache shared:SSL_STREAM:10m;
+    ssl_session_timeout 10m;
+}
+EOF
+  fi
 }
 
-# Generate stream configurations for custom services
-
-
-# Generate default server block
+# Custom Services
 generate_default_server() {
   cat > nginx/conf.d/default.conf <<EOF
 # Default server - redirect HTTP to HTTPS
@@ -620,6 +637,8 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
     }
 }
 EOF
