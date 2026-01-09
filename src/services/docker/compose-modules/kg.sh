@@ -60,6 +60,11 @@ generate_kg_stack() {
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   kg-builder-frontend:
     build:
@@ -80,6 +85,11 @@ generate_kg_stack() {
       - kg-builder-backend
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 EOF
 }

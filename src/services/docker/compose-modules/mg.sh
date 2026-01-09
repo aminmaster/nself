@@ -52,6 +52,11 @@ generate_mg_stack() {
       - mg_graphiti_data:/app/data
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   mg-graphiti-worker:
     image: \${PROJECT_NAME}_mg_graphiti:latest
