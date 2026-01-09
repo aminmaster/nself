@@ -58,24 +58,6 @@ generate_mg_stack() {
       timeout: 10s
       retries: 5
 
-  mg-graphiti-worker:
-    image: \${PROJECT_NAME}_mg_graphiti:latest
-    pull_policy: build
-    container_name: \${PROJECT_NAME}_mg_graphiti_worker
-    restart: unless-stopped
-    command: ["celery", "-A", "graphiti.worker", "worker", "--loglevel=info"]
-    environment:
-      NEO4J_URI: bolt://kg-neo4j:7687
-      FALKORDB_HOST: mg-falkordb
-      OPENAI_API_KEY: \${OPENAI_API_KEY}
-    depends_on:
-      mg-graphiti:
-        condition: service_healthy
-    volumes:
-      - mg_graphiti_data:/app/data
-    networks:
-      - ${DOCKER_NETWORK}
-
 EOF
 }
 
