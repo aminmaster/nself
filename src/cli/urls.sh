@@ -485,27 +485,27 @@ output_table() {
     fi
 
     if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
-        local flowise_port="${FLOWISE_PORT:-3002}"
-        echo -e "  Flowise:        ${COLOR_GREEN}http://${domain}:${flowise_port}${COLOR_RESET}"
+        local flowise_route="${FLOWISE_ROUTE:-flowise}"
+        echo -e "  Flowise:        ${COLOR_GREEN}${protocol}://${flowise_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
 
     if [[ "${KG_ENABLED:-false}" == "true" ]]; then
-        local kg_fe_port="${KG_FRONTEND_PORT:-8000}"
-        local kg_be_port="${KG_BACKEND_PORT:-8001}"
-        echo -e "  KG Builder:     ${COLOR_GREEN}http://${domain}:${kg_fe_port}${COLOR_RESET}"
-        [[ "$show_all" == "true" ]] && echo -e "   - Backend:     ${COLOR_GRAY}http://${domain}:${kg_be_port}${COLOR_RESET}"
+        local kg_route="${KG_ROUTE:-kg}"
+        echo -e "  KG Builder:     ${COLOR_GREEN}${protocol}://${kg_route}.${domain}${COLOR_RESET}"
+        [[ "$show_all" == "true" ]] && echo -e "   - Backend:     ${COLOR_GRAY}${protocol}://${kg_route}.${domain}/api/${COLOR_RESET}"
         has_ai=true
     fi
 
     if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
-        echo -e "  LangFlow:       ${COLOR_GREEN}http://${domain}:7860${COLOR_RESET}"
+        local langflow_route="${LANGFLOW_ROUTE:-langflow}"
+        echo -e "  LangFlow:       ${COLOR_GREEN}${protocol}://${langflow_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
 
     if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
-        local mlflow_port="${MLFLOW_PORT:-5000}"
-        echo -e "  MLflow:         ${COLOR_GREEN}http://${domain}:${mlflow_port}${COLOR_RESET}"
+        local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
+        echo -e "  MLflow:         ${COLOR_GREEN}${protocol}://${mlflow_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
 

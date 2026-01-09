@@ -46,8 +46,8 @@ generate_kg_stack() {
     pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_backend
     restart: unless-stopped
-    ports:
-      - "${KG_BACKEND_PORT:-8001}:8000"
+    # ports:
+    #   - "${KG_BACKEND_PORT:-8001}:8000"
     environment:
       NEO4J_URI: bolt://kg-neo4j:7687
       NEO4J_USERNAME: neo4j
@@ -79,8 +79,8 @@ generate_kg_stack() {
     pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_frontend
     restart: unless-stopped
-    ports:
-      - "${KG_FRONTEND_PORT:-8000}:8080"
+    # ports:
+    #   - "${KG_FRONTEND_PORT:-8000}:8080"
     depends_on:
       - kg-builder-backend
     networks:

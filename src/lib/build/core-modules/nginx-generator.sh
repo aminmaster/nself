@@ -488,6 +488,105 @@ EOF
 
 # Generate optional service routes
 generate_optional_service_routes() {
+  local base_domain="${BASE_DOMAIN:-localhost}"
+
+  # 1. Flowise
+  if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
+    local flowise_route="${FLOWISE_ROUTE:-flowise}"
+    cat > nginx/sites/flowise.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${flowise_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        set \$target_flowise fw-app;
+        proxy_pass http://\$target_flowise:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
+  # 2. Knowledge Graph (KG Builder)
+  if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+    local kg_route="${KG_ROUTE:-kg}"
+    cat > nginx/sites/kg.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${kg_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        set \$target_kg_fe kg-builder-frontend;
+        proxy_pass http://\$target_kg_fe:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # API proxy for backend
+    location /api/ {
+        set \$target_kg_be kg-builder-backend;
+        proxy_pass http://\$target_kg_be:8000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
+  # 3. Langflow (Modular)
+  if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && [[ "$aio_stack_exists" == "false" ]]; then
+    local langflow_route="${LANGFLOW_ROUTE:-langflow}"
+    cat > nginx/sites/langflow.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${langflow_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        set \$target_langflow aio-langflow;
+        proxy_pass http://\$target_langflow:7860;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # WebSocket support
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+  fi
+
   # Functions
   if [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]]; then
     local functions_route="${FUNCTIONS_ROUTE:-functions}"
