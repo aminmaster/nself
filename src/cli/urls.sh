@@ -438,11 +438,6 @@ output_table() {
         fi
     done
 
-    if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$aio_present" == "false" ]]; then
-        local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
-        echo -e "  MLflow:         ${COLOR_GREEN}${protocol}://${mlflow_route}.${domain}${COLOR_RESET}"
-        has_optional=true
-    fi
 
     # Other
     if [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]]; then
@@ -476,6 +471,50 @@ output_table() {
     fi
 
     [[ "$has_optional" == "false" ]] && echo -e "  ${COLOR_GRAY}None enabled${COLOR_RESET}"
+    echo
+
+    # AI Services
+    local has_ai=false
+    echo -e "${BOLD}${COLOR_BLUE}➞ AI Services${COLOR_RESET}"
+
+    if [[ "${RAGFLOW_ENABLED:-false}" == "true" ]]; then
+        local ragflow_sub="${RAGFLOW_SUBDOMAIN:-brain}"
+        echo -e "  RAGFlow:        ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
+        echo -e "   - Admin:       ${COLOR_GRAY}${protocol}://${ragflow_sub}.${domain}/admin${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
+        local flowise_port="${FLOWISE_PORT:-3002}"
+        echo -e "  Flowise:        ${COLOR_GREEN}http://${domain}:${flowise_port}${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+        local kg_fe_port="${KG_FRONTEND_PORT:-8000}"
+        local kg_be_port="${KG_BACKEND_PORT:-8001}"
+        echo -e "  KG Builder:     ${COLOR_GREEN}http://${domain}:${kg_fe_port}${COLOR_RESET}"
+        [[ "$show_all" == "true" ]] && echo -e "   - Backend:     ${COLOR_GRAY}http://${domain}:${kg_be_port}${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
+        echo -e "  LangFlow:       ${COLOR_GREEN}http://${domain}:7860${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
+        local mlflow_port="${MLFLOW_PORT:-5000}"
+        echo -e "  MLflow:         ${COLOR_GREEN}http://${domain}:${mlflow_port}${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    if [[ "${MG_ENABLED:-false}" == "true" ]]; then
+        echo -e "  Memory Graph:   ${COLOR_GRAY}Internal only (Graphiti API)${COLOR_RESET}"
+        has_ai=true
+    fi
+
+    [[ "$has_ai" == "false" ]] && echo -e "  ${COLOR_GRAY}None enabled${COLOR_RESET}"
     echo
 
     # Custom Services

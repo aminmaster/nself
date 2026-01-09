@@ -164,16 +164,16 @@ show_next_steps() {
        echo "     • Dify: https://${base_domain}:80 (UI)"
     fi
     if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
-       echo "     • Flowise: http://${base_domain}:3001"
+       echo "     • Flowise: http://${base_domain}:${FLOWISE_PORT:-3002}"
     fi
     if [[ "${KG_ENABLED:-false}" == "true" ]]; then
-       echo "     • KG Builder: http://${base_domain}:8000"
+       echo "     • KG Builder: http://${base_domain}:${KG_FRONTEND_PORT:-8000}"
     fi
     if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
        echo "     • LangFlow: http://${base_domain}:7860"
     fi
     if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
-       echo "     • MLflow: http://${base_domain}:5000"
+       echo "     • MLflow: http://${base_domain}:${MLFLOW_PORT:-5000}"
     fi
   fi
 
