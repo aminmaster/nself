@@ -58,6 +58,20 @@ generate_mg_stack() {
       timeout: 10s
       retries: 5
 
+  mg-falkordb-browser:
+    image: falkordb/falkordb-browser:latest
+    container_name: ${PROJECT_NAME}_mg_falkordb_browser
+    restart: unless-stopped
+    environment:
+      FALKORDB_HOST: mg-falkordb
+      FALKORDB_PORT: 6379
+      FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+    depends_on:
+      mg-falkordb:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
 EOF
 }
 

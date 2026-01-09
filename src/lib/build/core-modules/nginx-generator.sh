@@ -598,6 +598,58 @@ server {
 EOF
   fi
 
+  # 4. Neo4j Browser (KG)
+  if [[ "${KG_ENABLED:-false}" == "true" ]]; then
+    local neo4j_route="${NEO4J_ROUTE:-neo4j}"
+    cat > nginx/sites/neo4j.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${neo4j_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        set \$target_neo4j kg-neo4j;
+        proxy_pass http://\$target_neo4j:7474;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+EOF
+  fi
+
+  # 5. FalkorDB Browser (MG)
+  if [[ "${MG_ENABLED:-false}" == "true" ]]; then
+    local falkordb_route="${FALKORDB_ROUTE:-falkordb}"
+    cat > nginx/sites/falkordb.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${falkordb_route}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    location / {
+        set \$target_falkordb mg-falkordb-browser;
+        proxy_pass http://\$target_falkordb:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  fi
+
   # Functions
   if [[ "${FUNCTIONS_ENABLED:-false}" == "true" ]]; then
     local functions_route="${FUNCTIONS_ROUTE:-functions}"

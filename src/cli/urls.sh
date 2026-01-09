@@ -492,7 +492,9 @@ output_table() {
 
     if [[ "${KG_ENABLED:-false}" == "true" ]]; then
         local kg_route="${KG_ROUTE:-kg}"
+        local neo4j_route="${NEO4J_ROUTE:-neo4j}"
         echo -e "  KG Builder:     ${COLOR_GREEN}${protocol}://${kg_route}.${domain}${COLOR_RESET}"
+        echo -e "   - Neo4j:       ${COLOR_GREEN}${protocol}://${neo4j_route}.${domain}${COLOR_RESET}"
         [[ "$show_all" == "true" ]] && echo -e "   - Backend:     ${COLOR_GRAY}${protocol}://${kg_route}.${domain}/api/${COLOR_RESET}"
         has_ai=true
     fi
@@ -510,7 +512,9 @@ output_table() {
     fi
 
     if [[ "${MG_ENABLED:-false}" == "true" ]]; then
-        echo -e "  Memory Graph:   ${COLOR_GRAY}Internal only (Graphiti API)${COLOR_RESET}"
+        local falkordb_route="${FALKORDB_ROUTE:-falkordb}"
+        echo -e "  Memory Graph:   ${COLOR_GRAY}Graphiti API${COLOR_RESET}"
+        echo -e "   - FalkorDB:    ${COLOR_GREEN}${protocol}://${falkordb_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
 
