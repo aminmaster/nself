@@ -376,7 +376,7 @@ wizard_aio_bundles() {
   if confirm_action "Enable Flowise Bundle?"; then
     add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "true"
     local flowise_port
-    prompt_input "Flowise Port" "3001" flowise_port "^[0-9]+$"
+    prompt_input "Flowise Port" "3002" flowise_port "^[0-9]+$"
     add_wizard_config "$config_array_name" "FLOWISE_PORT" "$flowise_port"
   else
     add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "false"
