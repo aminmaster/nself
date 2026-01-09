@@ -43,6 +43,7 @@ generate_kg_stack() {
       context: ${kg_builder_dir}/backend
       dockerfile: Dockerfile
     image: \${PROJECT_NAME}_kg_builder_backend:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_backend
     restart: unless-stopped
     ports:
@@ -70,6 +71,7 @@ generate_kg_stack() {
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
     image: \${PROJECT_NAME}_kg_builder_frontend:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_frontend
     restart: unless-stopped
     ports:

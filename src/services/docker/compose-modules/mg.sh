@@ -2,7 +2,15 @@
 
 generate_mg_stack() {
   local service_name="mg"
+  local graphiti_dir="./services/mg/graphiti"
   
+  # Clone Graphiti source code if missing
+  if [[ ! -d "$graphiti_dir" ]]; then
+    echo "Cloning Graphiti source code..." >&2
+    mkdir -p "$(dirname "$graphiti_dir")"
+    git clone https://github.com/getzep/graphiti.git "$graphiti_dir" >&2
+  fi
+
   cat <<EOF
 
   # Memory Graph Stack
@@ -23,9 +31,9 @@ generate_mg_stack() {
 
   mg-graphiti:
     build:
-      context: ./services/ai-ops/graphiti
-      dockerfile: Dockerfile
+      context: ${graphiti_dir}
     image: \${PROJECT_NAME}_mg_graphiti:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_mg_graphiti
     restart: unless-stopped
     environment:
@@ -47,6 +55,7 @@ generate_mg_stack() {
 
   mg-graphiti-worker:
     image: \${PROJECT_NAME}_mg_graphiti:latest
+    pull_policy: build
     container_name: \${PROJECT_NAME}_mg_graphiti_worker
     restart: unless-stopped
     command: ["celery", "-A", "graphiti.worker", "worker", "--loglevel=info"]
