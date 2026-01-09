@@ -375,6 +375,9 @@ wizard_aio_bundles() {
   echo "⛓️ Flowise"
   if confirm_action "Enable Flowise Bundle?"; then
     add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "true"
+    local flowise_port
+    prompt_input "Flowise Port" "3001" flowise_port "^[0-9]+$"
+    add_wizard_config "$config_array_name" "FLOWISE_PORT" "$flowise_port"
   else
     add_wizard_config "$config_array_name" "FLOWISE_ENABLED" "false"
   fi
@@ -384,6 +387,11 @@ wizard_aio_bundles() {
   echo "🕸️ Knowledge Graph (Neo4j)"
   if confirm_action "Enable Knowledge Graph Bundle?"; then
     add_wizard_config "$config_array_name" "KG_ENABLED" "true"
+    local kg_fe_port kg_be_port
+    prompt_input "KG Frontend Port" "8000" kg_fe_port "^[0-9]+$"
+    prompt_input "KG Backend Port" "8001" kg_be_port "^[0-9]+$"
+    add_wizard_config "$config_array_name" "KG_FRONTEND_PORT" "$kg_fe_port"
+    add_wizard_config "$config_array_name" "KG_BACKEND_PORT" "$kg_be_port"
   else
     add_wizard_config "$config_array_name" "KG_ENABLED" "false"
   fi
@@ -411,6 +419,9 @@ wizard_aio_bundles() {
   echo "📊 MLflow"
   if confirm_action "Enable MLflow Bundle?"; then
     add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "true"
+    local mlflow_port
+    prompt_input "MLflow Port" "5000" mlflow_port "^[0-9]+$"
+    add_wizard_config "$config_array_name" "MLFLOW_PORT" "$mlflow_port"
   else
     add_wizard_config "$config_array_name" "MLFLOW_ENABLED" "false"
   fi
