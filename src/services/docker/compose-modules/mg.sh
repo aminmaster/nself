@@ -68,6 +68,7 @@ generate_mg_stack() {
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       # Pre-populate connection for UI if supported (image specific)
       REDIS_URL: redis://:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@mg-falkordb:6379
+      FALKORDB_URL: falkor://:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@mg-falkordb:6379
     depends_on:
       mg-falkordb:
         condition: service_healthy

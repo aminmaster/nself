@@ -416,15 +416,18 @@ admin_password() {
      fi
   fi
   
+  # Escape $ to $$ for docker-compose compatibility if writing to .env
+  local password_hash_escaped="${password_hash//$/\$\$}"
+
   # Update .env - escape special characters in hash
   if grep -q "^ADMIN_PASSWORD_HASH=" .env 2>/dev/null; then
     # Use a different delimiter to avoid issues with special characters
     # First, create a temp file with the new value
     grep -v "^ADMIN_PASSWORD_HASH=" .env > .env.tmp
-    echo "ADMIN_PASSWORD_HASH=$password_hash" >> .env.tmp
+    echo "ADMIN_PASSWORD_HASH=$password_hash_escaped" >> .env.tmp
     mv .env.tmp .env
   else
-    echo "ADMIN_PASSWORD_HASH=$password_hash" >> .env
+    echo "ADMIN_PASSWORD_HASH=$password_hash_escaped" >> .env
   fi
   
   # Generate secret key if not present
