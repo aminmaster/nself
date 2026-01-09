@@ -11,6 +11,14 @@ generate_kg_stack() {
     git clone https://github.com/neo4j-labs/llm-graph-builder.git "$kg_builder_dir" >&2
   fi
 
+  # Patch the Dockerfile to increase network timeout for unstable connections
+  if [[ -f "$kg_builder_dir/frontend/Dockerfile" ]]; then
+    if ! grep -q "network-timeout" "$kg_builder_dir/frontend/Dockerfile"; then
+       echo "Patching KG Builder Dockerfile for network stability..." >&2
+       sed -i 's/yarn install/yarn install --network-timeout 1000000/' "$kg_builder_dir/frontend/Dockerfile"
+    fi
+  fi
+
   cat <<EOF
 
   # Knowledge Graph Stack
