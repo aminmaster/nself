@@ -581,7 +581,7 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     location / {
-        set \$target_langflow aio-langflow;
+        set \$target_langflow lf-app;
         proxy_pass http://\$target_langflow:7860;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
