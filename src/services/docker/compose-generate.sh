@@ -56,6 +56,10 @@ export STORAGE_PORT="${STORAGE_PORT:-5000}"
 export REDIS_PORT="${REDIS_PORT:-6379}"
 export MINIO_PORT="${MINIO_PORT:-9000}"
 export MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-9001}"
+export FLOWISE_PORT="${FLOWISE_PORT:-3001}"
+export KG_FRONTEND_PORT="${KG_FRONTEND_PORT:-8000}"
+export KG_BACKEND_PORT="${KG_BACKEND_PORT:-8001}"
+export MLFLOW_PORT="${MLFLOW_PORT:-5000}"
 
 # Source smart defaults to handle JWT construction
 if [[ -f "$COMPOSE_SCRIPT_DIR/../../lib/config/smart-defaults.sh" ]]; then

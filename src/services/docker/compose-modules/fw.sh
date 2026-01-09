@@ -28,7 +28,7 @@ generate_fw_stack() {
     container_name: \${PROJECT_NAME}_fw_app
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "${FLOWISE_PORT:-3001}:3000"
     environment:
       DATABASE_TYPE: postgres
       DATABASE_HOST: fw-db

@@ -47,7 +47,7 @@ generate_kg_stack() {
     container_name: \${PROJECT_NAME}_kg_builder_backend
     restart: unless-stopped
     ports:
-      - "8001:8000"
+      - "${KG_BACKEND_PORT:-8001}:8000"
     environment:
       NEO4J_URI: bolt://kg-neo4j:7687
       NEO4J_USERNAME: neo4j
@@ -66,7 +66,7 @@ generate_kg_stack() {
       context: ${kg_builder_dir}/frontend
       dockerfile: Dockerfile
       args:
-        - VITE_BACKEND_API_URL=http://\${BASE_DOMAIN}:8001
+        - VITE_BACKEND_API_URL=http://\${BASE_DOMAIN}:\${KG_BACKEND_PORT:-8001}
         - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
@@ -75,7 +75,7 @@ generate_kg_stack() {
     container_name: \${PROJECT_NAME}_kg_builder_frontend
     restart: unless-stopped
     ports:
-      - "8000:8080"
+      - "${KG_FRONTEND_PORT:-8000}:8080"
     depends_on:
       - kg-builder-backend
     networks:

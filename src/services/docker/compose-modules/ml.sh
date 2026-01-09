@@ -46,7 +46,7 @@ generate_ml_stack() {
     container_name: \${PROJECT_NAME}_ml_app
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${MLFLOW_PORT:-5000}:5000"
     environment:
       MLFLOW_BACKEND_STORE_URI: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@ml-db:5432/mlflow
       MLFLOW_DEFAULT_ARTIFACT_ROOT: s3://mlflow/
