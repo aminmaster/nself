@@ -684,7 +684,7 @@ server {
 
     location / {
         ${auth_config}
-        proxy_pass http://mlflow:5005;
+        proxy_pass http://ml-app:5000;
         proxy_http_version 1.1;
         proxy_set_header Host 127.0.0.1;
         proxy_set_header X-Real-IP \$remote_addr;
