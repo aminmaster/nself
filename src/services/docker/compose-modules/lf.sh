@@ -32,6 +32,8 @@ generate_lf_stack() {
     environment:
       LANGFLOW_DATABASE_URL: postgresql://postgres:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@lf-db:5432/langflow
       LANGFLOW_AUTO_LOGIN: "false"
+      LANGFLOW_SUPERUSER: ${NSELF_ADMIN_USER:-admin}
+      LANGFLOW_SUPERUSER_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       LANGFLOW_SECRET_KEY: \${AUTH_JWT_SECRET:-equilibria_secret_key}
     depends_on:
       lf-db:

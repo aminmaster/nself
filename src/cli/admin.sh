@@ -395,25 +395,25 @@ admin_password() {
     return 1
   fi
   
-  # Generate password hash with salt using Python (most secure)
-  local password_hash
+  # Generate password hash with salt (standard bcrypt)
+  local password_hash=""
   if command -v python3 >/dev/null 2>&1; then
-    password_hash=$(python3 -c "
-import hashlib, os, base64
-salt = os.urandom(32)
-pwd_hash = hashlib.pbkdf2_hmac('sha256', '$password'.encode('utf-8'), salt, 100000)
-combined = salt + pwd_hash
-print(base64.b64encode(combined).decode('ascii'))
-")
-  elif command -v openssl >/dev/null 2>&1; then
-    # Fallback to OpenSSL with salt (still secure)
-    local salt=$(openssl rand -hex 16)
-    password_hash="${salt}:$(echo -n "${salt}${password}" | openssl dgst -sha256 -binary | base64)"
-  else
-    # No secure hashing available - abort
-    log_error "Cannot generate secure password hash"
-    log_error "Please install either Python 3 or OpenSSL"
-    return 1
+    # Use python/bcrypt if available
+    password_hash=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'$password', bcrypt.gensalt()).decode())" 2>/dev/null || true)
+  fi
+
+  # Fallback if python/bcrypt failed or returned empty
+  if [[ -z "$password_hash" ]]; then
+     # Try htpasswd with bcrypt
+     if command -v htpasswd >/dev/null 2>&1; then
+       password_hash=$(htpasswd -bnBC 10 "" "$password" | tr -d ':\n')
+     # Try openssl as last resort
+     elif command -v openssl >/dev/null 2>&1; then
+       password_hash=$(openssl passwd -6 "$password")
+     else
+       log_error "Cannot generate secure password hash (bcrypt/htpasswd/openssl unavailable)"
+       return 1
+     fi
   fi
   
   # Update .env - escape special characters in hash

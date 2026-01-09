@@ -71,7 +71,7 @@ generate_kg_stack() {
       context: ${kg_builder_dir}/frontend
       dockerfile: Dockerfile
       args:
-        - VITE_BACKEND_API_URL=http://\${BASE_DOMAIN}:\${KG_BACKEND_PORT:-8001}
+        - VITE_BACKEND_API_URL=https://${KG_ROUTE:-kg}.${BASE_DOMAIN}/api
         - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
