@@ -164,6 +164,8 @@ server {
 }
 EOF
     fi
+  done
+
   # Modular Stack Neo4j support
   if [[ "${KG_ENABLED:-false}" == "true" ]]; then
       local cs_name="kg-neo4j"
