@@ -68,17 +68,13 @@ generate_nself_admin_service() {
         condition: service_healthy
       hasura:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PROJECT_PATH: /workspace
       NSELF_PROJECT_PATH: /workspace
-      PROJECT_NAME: \${PROJECT_NAME}
-      BASE_DOMAIN: \${BASE_DOMAIN}
-      ENV: \${ENV}
       DATABASE_URL: postgres://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@postgres:5432/\${POSTGRES_DB}
       HASURA_GRAPHQL_ENDPOINT: http://hasura:8080/v1/graphql
-      HASURA_GRAPHQL_ADMIN_SECRET: \${HASURA_GRAPHQL_ADMIN_SECRET}
-      ADMIN_SECRET_KEY: \${ADMIN_SECRET_KEY:-admin-secret-key-change-me}
-      ADMIN_PASSWORD_HASH: \${ADMIN_PASSWORD_HASH}
       DOCKER_HOST: unix:///var/run/docker.sock
     ports:
       - "\${NSELF_ADMIN_PORT:-3021}:3021"

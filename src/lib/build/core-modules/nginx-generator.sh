@@ -294,6 +294,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         # CORS Headers - Nginx as the single source of truth
         proxy_hide_header 'Access-Control-Allow-Origin';
@@ -355,6 +357,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         # CORS Headers - Nginx as the single source of truth
         proxy_hide_header 'Access-Control-Allow-Origin';
@@ -406,6 +410,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_minio_console minio;
         proxy_pass http://\$target_minio_console:9001;
@@ -427,6 +433,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     client_max_body_size 1000M;
 
@@ -458,6 +466,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     client_max_body_size 100M;
 
     location / {
@@ -487,6 +497,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_rabbit rabbitmq;
@@ -532,6 +544,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_flowise fw-app;
         proxy_pass http://\$target_flowise:3000;
@@ -559,6 +573,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_kg_fe kg-builder-frontend;
@@ -599,6 +615,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_langflow lf-app;
         proxy_pass http://\$target_langflow:7860;
@@ -629,6 +647,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_neo4j kg-neo4j;
         proxy_pass http://\$target_neo4j:7474;
@@ -658,6 +678,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_falkordb mg-falkordb-browser;
         proxy_pass http://\$target_falkordb:3000;
@@ -685,6 +707,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_functions functions;
         proxy_pass http://\$target_functions:3000;
@@ -711,6 +735,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_admin nself-admin;
@@ -754,6 +780,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         ${auth_config}
@@ -809,6 +837,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_ragflow aio-ragflow;
         proxy_pass http://\$target_ragflow:80;
@@ -836,6 +866,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_langflow aio-langflow;
@@ -865,6 +897,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         # CORS Headers
@@ -910,6 +944,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     location / {
         set \$target_neo4j aio-neo4j;
         proxy_pass http://\$target_neo4j:7474;
@@ -948,6 +984,8 @@ server {
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
+    resolver 127.0.0.11 valid=30s;
+
     ${mlflow_auth_config}
 
     location / {
@@ -973,6 +1011,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_falkordb aio-falkordb-browser;
@@ -1002,6 +1042,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     location / {
         set \$target_grafana grafana;
@@ -1044,6 +1086,8 @@ server {
 
     ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
 
     ${auth_config}
 
@@ -1146,6 +1190,19 @@ generate_custom_routes() {
     local cs_port="${!cs_port_var:-}"
     local cs_route_var="CS_${i}_ROUTE"
     local cs_route="${!cs_route_var:-}"
+    # Check if AIO Stack is present globally
+  local aio_stack_exists=false
+  for i in {1..20}; do
+      local cs_var="CUSTOM_SERVICE_${i}"
+      local cs_val="${!cs_var:-}"
+      if [[ "$cs_val" == *":ai-ops"* ]]; then
+          aio_stack_exists=true
+          break
+      fi
+  done
+
+  # Global Resolver for Docker DNS
+  local resolver="resolver 127.0.0.11 valid=30s;"
     local template=""
 
     # Fallback to CUSTOM_SERVICE_N parsing

@@ -11,6 +11,13 @@ generate_mg_stack() {
     git clone https://github.com/getzep/graphiti.git "$graphiti_dir" >&2
   fi
 
+  # URL encode the password for safety in URLs
+  local raw_pass="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
+  local encoded_pass="$raw_pass"
+  if command -v python3 >/dev/null 2>&1; then
+    encoded_pass=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''$raw_pass'''))")
+  fi
+
   cat <<EOF
 
   # Memory Graph Stack
@@ -67,8 +74,10 @@ generate_mg_stack() {
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       # Pre-populate connection for UI if supported (image specific)
-      REDIS_URL: redis://:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@mg-falkordb:6379
-      FALKORDB_URL: falkor://:${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}@mg-falkordb:6379
+      REDIS_URL: redis://:${encoded_pass}@mg-falkordb:6379
+      FALKORDB_URL: falkor://:${encoded_pass}@mg-falkordb:6379
+      NEXTAUTH_URL: https://${FALKORDB_ROUTE:-falkordb}.${BASE_DOMAIN}
+      NEXTAUTH_SECRET: ${AUTH_JWT_SECRET:-equilibria_secret_key}
     depends_on:
       mg-falkordb:
         condition: service_healthy
