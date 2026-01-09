@@ -35,6 +35,11 @@ generate_ml_stack() {
       - ml_minio_data:/data
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   ml-app:
     image: ghcr.io/mlflow/mlflow:latest

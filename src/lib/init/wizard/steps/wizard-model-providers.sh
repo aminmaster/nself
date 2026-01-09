@@ -104,6 +104,22 @@ wizard_model_providers() {
     fi
   fi
   echo ""
+
+  # Anthropic
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔴 Anthropic"
+  echo "  Required for: Claude models"
+  echo "  Get key: https://console.anthropic.com/"
+  if confirm_action "Configure Anthropic API Key?"; then
+    local anthropic_key
+    prompt_password "Anthropic API Key" anthropic_key
+    if [[ -n "$anthropic_key" ]]; then
+      add_wizard_secret "$config_array_name" "ANTHROPIC_API_KEY" "$anthropic_key"
+      has_any_key=true
+      echo "  ✓ Anthropic key configured"
+    fi
+  fi
+  echo ""
   
   # Summary
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
