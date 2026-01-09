@@ -490,6 +490,17 @@ EOF
 generate_optional_service_routes() {
   local base_domain="${BASE_DOMAIN:-localhost}"
 
+  # Check if AIO Stack is present globally
+  local aio_stack_exists=false
+  for i in {1..20}; do
+      local cs_var="CUSTOM_SERVICE_${i}"
+      local cs_val="${!cs_var:-}"
+      if [[ "$cs_val" == *":ai-ops"* ]]; then
+          aio_stack_exists=true
+          break
+      fi
+  done
+
   # 1. Flowise
   if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
     local flowise_route="${FLOWISE_ROUTE:-flowise}"
@@ -642,17 +653,6 @@ EOF
   fi
 
   # MLflow Model Registry (Standalone - Skip if AIO Stack is present as it has its own)
-  local aio_stack_exists=false
-  # Simple check if "ai-ops" is in headers
-  for i in {1..20}; do
-      local cs_var="CUSTOM_SERVICE_${i}"
-      local cs_val="${!cs_var:-}"
-      if [[ "$cs_val" == *":ai-ops"* ]]; then
-          aio_stack_exists=true
-          break
-      fi
-  done
-
   if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
     local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
     local base_domain="${BASE_DOMAIN:-localhost}"
