@@ -592,7 +592,8 @@ server {
     # API proxy for backend
     location /api/ {
         set \$target_kg_be kg-builder-backend;
-        proxy_pass http://\$target_kg_be:8000/;
+        rewrite ^/api/(.*) /\$1 break;
+        proxy_pass http://\$target_kg_be:8000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

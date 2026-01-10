@@ -38,6 +38,8 @@ generate_fw_stack() {
       DATABASE_NAME: flowise
       FLOWISE_USERNAME: \${NSELF_ADMIN_USER:-admin}
       FLOWISE_PASSWORD: \${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      # Use password auth
+      FLOWISE_AUTH_TYPE: password
     depends_on:
       fw-db:
         condition: service_healthy

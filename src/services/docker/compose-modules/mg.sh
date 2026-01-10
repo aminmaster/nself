@@ -15,7 +15,7 @@ generate_mg_stack() {
   local raw_pass="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
   local encoded_pass="$raw_pass"
   if command -v python3 >/dev/null 2>&1; then
-    encoded_pass=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''$raw_pass'''))")
+    encoded_pass=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.stdin.read().strip()))" <<< "$raw_pass")
   fi
 
   cat <<EOF
@@ -73,6 +73,7 @@ generate_mg_stack() {
       FALKORDB_HOST: mg-falkordb
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       # Pre-populate connection for UI if supported (image specific)
       REDIS_URL: redis://:${encoded_pass}@mg-falkordb:6379
       FALKORDB_URL: falkor://:${encoded_pass}@mg-falkordb:6379
