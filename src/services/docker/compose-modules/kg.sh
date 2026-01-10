@@ -71,10 +71,13 @@ generate_kg_stack() {
     environment:
       NEO4J_URI: bolt://kg-neo4j:7687
       NEO4J_USERNAME: neo4j
-      NEO4J_PASSWORD: \${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      ANTHROPIC_API_KEY: \${ANTHROPIC_API_KEY}
-      OPENAI_API_KEY: \${OPENAI_API_KEY}
-      MODEL: \${KG_EXTRACTOR_MODEL:-anthropic/claude-sonnet-4.5}
+      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      MODEL: ${KG_EXTRACTOR_MODEL:-anthropic/claude-sonnet-4.5}
     depends_on:
       kg-neo4j:
         condition: service_healthy
@@ -92,7 +95,7 @@ generate_kg_stack() {
       dockerfile: Dockerfile
       args:
         - VITE_BACKEND_API_URL=https://${KG_ROUTE:-kg}.${BASE_DOMAIN}/api
-        - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash
+        - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1_5_flash,gemini_1_5_pro,gemini_2_0_flash,groq_llama3_70b,anthropic_claude_3_5_sonnet
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
         - VITE_AUTH_TYPE=none
