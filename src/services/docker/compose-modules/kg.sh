@@ -83,6 +83,7 @@ generate_kg_stack() {
         - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1.5_flash
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
+        - VITE_AUTH_TYPE=none
     image: \${PROJECT_NAME}_kg_builder_frontend:latest
     pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_frontend

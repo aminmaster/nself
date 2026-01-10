@@ -73,12 +73,14 @@ generate_mg_stack() {
       FALKORDB_HOST: mg-falkordb
       FALKORDB_PORT: 6379
       FALKORDB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       # Pre-populate connection for UI if supported (image specific)
       REDIS_URL: redis://:${encoded_pass}@mg-falkordb:6379
       FALKORDB_URL: falkor://:${encoded_pass}@mg-falkordb:6379
       NEXTAUTH_URL: https://${FALKORDB_ROUTE:-falkordb}.${BASE_DOMAIN}
       NEXTAUTH_SECRET: ${AUTH_JWT_SECRET:-equilibria_secret_key}
+      NEXTAUTH_URL_INTERNAL: http://localhost:3000
     depends_on:
       mg-falkordb:
         condition: service_healthy
