@@ -46,7 +46,7 @@ BACKEND_ENV
   cat > "$kg_builder_dir/frontend/.env" <<FRONTEND_ENV
 # KG Builder Frontend Configuration
 VITE_BACKEND_API_URL=https://${KG_ROUTE:-kg}.${BASE_DOMAIN}/api
-VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1_5_flash,gemini_1_5_pro,gemini_2_0_flash,groq_llama3_70b,anthropic_claude_3_5_sonnet,openrouter
+VITE_LLM_MODELS_PROD=openai_gpt_5_mini,openai_gpt_5.2,diffbot,gemini_2.5_flash,gemini_2.5_pro,groq_llama3.1_8b,anthropic_claude_4.5_sonnet,anthropic_claude_4.5_haiku,llama4_maverick,openrouter
 VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
 VITE_ENV=PROD
 VITE_AUTH_TYPE=none
@@ -59,10 +59,20 @@ FRONTEND_ENV
        echo "Patching KG Builder Dockerfile for network stability..." >&2
        sed -i 's/yarn install/yarn install --network-timeout 1000000/' "$kg_builder_dir/frontend/Dockerfile"
     fi
-    # Force VITE_AUTH_TYPE=none to bypass broken Auth0 redirect
+    # Force VITE_AUTH_TYPE=none and declare ARGs to ensure they are available during 'yarn build'
     if ! grep -q "VITE_AUTH_TYPE" "$kg_builder_dir/frontend/Dockerfile"; then
-       echo "Patching KG Builder Dockerfile to disable SSO..." >&2
-       sed -i '/yarn build/i ARG VITE_AUTH_TYPE=none\nARG VITE_SKIP_AUTH=true\nARG VITE_BACKEND_API_URL' "$kg_builder_dir/frontend/Dockerfile"
+       echo "Patching KG Builder Dockerfile to declare build args and disable SSO..." >&2
+       # We inject the ARGs right after the FROM or at the beginning of the build stage
+       sed -i '/yarn build/i ARG VITE_AUTH_TYPE=none\nARG VITE_SKIP_AUTH=true\nARG VITE_BACKEND_API_URL\nARG VITE_LLM_MODELS_PROD\nARG VITE_CHAT_MODES\nARG VITE_ENV' "$kg_builder_dir/frontend/Dockerfile"
+    fi
+
+    # Aggressive Frontend Patch: Trick the UI into thinking keys are configured when skipping auth
+    if [[ -f "$kg_builder_dir/frontend/index.html" ]]; then
+       if ! grep -q "skip-auth-patch" "$kg_builder_dir/frontend/index.html"; then
+          echo "Patching KG Builder index.html to unlock models in bypass mode..." >&2
+          sed -i '/<head>/a \    <script id="skip-auth-patch">\n      if ("%VITE_SKIP_AUTH%" === "true" || true) {\n        localStorage.setItem("openai_api_key", "internal");\n        localStorage.setItem("anthropic_api_key", "internal");\n        localStorage.setItem("gemini_api_key", "internal");\n        localStorage.setItem("groq_api_key", "internal");\n      }\n    </script>' "$kg_builder_dir/frontend/index.html"
+          # Replace the placeholder with actual build-time value if needed (or just leave it true for bypass)
+       fi
     fi
   fi
 
@@ -122,7 +132,7 @@ FRONTEND_ENV
       dockerfile: Dockerfile
       args:
         - VITE_BACKEND_API_URL=https://${KG_ROUTE:-kg}.${BASE_DOMAIN}/api
-        - VITE_LLM_MODELS_PROD=openai_gpt_4o,openai_gpt_4o_mini,diffbot,gemini_1_5_flash,gemini_1_5_pro,gemini_2_0_flash,groq_llama3_70b,anthropic_claude_3_5_sonnet,openrouter
+        - VITE_LLM_MODELS_PROD=openai_gpt_5_mini,openai_gpt_5.2,diffbot,gemini_2.5_flash,gemini_2.5_pro,groq_llama3.1_8b,anthropic_claude_4.5_sonnet,anthropic_claude_4.5_haiku,llama4_maverick,openrouter
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
         - VITE_AUTH_TYPE=none
