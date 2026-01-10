@@ -20,7 +20,7 @@ generate_kg_stack() {
     # Force VITE_AUTH_TYPE=none to bypass broken Auth0 redirect
     if ! grep -q "VITE_AUTH_TYPE" "$kg_builder_dir/frontend/Dockerfile"; then
        echo "Patching KG Builder Dockerfile to disable SSO..." >&2
-       sed -i '/yarn build/i ARG VITE_AUTH_TYPE=none\nARG VITE_BACKEND_API_URL' "$kg_builder_dir/frontend/Dockerfile"
+       sed -i '/yarn build/i ARG VITE_AUTH_TYPE=none\nARG VITE_SKIP_AUTH=true\nARG VITE_BACKEND_API_URL' "$kg_builder_dir/frontend/Dockerfile"
     fi
   fi
   
@@ -96,6 +96,7 @@ generate_kg_stack() {
         - VITE_CHAT_MODES=vector,graph_vector,graph,fulltext,entity_vector,global_vector
         - VITE_ENV=PROD
         - VITE_AUTH_TYPE=none
+        - VITE_SKIP_AUTH=true
     image: \${PROJECT_NAME}_kg_builder_frontend:latest
     pull_policy: build
     container_name: \${PROJECT_NAME}_kg_builder_frontend
