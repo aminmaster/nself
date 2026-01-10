@@ -17,6 +17,18 @@ generate_kg_stack() {
        echo "Patching KG Builder Dockerfile for network stability..." >&2
        sed -i 's/yarn install/yarn install --network-timeout 1000000/' "$kg_builder_dir/frontend/Dockerfile"
     fi
+    # Force VITE_AUTH_TYPE=none to bypass broken Auth0 redirect
+    if ! grep -q "VITE_AUTH_TYPE" "$kg_builder_dir/frontend/Dockerfile"; then
+       echo "Patching KG Builder Dockerfile to disable SSO..." >&2
+       sed -i '/yarn build/i ARG VITE_AUTH_TYPE=none\nARG VITE_BACKEND_API_URL' "$kg_builder_dir/frontend/Dockerfile"
+    fi
+  fi
+  
+  # Ensure backend also knows about pre-configured credentials
+  if [[ -f "$kg_builder_dir/backend/Dockerfile" ]]; then
+     if ! grep -q "NEO4J_URI" "$kg_builder_dir/backend/Dockerfile"; then
+        sed -i '/FROM/a ENV NEO4J_URI=bolt://kg-neo4j:7687\nENV NEO4J_USERNAME=neo4j' "$kg_builder_dir/backend/Dockerfile"
+     fi
   fi
 
   cat <<EOF
