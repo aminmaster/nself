@@ -46,12 +46,6 @@ generate_fw_stack() {
       - fw_app_data:/root/.flowise
     networks:
       - ${DOCKER_NETWORK}
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/v1/health || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
 EOF
 }
