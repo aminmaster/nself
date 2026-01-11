@@ -51,6 +51,7 @@ generate_fw_stack() {
       interval: 15s
       timeout: 10s
       retries: 5
+      start_period: 60s
 
 EOF
 }
