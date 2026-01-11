@@ -847,7 +847,7 @@ server {
 
     location / {
         set \$target_df_web df-web;
-        proxy_pass http://\$target_df_web:80;
+        proxy_pass http://\$target_df_web:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

@@ -121,6 +121,11 @@ generate_df_stack() {
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 EOF
 }
