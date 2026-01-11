@@ -354,8 +354,6 @@ case $MODE in
         pre_pull_images
         $NSELF_BIN start --verbose --fresh
         
-        echo "🔄 Forcing Nginx reload to apply config changes..."
-        docker compose restart nginx || echo "⚠️  Nginx restart warning (Container might not be running)"
         ;;
     partial)
         echo "🧹 Starting partial nuke for $PROJECT_NAME (Web: $WEB_DEPLOY_MODE)..."
