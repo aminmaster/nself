@@ -478,14 +478,20 @@ output_table() {
     echo -e "${BOLD}${COLOR_BLUE}➞ AI Services${COLOR_RESET}"
 
     if [[ "${RAGFLOW_ENABLED:-false}" == "true" ]]; then
-        local ragflow_sub="${RAGFLOW_SUBDOMAIN:-brain}"
+        local ragflow_sub="${RAGFLOW_SUBDOMAIN:-rf}"
         echo -e "  RAGFlow:        ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
         echo -e "   - Admin:       ${COLOR_GRAY}${protocol}://${ragflow_sub}.${domain}/admin${COLOR_RESET}"
         has_ai=true
     fi
 
+    if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
+        local dify_sub="${DIFY_SUBDOMAIN:-df}"
+        echo -e "  Dify:           ${COLOR_GREEN}${protocol}://${dify_sub}.${domain}${COLOR_RESET}"
+        has_ai=true
+    fi
+
     if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
-        local flowise_route="${FLOWISE_ROUTE:-flowise}"
+        local flowise_route="${FLOWISE_ROUTE:-fw}"
         echo -e "  Flowise:        ${COLOR_GREEN}${protocol}://${flowise_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
@@ -500,13 +506,13 @@ output_table() {
     fi
 
     if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]]; then
-        local langflow_route="${LANGFLOW_ROUTE:-langflow}"
+        local langflow_route="${LANGFLOW_ROUTE:-lf}"
         echo -e "  LangFlow:       ${COLOR_GREEN}${protocol}://${langflow_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
 
     if [[ "${MLFLOW_ENABLED:-false}" == "true" ]]; then
-        local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
+        local mlflow_route="${MLFLOW_ROUTE:-ml}"
         echo -e "  MLflow:         ${COLOR_GREEN}${protocol}://${mlflow_route}.${domain}${COLOR_RESET}"
         has_ai=true
     fi
@@ -555,12 +561,14 @@ output_table() {
                 
                 # Expand AI-OPS details
                  if [[ "$template" == "ai-ops" ]]; then
-                    local ragflow_sub="${AIO_SUBDOMAIN:-brain}"
-                    echo -e "    ├─ RAGFlow:    ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
-                    echo -e "    ├─ RF Admin:   ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}/admin${COLOR_RESET}"
-                    echo -e "    ├─ Langflow:   ${COLOR_GREEN}${protocol}://langflow.${domain}${COLOR_RESET}"
+                    local rf_sub="${RAGFLOW_SUBDOMAIN:-rf}"
+                    local lf_route="${LANGFLOW_ROUTE:-lf}"
+                    local ml_route="${MLFLOW_ROUTE:-ml}"
+                    echo -e "    ├─ RAGFlow:    ${COLOR_GREEN}${protocol}://${rf_sub}.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ RF Admin:   ${COLOR_GREEN}${protocol}://${rf_sub}.${domain}/admin${COLOR_RESET}"
+                    echo -e "    ├─ Langflow:   ${COLOR_GREEN}${protocol}://${lf_route}.${domain}${COLOR_RESET}"
                     echo -e "    ├─ Graphiti:   ${COLOR_GREEN}${protocol}://graphiti.${domain}${COLOR_RESET}"
-                    echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://mlflow.${domain}${COLOR_RESET}"
+                    echo -e "    ├─ MLFlow:     ${COLOR_GREEN}${protocol}://${ml_route}.${domain}${COLOR_RESET}"
                     echo -e "    ├─ FalkorDB:   ${COLOR_GREEN}${protocol}://falkordb.${domain}${COLOR_RESET}"
                     echo -e "    └─ Neo4j:      ${COLOR_GREEN}${protocol}://neo4j.${domain}${COLOR_RESET}"
                  fi

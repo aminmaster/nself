@@ -534,7 +534,7 @@ generate_optional_service_routes() {
 
   # 1. Flowise
   if [[ "${FLOWISE_ENABLED:-false}" == "true" ]]; then
-    local flowise_route="${FLOWISE_ROUTE:-flowise}"
+    local flowise_route="${FLOWISE_ROUTE:-fw}"
     cat > nginx/sites/flowise.conf <<EOF
 server {
     listen 443 ssl;
@@ -606,7 +606,7 @@ EOF
 
   # 3. Langflow (Modular)
   if [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && [[ "$aio_stack_exists" == "false" ]]; then
-    local langflow_route="${LANGFLOW_ROUTE:-langflow}"
+    local langflow_route="${LANGFLOW_ROUTE:-lf}"
     cat > nginx/sites/langflow.conf <<EOF
 server {
     listen 443 ssl;
@@ -754,7 +754,7 @@ EOF
 
   # MLflow Model Registry (Standalone - Skip if AIO Stack is present as it has its own)
   if [[ "${MLFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
-    local mlflow_route="${MLFLOW_ROUTE:-mlflow}"
+    local mlflow_route="${MLFLOW_ROUTE:-ml}"
     local base_domain="${BASE_DOMAIN:-localhost}"
     local auth_config=""
 
@@ -788,7 +788,7 @@ server {
         ${auth_config}
         proxy_pass http://ml-app:5000;
         proxy_http_version 1.1;
-        proxy_set_header Host 127.0.0.1;
+        proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Host \$host;
@@ -798,6 +798,65 @@ server {
     }
 }
 EOF
+  fi
+
+  # 6. RAGFlow (Modular) - Only if AIO is not present
+  if [[ "${RAGFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
+    local rf_subdomain="${RAGFLOW_SUBDOMAIN:-rf}"
+    cat > nginx/sites/ragflow.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${rf_subdomain}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
+
+    location / {
+        set \$target_rf rf-ragflow;
+        proxy_pass http://\$target_rf:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+EOF
+  fi
+
+  # 7. Dify (Modular)
+  if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
+    local df_subdomain="${DIFY_SUBDOMAIN:-df}"
+    cat > nginx/sites/dify.conf <<EOF
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${df_subdomain}.${base_domain};
+
+    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
+
+    resolver 127.0.0.11 valid=30s;
+
+    location / {
+        set \$target_df_web df-web;
+        proxy_pass http://\$target_df_web:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+EOF
+  fi
   fi
 
   # Unified AIO (AI Operating System) Stack Integration
@@ -816,9 +875,8 @@ EOF
       if [[ "$cs_val" == *":ai-ops"* ]]; then
           IFS=':' read -r s_name s_type s_port <<< "$cs_val"
           aio_service_name="$s_name"
-          # Priority: AIO_SUBDOMAIN > Service Name > "brain"
           if [[ -z "$aio_subdomain" ]]; then
-              aio_subdomain="${AIO_SUBDOMAIN:-${aio_service_name:-brain}}"
+              aio_subdomain="${RAGFLOW_SUBDOMAIN:-${AIO_SUBDOMAIN:-${aio_service_name:-rf}}}"
           fi
           break
       fi
