@@ -259,6 +259,12 @@ generate_rf_stack() {
       - rf_ragflow_data:/ragflow/rag
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:9380/v1/system/config\")'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
   rf-ragflow-sandbox:
     image: infiniflow/sandbox-executor-manager:latest

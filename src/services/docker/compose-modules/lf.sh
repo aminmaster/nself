@@ -42,6 +42,11 @@ generate_lf_stack() {
       - lf_app_data:/app/langflow
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(5); s.connect((\"localhost\", 7860))'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
 EOF
 }

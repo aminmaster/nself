@@ -57,6 +57,11 @@ generate_df_stack() {
       - df_weaviate_data:/var/lib/weaviate
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Dify Services
   df-api:
@@ -82,6 +87,11 @@ generate_df_stack() {
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(5); s.connect((\"localhost\", 5001))'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   df-worker:
     image: langgenius/dify-api:latest
