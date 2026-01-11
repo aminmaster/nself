@@ -240,6 +240,7 @@ generate_rf_stack() {
       MINIO_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       ES_HOST: rf-es
       REDIS_HOST: rf-redis
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       SANDBOX_HOST: rf-ragflow-sandbox
       SANDBOX_PORT: 9385
