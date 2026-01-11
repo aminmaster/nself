@@ -113,8 +113,6 @@ generate_df_stack() {
     image: langgenius/dify-web:latest
     container_name: \${PROJECT_NAME}_df_web
     restart: unless-stopped
-    ports:
-      - "80:80"
     environment:
       CONSOLE_API_URL: http://df-api:5001
       APP_API_URL: http://df-api:5001
