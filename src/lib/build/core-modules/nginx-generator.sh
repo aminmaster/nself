@@ -827,6 +827,17 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
+    location ~ ^/api/v1/admin {
+        set \$target_rf_admin rf-ragflow;
+        proxy_pass http://\$target_rf_admin:9381;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Connection "upgrade";
+    }
+
     location ~ ^/(v1|api) {
         set \$target_rf_api rf-ragflow;
         proxy_pass http://\$target_rf_api:9380;
@@ -865,6 +876,17 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location ~ ^/(console/api|api|v1|files) {
+        set \$target_df_api df-api;
+        proxy_pass http://\$target_df_api:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Connection "upgrade";
     }
 }
