@@ -105,6 +105,11 @@ generate_df_stack() {
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       DB_HOST: df-db
       REDIS_HOST: df-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      WEAVIATE_HOST: df-weaviate
+      WEAVIATE_PORT: 8080
+      WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
     depends_on:
       df-api:
         condition: service_healthy
@@ -124,7 +129,7 @@ generate_df_stack() {
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

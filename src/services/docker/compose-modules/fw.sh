@@ -47,7 +47,7 @@ generate_fw_stack() {
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/v1/health || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
