@@ -82,11 +82,15 @@ generate_df_stack() {
       WEAVIATE_HOST: df-weaviate
       WEAVIATE_PORT: 8080
       WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
+      STORAGE_TYPE: local-storage
+      STORAGE_LOCAL_PATH: /app/api/storage
     depends_on:
       df-db:
         condition: service_healthy
       df-redis:
         condition: service_healthy
+    volumes:
+      - df_storage_data:/app/api/storage
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
@@ -110,9 +114,13 @@ generate_df_stack() {
       WEAVIATE_HOST: df-weaviate
       WEAVIATE_PORT: 8080
       WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
+      STORAGE_TYPE: local-storage
+      STORAGE_LOCAL_PATH: /app/api/storage
     depends_on:
       df-api:
         condition: service_healthy
+    volumes:
+      - df_storage_data:/app/api/storage
     networks:
       - ${DOCKER_NETWORK}
 
