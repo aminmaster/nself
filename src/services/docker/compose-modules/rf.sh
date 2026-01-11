@@ -245,6 +245,7 @@ generate_rf_stack() {
       SANDBOX_HOST: rf-ragflow-sandbox
       SANDBOX_PORT: 9385
       RAGFLOW_SECRET_KEY: ${NSELF_ADMIN_PASSWORD:-aiopassword}${NSELF_ADMIN_PASSWORD:-aiopassword}
+      ENABLE_ADMIN_SERVER: 1
     depends_on:
       rf-init:
         condition: service_completed_successfully

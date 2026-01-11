@@ -129,8 +129,8 @@ generate_df_stack() {
     container_name: \${PROJECT_NAME}_df_web
     restart: unless-stopped
     environment:
-      CONSOLE_API_URL: http://df-api:5001
-      APP_API_URL: http://df-api:5001
+      CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
     depends_on:
       df-api:
         condition: service_healthy
