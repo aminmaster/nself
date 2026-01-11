@@ -802,6 +802,7 @@ EOF
 
   # 6. RAGFlow (Modular) - Only if AIO is not present
   if [[ "${RAGFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
+    echo "DEBUG: Generating RAGFlow Nginx Config (Modular)..."
     local rf_subdomain="${RAGFLOW_SUBDOMAIN:-rf}"
     cat > nginx/sites/ragflow.conf <<EOF
 server {
@@ -831,6 +832,7 @@ EOF
 
   # 7. Dify (Modular)
   if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
+    echo "DEBUG: Generating Dify Nginx Config..."
     local df_subdomain="${DIFY_SUBDOMAIN:-df}"
     cat > nginx/sites/dify.conf <<EOF
 server {
@@ -856,7 +858,6 @@ server {
     }
 }
 EOF
-  fi
   fi
 
   # Unified AIO (AI Operating System) Stack Integration
