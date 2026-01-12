@@ -173,6 +173,8 @@ generate_df_stack() {
       WEAVIATE_HOST: df-weaviate
       WEAVIATE_PORT: 8080
       WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: /app/api/storage
       CODE_EXECUTION_ENDPOINT: http://df-sandbox:8194
       CODE_EXECUTION_API_KEY: \${SANDBOX_API_KEY:-dify-sandbox}
     depends_on:
