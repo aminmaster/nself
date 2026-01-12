@@ -228,6 +228,7 @@ generate_rf_stack() {
     ports:
       - "9380:9380"
       - "9381:9381"
+    command: ["--enable-adminserver"]
     environment:
       DB_TYPE: postgres
       DB_NAME: ragflow

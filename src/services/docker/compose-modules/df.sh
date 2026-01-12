@@ -65,6 +65,25 @@ generate_df_stack() {
       start_period: 30s
       start_period: 30s
 
+
+  # Dify Init Service (DB Migrations)
+  df-init:
+    image: langgenius/dify-api:latest
+    container_name: \${PROJECT_NAME}_df_init
+    command: flask db upgrade
+    environment:
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: df-db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+    depends_on:
+      df-db:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+    restart: "no"
+
   # Dify Services
   df-api:
     image: langgenius/dify-api:latest
@@ -85,6 +104,8 @@ generate_df_stack() {
       STORAGE_TYPE: local
       STORAGE_LOCAL_PATH: /app/api/storage
     depends_on:
+      df-init:
+        condition: service_completed_successfully
       df-db:
         condition: service_healthy
       df-redis:
