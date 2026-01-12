@@ -70,7 +70,8 @@ generate_df_stack() {
   df-init:
     image: langgenius/dify-api:latest
     container_name: \${PROJECT_NAME}_df_init
-    command: flask db upgrade
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["flask db upgrade"]
     environment:
       DB_USERNAME: postgres
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
