@@ -113,11 +113,15 @@ generate_df_stack() {
       STORAGE_TYPE: local
       STORAGE_LOCAL_PATH: /app/api/storage
       SECRET_KEY: \${DIFY_SECRET_KEY:-sk-9f73s3ljTXVcMT3Blbkfk1TWf4YHlM4dT_XqD_vP_-iwO3AZZ}
+      VECTOR_STORE: weaviate
+      WEAVIATE_ENDPOINT: http://df-weaviate:8080
       CONSOLE_CORS_ALLOW_ORIGINS: \${CONSOLE_CORS_ALLOW_ORIGINS:-*}
       WEB_API_CORS_ALLOW_ORIGINS: \${WEB_API_CORS_ALLOW_ORIGINS:-*}
       COOKIE_DOMAIN: .${BASE_DOMAIN}
       PLUGIN_DAEMON_URL: http://df-plugin-daemon:5002
       PLUGIN_DAEMON_KEY: \${PLUGIN_DAEMON_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}
+      VECTOR_STORE: weaviate
+      WEAVIATE_ENDPOINT: http://df-weaviate:8080
     depends_on:
       df-init:
         condition: service_completed_successfully
