@@ -77,6 +77,14 @@ generate_df_stack() {
       DB_HOST: df-db
       DB_PORT: 5432
       DB_DATABASE: dify
+      REDIS_HOST: df-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      WEAVIATE_HOST: df-weaviate
+      WEAVIATE_PORT: 8080
+      WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: /app/api/storage
     depends_on:
       df-db:
         condition: service_healthy
