@@ -228,6 +228,8 @@ generate_df_stack() {
       MAX_PLUGIN_PACKAGE_SIZE: 52428800
       HTTP_PROXY: http://df-ssrf-proxy:3128
       HTTPS_PROXY: http://df-ssrf-proxy:3128
+      DIFY_INNER_API_URL: http://df-api:5001
+      DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
       PLUGIN_DIFY_INNER_API_URL: http://df-api:5001
       PLUGIN_DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
     volumes:
