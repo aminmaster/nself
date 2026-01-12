@@ -185,7 +185,7 @@ generate_df_stack() {
 
   # Dify Sandbox (Code Execution Environment)
   df-sandbox:
-    image: langgenius/dify-sandbox:latest
+    image: langgenius/dify-sandbox:0.2.12
     container_name: \${PROJECT_NAME}_df_sandbox
     restart: unless-stopped
     environment:
@@ -208,7 +208,7 @@ generate_df_stack() {
 
   # Dify Plugin Daemon (Plugin Manager)
   df-plugin-daemon:
-    image: langgenius/dify-plugin-daemon:latest
+    image: langgenius/dify-plugin-daemon:0.5.2-local
     container_name: \${PROJECT_NAME}_df_plugin_daemon
     restart: unless-stopped
     environment:
