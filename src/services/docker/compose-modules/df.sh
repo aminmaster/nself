@@ -120,8 +120,6 @@ generate_df_stack() {
       COOKIE_DOMAIN: .${BASE_DOMAIN}
       PLUGIN_DAEMON_URL: http://df-plugin-daemon:5002
       PLUGIN_DAEMON_KEY: \${PLUGIN_DAEMON_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}
-      VECTOR_STORE: weaviate
-      WEAVIATE_ENDPOINT: http://df-weaviate:8080
     depends_on:
       df-init:
         condition: service_completed_successfully
