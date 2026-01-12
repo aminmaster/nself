@@ -828,7 +828,7 @@ server {
 
     location ~ ^/api/v1/admin {
         set \$target_rf_admin rf-ragflow;
-        proxy_pass http://rf-ragflow:9380;
+        proxy_pass http://rf-ragflow:9381;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
