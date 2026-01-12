@@ -232,6 +232,7 @@ generate_df_stack() {
       DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
       PLUGIN_DIFY_INNER_API_URL: http://df-api:5001
       PLUGIN_DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
+      PLUGIN_REMOTE_INSTALLING_HOST: 0.0.0.0
     volumes:
       - df_plugin_storage:/app/storage
       - df_plugins:/app/plugins
