@@ -269,6 +269,10 @@ VOL
   df_redis_data:
   df_weaviate_data:
   df_storage_data:
+  df_sandbox_dependencies:
+  df_plugin_storage:
+  df_plugins:
+  df_squid_cache:
 VOL
   [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && echo "  fw_db_data:" >> docker-compose.yml && echo "  fw_app_data:" >> docker-compose.yml
   [[ "${KG_ENABLED:-false}" == "true" ]] && echo "  kg_neo4j_data:" >> docker-compose.yml && echo "  kg_neo4j_logs:" >> docker-compose.yml

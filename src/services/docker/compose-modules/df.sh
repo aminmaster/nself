@@ -154,6 +154,102 @@ generate_df_stack() {
     networks:
       - ${DOCKER_NETWORK}
 
+  # Dify Worker Beat (Celery Scheduler)
+  df-worker-beat:
+    image: langgenius/dify-api:latest
+    container_name: \${PROJECT_NAME}_df_worker_beat
+    restart: unless-stopped
+    command: celery -A app.celery worker -B
+    environment:
+      MODE: beat
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: df-db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+      REDIS_HOST: df-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      WEAVIATE_HOST: df-weaviate
+      WEAVIATE_PORT: 8080
+      WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
+      CODE_EXECUTION_ENDPOINT: http://df-sandbox:8194
+      CODE_EXECUTION_API_KEY: \${SANDBOX_API_KEY:-dify-sandbox}
+    depends_on:
+      df-db:
+        condition: service_healthy
+      df-redis:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  # Dify Sandbox (Code Execution Environment)
+  df-sandbox:
+    image: langgenius/dify-sandbox:latest
+    container_name: \${PROJECT_NAME}_df_sandbox
+    restart: unless-stopped
+    environment:
+      API_KEY: \${SANDBOX_API_KEY:-dify-sandbox}
+      GIN_MODE: release
+      WORKER_TIMEOUT: 15
+      ENABLE_NETWORK: true
+      HTTP_PROXY: http://df-ssrf-proxy:3128
+      HTTPS_PROXY: http://df-ssrf-proxy:3128
+      SANDBOX_PORT: 8194
+    volumes:
+      - df_sandbox_dependencies:/dependencies
+    networks:
+      - ${DOCKER_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8194/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Dify Plugin Daemon (Plugin Manager)
+  df-plugin-daemon:
+    image: langgenius/dify-plugin-daemon:latest
+    container_name: \${PROJECT_NAME}_df_plugin_daemon
+    restart: unless-stopped
+    environment:
+      LOG_OUTPUT_FORMAT: text
+      DB_DATABASE: dify_plugin
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: df-db
+      DB_PORT: 5432
+      REDIS_HOST: df-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      SERVER_PORT: 5002
+      SERVER_KEY: \${PLUGIN_DAEMON_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}
+      MAX_PLUGIN_PACKAGE_SIZE: 52428800
+      HTTP_PROXY: http://df-ssrf-proxy:3128
+      HTTPS_PROXY: http://df-ssrf-proxy:3128
+    volumes:
+      - df_plugin_storage:/app/storage
+      - df_plugins:/app/plugins
+    depends_on:
+      df-db:
+        condition: service_healthy
+      df-redis:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  # Dify SSRF Proxy (Security Proxy)
+  df-ssrf-proxy:
+    image: ubuntu/squid:latest
+    container_name: \${PROJECT_NAME}_df_ssrf_proxy
+    restart: unless-stopped
+    environment:
+      HTTP_PORT: 3128
+      COREDUMP_DIR: /var/spool/squid
+    volumes:
+      - df_squid_cache:/var/spool/squid
+    networks:
+      - ${DOCKER_NETWORK}
+
   df-web:
     image: langgenius/dify-web:latest
     container_name: \${PROJECT_NAME}_df_web
