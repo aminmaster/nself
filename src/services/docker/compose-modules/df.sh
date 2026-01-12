@@ -228,12 +228,24 @@ generate_df_stack() {
       MAX_PLUGIN_PACKAGE_SIZE: 52428800
       HTTP_PROXY: http://df-ssrf-proxy:3128
       HTTPS_PROXY: http://df-ssrf-proxy:3128
+      PPROF_ENABLED: false
       DIFY_INNER_API_URL: http://df-api:5001
       DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
       PLUGIN_DIFY_INNER_API_URL: http://df-api:5001
       PLUGIN_DIFY_INNER_API_KEY: \${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}
       PLUGIN_REMOTE_INSTALLING_HOST: 0.0.0.0
       PLUGIN_REMOTE_INSTALLING_PORT: 5003
+      PLUGIN_WORKING_PATH: /app/storage/cwd
+      PYTHON_ENV_INIT_TIMEOUT: 120
+      PLUGIN_MAX_EXECUTION_TIMEOUT: 600
+      PIP_MIRROR_URL: ""
+      PLUGIN_STORAGE_TYPE: local
+      PLUGIN_STORAGE_LOCAL_ROOT: /app/storage
+      PLUGIN_INSTALLED_PATH: plugin
+      PLUGIN_PACKAGE_CACHE_PATH: plugin_packages
+      PLUGIN_MEDIA_CACHE_PATH: assets
+      THIRD_PARTY_SIGNATURE_VERIFICATION_ENABLED: true
+      FORCE_VERIFYING_SIGNATURE: false
     volumes:
       - df_plugin_storage:/app/storage
       - df_plugins:/app/plugins
