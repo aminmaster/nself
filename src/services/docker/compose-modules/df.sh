@@ -112,6 +112,10 @@ generate_df_stack() {
       WEAVIATE_API_KEY: \${DIFY_WEAVIATE_API_KEY:-dify-weaviate-key}
       STORAGE_TYPE: local
       STORAGE_LOCAL_PATH: /app/api/storage
+      SECRET_KEY: \${DIFY_SECRET_KEY:-sk-9f73s3ljTXVcMT3Blbkfk1TWf4YHlM4dT_XqD_vP_-iwO3AZZ}
+      CONSOLE_CORS_ALLOW_ORIGINS: \${CONSOLE_CORS_ALLOW_ORIGINS:-*}
+      WEB_API_CORS_ALLOW_ORIGINS: \${WEB_API_CORS_ALLOW_ORIGINS:-*}
+      COOKIE_DOMAIN: ${BASE_DOMAIN}
     depends_on:
       df-init:
         condition: service_completed_successfully
