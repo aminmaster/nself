@@ -281,6 +281,7 @@ generate_df_stack() {
     environment:
       CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      NEXT_PUBLIC_COOKIE_DOMAIN: ${BASE_DOMAIN}
     depends_on:
       df-api:
         condition: service_healthy
