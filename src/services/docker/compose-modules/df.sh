@@ -115,7 +115,7 @@ generate_df_stack() {
       SECRET_KEY: \${DIFY_SECRET_KEY:-sk-9f73s3ljTXVcMT3Blbkfk1TWf4YHlM4dT_XqD_vP_-iwO3AZZ}
       CONSOLE_CORS_ALLOW_ORIGINS: \${CONSOLE_CORS_ALLOW_ORIGINS:-*}
       WEB_API_CORS_ALLOW_ORIGINS: \${WEB_API_CORS_ALLOW_ORIGINS:-*}
-      COOKIE_DOMAIN: ${BASE_DOMAIN}
+      COOKIE_DOMAIN: .${BASE_DOMAIN}
     depends_on:
       df-init:
         condition: service_completed_successfully
@@ -281,7 +281,7 @@ generate_df_stack() {
     environment:
       CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
-      NEXT_PUBLIC_COOKIE_DOMAIN: ${BASE_DOMAIN}
+      NEXT_PUBLIC_COOKIE_DOMAIN: .${BASE_DOMAIN}
     depends_on:
       df-api:
         condition: service_healthy
