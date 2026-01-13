@@ -79,7 +79,7 @@ generate_df_stack() {
             echo "✅ Migration successful"
             exit 0
           fi
-          echo "⚠️ Migration failed, retrying in 5s ($i/5)..."
+          echo "⚠️ Migration failed, retrying in 5s (\$i/5)..."
           sleep 5
         done
         echo "❌ Migration failed after 5 attempts"

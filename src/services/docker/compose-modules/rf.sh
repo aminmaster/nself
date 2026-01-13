@@ -218,16 +218,16 @@ generate_rf_stack() {
         MAX_RETRIES=30
         COUNT=0
         until psql -h rf-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "ragflow"; do
-          if [ $COUNT -ge $MAX_RETRIES ]; then
-            echo "❌ Timeout waiting for database creation or connection after ${MAX_RETRIES} attempts."
+          if [ \$COUNT -ge \$MAX_RETRIES ]; then
+            echo "❌ Timeout waiting for database creation or connection after \${MAX_RETRIES} attempts."
             exit 1
           fi
-          echo "Attempting database creation ($COUNT/$MAX_RETRIES)..."
+          echo "Attempting database creation (\$COUNT/\$MAX_RETRIES)..."
           # Try to create, suppress error if it exists (race condition)
           psql -h rf-db -U postgres -c "CREATE DATABASE ragflow;" 2>/dev/null || true
           
           sleep 5
-          COUNT=$((COUNT+1))
+          COUNT=\$((COUNT+1))
         done
         echo "✅ RAGFlow database ready."
 
