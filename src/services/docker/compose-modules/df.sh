@@ -70,8 +70,20 @@ generate_df_stack() {
   df-init:
     image: langgenius/dify-api:latest
     container_name: \${PROJECT_NAME}_df_init
-    entrypoint: ["/bin/bash", "-c"]
-    command: ["flask db upgrade"]
+    command:
+      - /bin/bash
+      - -c
+      - |
+        for i in {1..5}; do
+          if flask db upgrade; then
+            echo "✅ Migration successful"
+            exit 0
+          fi
+          echo "⚠️ Migration failed, retrying in 5s ($i/5)..."
+          sleep 5
+        done
+        echo "❌ Migration failed after 5 attempts"
+        exit 1
     environment:
       DB_USERNAME: postgres
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
