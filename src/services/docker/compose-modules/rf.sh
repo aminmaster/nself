@@ -215,11 +215,21 @@ generate_rf_stack() {
       - |
         export PGPASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
         echo "Waiting for rf-db..."
+        MAX_RETRIES=30
+        COUNT=0
         until psql -h rf-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "ragflow"; do
-          echo "Creating ragflow database..."
-          psql -h rf-db -U postgres -c "CREATE DATABASE ragflow;" || sleep 2
+          if [ $COUNT -ge $MAX_RETRIES ]; then
+            echo "❌ Timeout waiting for database creation or connection after ${MAX_RETRIES} attempts."
+            exit 1
+          fi
+          echo "Attempting database creation ($COUNT/$MAX_RETRIES)..."
+          # Try to create, suppress error if it exists (race condition)
+          psql -h rf-db -U postgres -c "CREATE DATABASE ragflow;" 2>/dev/null || true
+          
+          sleep 5
+          COUNT=$((COUNT+1))
         done
-        echo "RAGFlow database ready."
+        echo "✅ RAGFlow database ready."
 
   rf-ragflow:
     image: infiniflow/ragflow:\${RAGFLOW_IMAGE_TAG:-v0.23.1}
