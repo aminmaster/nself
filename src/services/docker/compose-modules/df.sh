@@ -63,7 +63,6 @@ generate_df_stack() {
       timeout: 10s
       retries: 10
       start_period: 30s
-      start_period: 30s
 
 
   # Dify Init Service (DB Migrations)
