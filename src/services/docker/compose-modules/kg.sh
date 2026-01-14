@@ -153,37 +153,7 @@ FRONTEND_ENV
       timeout: 10s
       retries: 5
 
-  kg-graphrag-api:
-    build:
-      context: ${NSELF_DIR:-$HOME/.nself}/src/services/kg/graphrag-api
-      dockerfile: Dockerfile
-    image: ${PROJECT_NAME}_kg_graphrag_api:latest
-    pull_policy: build
-    container_name: ${PROJECT_NAME}_kg_graphrag_api
-    restart: unless-stopped
-    environment:
-      NEO4J_URI: bolt://kg-neo4j:7687
-      NEO4J_USERNAME: neo4j
-      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      DEFAULT_LLM_PROVIDER: openai
-      DEFAULT_MODEL: gpt-4o-mini
-      EMBEDDING_MODEL: text-embedding-3-small
-      VECTOR_INDEX_NAME: kg_embeddings
-      DEBUG: "false"
-    depends_on:
-      kg-neo4j:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-    ports:
-      - "${KG_BACKEND_PORT:-8001}:8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+
 EOF
 }
 
