@@ -316,9 +316,14 @@ generate_df_stack() {
     container_name: \${PROJECT_NAME}_df_web
     restart: unless-stopped
     environment:
+      EDITION: SELF_HOSTED
+      DEPLOY_ENV: PRODUCTION
       CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
-      NEXT_PUBLIC_COOKIE_DOMAIN: .${BASE_DOMAIN}
+      NEXT_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/console/api
+      NEXT_PUBLIC_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/api
+      COOKIE_DOMAIN: .${BASE_DOMAIN}
+      NEXT_PUBLIC_COOKIE_DOMAIN: "1"
       NEXT_PUBLIC_DEPLOY_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       CONSOLE_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}

@@ -858,6 +858,32 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
+    # Dify Serwist ServiceWorker and related assets
+    location ~ ^/serwist/(sw\.js|sw\.js\.map)$ {
+        set \$target_df_web df-web;
+        proxy_pass http://\$target_df_web:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /serwist/ {
+        set \$target_df_web df-web;
+        rewrite ^/serwist/(.*)$ /\$1 break;
+        proxy_pass http://\$target_df_web:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
     location / {
         set \$target_df_web df-web;
         proxy_pass http://\$target_df_web:3000;
