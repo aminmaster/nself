@@ -330,7 +330,8 @@ generate_df_stack() {
       APP_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       NEXT_PUBLIC_SITE_DOMAIN: ${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       NEXT_PUBLIC_SITE_TITLE: Dify
-      LOCALE: en-US
+      LOCALE: en_US
+      LANGUAGE: en-US
       I18NEXT_DEBUG: "true"
       DEBUG: "i18next:*"
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
