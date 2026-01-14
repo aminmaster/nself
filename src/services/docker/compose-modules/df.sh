@@ -83,7 +83,7 @@ generate_df_stack() {
             echo "✅ Migration successful"
             echo "Fixing storage permissions..."
             mkdir -p /app/api/storage/privkeys
-            chmod -R 775 /app/api/storage
+            chmod -R 777 /app/api/storage
             chown -R 1001:1001 /app/api/storage
             exit 0
           fi
@@ -313,6 +313,9 @@ generate_df_stack() {
       NEXT_PUBLIC_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/api
       NEXT_PUBLIC_COOKIE_DOMAIN: .${BASE_DOMAIN}
       NEXT_PUBLIC_DEPLOY_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      CONSOLE_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      APP_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      NEXT_PUBLIC_SITE_DOMAIN: ${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       LOCALE: en-US
     depends_on:
       df-api:
