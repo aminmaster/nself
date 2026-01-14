@@ -318,6 +318,7 @@ generate_df_stack() {
     environment:
       EDITION: SELF_HOSTED
       DEPLOY_ENV: PRODUCTION
+      PM2_INSTANCES: 1
       CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       NEXT_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/console/api
@@ -328,6 +329,7 @@ generate_df_stack() {
       CONSOLE_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_WEB_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       NEXT_PUBLIC_SITE_DOMAIN: ${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      NEXT_PUBLIC_SITE_TITLE: Dify
       LOCALE: en-US
       I18NEXT_DEBUG: "true"
       DEBUG: "i18next:*"
