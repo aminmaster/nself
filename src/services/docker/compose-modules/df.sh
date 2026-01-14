@@ -68,10 +68,9 @@ generate_df_stack() {
   # Dify Init Service (DB Migrations)
   df-init:
     image: langgenius/dify-api:latest
-    container_name: ${PROJECT_NAME:-nself}_df_init
+    container_name: \${PROJECT_NAME:-nself}_df_init
+    entrypoint: ["/bin/bash", "-c"]
     command:
-      - /bin/bash
-      - -c
       - |
         echo "Ensuring Dify databases exist..."
         # Use python inside the dify-api image to check/create databases
