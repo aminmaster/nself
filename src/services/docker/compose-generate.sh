@@ -305,6 +305,9 @@ VOL
   df_squid_cache:
     name: \${PROJECT_NAME:-nself}_df_squid_cache
     driver: local
+  df_squid_log:
+    name: \${PROJECT_NAME:-nself}_df_squid_log
+    driver: local
 VOL
   [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && {
     echo "  fw_db_data:" >> docker-compose.yml
