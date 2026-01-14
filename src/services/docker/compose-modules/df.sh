@@ -332,8 +332,6 @@ generate_df_stack() {
       NEXT_PUBLIC_SITE_TITLE: Dify
       LOCALE: en_US
       LANGUAGE: en-US
-      I18NEXT_DEBUG: "true"
-      DEBUG: "i18next:*"
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
     depends_on:
       df-api:
