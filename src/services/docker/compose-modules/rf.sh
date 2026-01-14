@@ -237,7 +237,7 @@ generate_rf_stack() {
         python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='rf-db'); conn.autocommit=True; cur=conn.cursor(); cur.execute('SELECT 1 FROM pg_database WHERE datname=\'ragflow\''); exists=cur.fetchone(); [cur.execute('CREATE DATABASE ragflow') if not exists else None]"
 
         echo "Initializing RAGFlow database tables..."
-        python3 -c "from api.db.db_models import init_database_tables; import logging; logging.basicConfig(level=logging.INFO); init_database_tables()"
+        python3 -c "from common import settings; settings.init_settings(); from api.db.db_models import init_database_tables; import logging; logging.basicConfig(level=logging.INFO); init_database_tables()"
         
         echo "✅ RAGFlow database migration complete."
 
