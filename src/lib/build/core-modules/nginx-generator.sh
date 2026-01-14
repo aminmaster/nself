@@ -860,6 +860,7 @@ server {
 
     location / {
         set \$target_df_web df-web;
+        rewrite ^/serwist/(.*)$ /\$1 break;
         proxy_pass http://\$target_df_web:3000;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;

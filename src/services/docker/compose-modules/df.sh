@@ -75,7 +75,7 @@ generate_df_stack() {
       - |
         echo "Ensuring Dify databases exist..."
         # Use python inside the dify-api image to check/create databases
-        python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='df-db'); conn.autocommit=True; cur=conn.cursor(); [cur.execute(f'CREATE DATABASE {db}') for db in ['dify', 'dify_plugin'] if (cur.execute(f'SELECT 1 FROM pg_database WHERE datname=\'{db}\''), not cur.fetchone())[1]]"
+        python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='df-db'); conn.autocommit=True; cur=conn.cursor(); [cur.execute(f'CREATE DATABASE {db}') for db in ['dify', 'dify_plugin'] if (cur.execute(f'SELECT 1 FROM pg_database WHERE datname=\\\'{db}\\\''), not cur.fetchone())[1]]"
 
         echo "Running Dify migrations..."
         for i in {1..5}; do
@@ -153,6 +153,8 @@ generate_df_stack() {
       - df_storage_data:/app/api/storage
     networks:
       - ${DOCKER_NETWORK}
+    extra_hosts:
+      - "${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "python3 -c 'import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(5); s.connect((\"localhost\", 5001))'"]
       interval: 10s
@@ -184,6 +186,8 @@ generate_df_stack() {
       - df_storage_data:/app/api/storage
     networks:
       - ${DOCKER_NETWORK}
+    extra_hosts:
+      - "${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}:host-gateway"
 
   # Dify Worker Beat (Celery Scheduler)
   df-worker-beat:
@@ -322,6 +326,8 @@ generate_df_stack() {
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+    extra_hosts:
+      - "${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}:host-gateway"
 
 EOF
 }
