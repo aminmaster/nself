@@ -143,36 +143,6 @@ server {
     listen 80;
     server_name ${route};
 
-$(if [[ "$service_name" == "rf-ragflow" || "$service_name" == "ragflow" ]]; then
-cat <<'RF_LOCATION'
-    location ~ ^/api/v1/admin {
-        resolver 127.0.0.11 valid=30s;
-        set $target_rf_admin rf-ragflow;
-        proxy_pass http://$target_rf_admin:9381;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location ~ ^/(v1|api) {
-        resolver 127.0.0.11 valid=30s;
-        set $target_rf_api rf-ragflow;
-        proxy_pass http://$target_rf_api:9380;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-RF_LOCATION
-fi)
-
     location / {
         resolver 127.0.0.11 valid=30s;
         set \$upstream_${service_name//-/_} ${service_name};
@@ -184,6 +154,10 @@ fi)
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # Increase timeouts for long-running tasks
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 EOF

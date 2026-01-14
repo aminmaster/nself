@@ -814,28 +814,6 @@ server {
 
     resolver 127.0.0.11 valid=30s;
 
-    location ~ ^/api/v1/admin {
-        set \$target_rf_admin rf-ragflow;
-        proxy_pass http://\$target_rf_admin:9381;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Connection "upgrade";
-    }
-
-    location ~ ^/(v1|api) {
-        set \$target_rf_api rf-ragflow;
-        proxy_pass http://\$target_rf_api:9380;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Connection "upgrade";
-    }
-
     location / {
         set \$target_rf rf-ragflow;
         proxy_pass http://\$target_rf:80;
@@ -846,6 +824,10 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+        
+        # Increase timeouts for long-running RAG tasks
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 EOF
@@ -930,28 +912,6 @@ server {
 
     resolver 127.0.0.11 valid=30s;
 
-    location ~ ^/api/v1/admin {
-        set \$target_rf_admin aio-ragflow;
-        proxy_pass http://\$target_rf_admin:9381;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Connection "upgrade";
-    }
-
-    location ~ ^/(v1|api) {
-        set \$target_rf_api aio-ragflow;
-        proxy_pass http://\$target_rf_api:9380;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Connection "upgrade";
-    }
-
     location / {
         set \$target_ragflow aio-ragflow;
         proxy_pass http://\$target_ragflow:80;
@@ -964,7 +924,8 @@ server {
         # WebSocket support
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_read_timeout 86400;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 EOF

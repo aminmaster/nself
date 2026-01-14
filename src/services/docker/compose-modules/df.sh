@@ -82,7 +82,8 @@ generate_df_stack() {
           if flask db upgrade; then
             echo "✅ Migration successful"
             echo "Fixing storage permissions..."
-            chown -R 1001:1001 /app/api/storage 2>/dev/null || true
+            mkdir -p /app/api/storage/privkeys
+            chown -R 1001:1001 /app/api/storage
             exit 0
           fi
           echo "⚠️ Migration failed, retrying in 5s (\$\$i/5)..."
