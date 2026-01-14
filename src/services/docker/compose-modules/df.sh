@@ -69,6 +69,7 @@ generate_df_stack() {
   df-init:
     image: langgenius/dify-api:latest
     container_name: \${PROJECT_NAME:-nself}_df_init
+    user: root
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |

@@ -814,18 +814,6 @@ server {
 
     resolver 127.0.0.11 valid=30s;
 
-    location / {
-        set \$target_rf rf-ragflow;
-        proxy_pass http://\$target_rf:80;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
     location ~ ^/api/v1/admin {
         set \$target_rf_admin rf-ragflow;
         proxy_pass http://rf-ragflow:9381;
@@ -847,6 +835,18 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Connection "upgrade";
     }
+
+    location / {
+        set \$target_rf rf-ragflow;
+        proxy_pass http://\$target_rf:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
 }
 EOF
   fi
@@ -865,6 +865,17 @@ server {
 
     resolver 127.0.0.11 valid=30s;
 
+    location ~ ^/(console/api|api|v1|files) {
+        set \$target_df_api df-api;
+        proxy_pass http://\$target_df_api:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Connection "upgrade";
+    }
+
     location / {
         set \$target_df_web df-web;
         proxy_pass http://\$target_df_web:3000;
@@ -874,17 +885,6 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    location ~ ^/(console/api|api|v1|files) {
-        set \$target_df_api df-api;
-        proxy_pass http://\$target_df_api:5001;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Connection "upgrade";
     }
 }
@@ -929,6 +929,28 @@ server {
     ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
 
     resolver 127.0.0.11 valid=30s;
+
+    location ~ ^/api/v1/admin {
+        set \$target_rf_admin aio-ragflow;
+        proxy_pass http://aio-ragflow:9381;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location ~ ^/(v1|api) {
+        set \$target_rf_api aio-ragflow;
+        proxy_pass http://aio-ragflow:9380;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Connection "upgrade";
+    }
 
     location / {
         set \$target_ragflow aio-ragflow;
