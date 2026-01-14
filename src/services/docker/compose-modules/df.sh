@@ -83,6 +83,7 @@ generate_df_stack() {
             echo "✅ Migration successful"
             echo "Fixing storage permissions..."
             mkdir -p /app/api/storage/privkeys
+            chmod -R 775 /app/api/storage
             chown -R 1001:1001 /app/api/storage
             exit 0
           fi
@@ -164,6 +165,7 @@ generate_df_stack() {
     restart: unless-stopped
     command: python main.py worker
     environment:
+      MODE: worker
       DB_USERNAME: postgres
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       DB_HOST: df-db
@@ -307,7 +309,11 @@ generate_df_stack() {
     environment:
       CONSOLE_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
       APP_API_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      NEXT_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/console/api
+      NEXT_PUBLIC_PUBLIC_API_PREFIX: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}/api
       NEXT_PUBLIC_COOKIE_DOMAIN: .${BASE_DOMAIN}
+      NEXT_PUBLIC_DEPLOY_URL: https://${DIFY_SUBDOMAIN:-df}.${BASE_DOMAIN}
+      LOCALE: en-US
     depends_on:
       df-api:
         condition: service_healthy
