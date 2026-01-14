@@ -108,6 +108,8 @@ generate_df_stack() {
     depends_on:
       df-db:
         condition: service_healthy
+    volumes:
+      - df_storage_data:/app/api/storage
     networks:
       - ${DOCKER_NETWORK}
     restart: "no"
