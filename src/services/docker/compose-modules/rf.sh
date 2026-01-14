@@ -203,33 +203,43 @@ generate_rf_stack() {
       - ${DOCKER_NETWORK}
 
   rf-init:
-    image: postgres:16-alpine
-    container_name: \${PROJECT_NAME:-nself}_rf_init
+    image: infiniflow/ragflow:${RAGFLOW_IMAGE_TAG:-v0.23.1}
+    container_name: ${PROJECT_NAME:-nself}_rf_init
     depends_on:
       rf-db:
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+    environment:
+      DB_TYPE: postgres
+      DB_NAME: ragflow
+      DB_USER: postgres
+      DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      DB_HOST: rf-db
+      DB_PORT: 5432
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        export PGPASSWORD="${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
         echo "Waiting for rf-db..."
         MAX_RETRIES=30
         COUNT=0
-        until psql -h rf-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "ragflow"; do
+        until python3 -c "import psycopg2; psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='rf-db')" 2>/dev/null; do
           if [ \$\$COUNT -ge \$\$MAX_RETRIES ]; then
-            echo "❌ Timeout waiting for database creation or connection after \$\${MAX_RETRIES} attempts."
+            echo "❌ Timeout waiting for database connection after \$\${MAX_RETRIES} attempts."
             exit 1
           fi
-          echo "Attempting database creation (\$\$COUNT/\$\$MAX_RETRIES)..."
-          # Try to create, suppress error if it exists (race condition)
-          psql -h rf-db -U postgres -c "CREATE DATABASE ragflow;" 2>/dev/null || true
-          
+          echo "Connecting to database (\$\$COUNT/\$\$MAX_RETRIES)..."
           sleep 5
           COUNT=\$\$((COUNT+1))
         done
-        echo "✅ RAGFlow database ready."
+
+        echo "Ensuring ragflow database exists..."
+        python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='rf-db'); conn.autocommit=True; cur=conn.cursor(); cur.execute('SELECT 1 FROM pg_database WHERE datname=\'ragflow\''); exists=cur.fetchone(); [cur.execute('CREATE DATABASE ragflow') if not exists else None]"
+
+        echo "Initializing RAGFlow database tables..."
+        python3 -c "from api.db.db_models import init_database_tables; import logging; logging.basicConfig(level=logging.INFO); init_database_tables()"
+        
+        echo "✅ RAGFlow database migration complete."
 
   rf-ragflow:
     image: infiniflow/ragflow:\${RAGFLOW_IMAGE_TAG:-v0.23.1}

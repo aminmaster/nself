@@ -207,29 +207,31 @@ networks:
 
 volumes:
   postgres_data:
+    name: ${PROJECT_NAME:-nself}_postgres_data
     driver: local
   nginx_cache:
+    name: ${PROJECT_NAME:-nself}_nginx_cache
     driver: local
 EOF
 
   # Add conditional volumes based on enabled services
-  [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]] && echo "  nself_admin_data:" >> docker-compose.yml
-  [[ "${REDIS_ENABLED:-false}" == "true" ]] && echo "  redis_data:" >> docker-compose.yml
-  [[ "${MINIO_ENABLED:-false}" == "true" ]] && echo "  minio_data:" >> docker-compose.yml
-  [[ "${RABBITMQ_ENABLED:-false}" == "true" ]] && echo "  rabbitmq_data:" >> docker-compose.yml
-  [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] && echo "  meilisearch_data:" >> docker-compose.yml
-  [[ "${TYPESENSE_ENABLED:-false}" == "true" ]] && echo "  typesense_data:" >> docker-compose.yml
-  [[ "${SONIC_ENABLED:-false}" == "true" ]] && echo "  sonic_data:" >> docker-compose.yml
-  [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && echo "  mlflow_data:" >> docker-compose.yml
-  [[ "${GRAFANA_ENABLED:-false}" == "true" ]] && echo "  grafana_data:" >> docker-compose.yml
-  [[ "${PROMETHEUS_ENABLED:-false}" == "true" ]] && echo "  prometheus_data:" >> docker-compose.yml
-  [[ "${LOKI_ENABLED:-false}" == "true" ]] && echo "  loki_data:" >> docker-compose.yml
-  [[ "${TEMPO_ENABLED:-false}" == "true" ]] && echo "  tempo_data:" >> docker-compose.yml
-  [[ "${ALERTMANAGER_ENABLED:-false}" == "true" ]] && echo "  alertmanager_data:" >> docker-compose.yml
-  [[ "${PGADMIN_ENABLED:-false}" == "true" ]] && echo "  pgadmin_data:" >> docker-compose.yml
-  [[ "${PORTAINER_ENABLED:-false}" == "true" ]] && echo "  portainer_data:" >> docker-compose.yml
-  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_data:" >> docker-compose.yml
-  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_lib:" >> docker-compose.yml
+  [[ "${NSELF_ADMIN_ENABLED:-false}" == "true" ]] && echo "  nself_admin_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_nself_admin_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${REDIS_ENABLED:-false}" == "true" ]] && echo "  redis_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_redis_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${MINIO_ENABLED:-false}" == "true" ]] && echo "  minio_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_minio_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${RABBITMQ_ENABLED:-false}" == "true" ]] && echo "  rabbitmq_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_rabbitmq_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${MEILISEARCH_ENABLED:-false}" == "true" ]] && echo "  meilisearch_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_meilisearch_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${TYPESENSE_ENABLED:-false}" == "true" ]] && echo "  typesense_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_typesense_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${SONIC_ENABLED:-false}" == "true" ]] && echo "  sonic_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_sonic_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && echo "  mlflow_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_mlflow_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${GRAFANA_ENABLED:-false}" == "true" ]] && echo "  grafana_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_grafana_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${PROMETHEUS_ENABLED:-false}" == "true" ]] && echo "  prometheus_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_prometheus_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${LOKI_ENABLED:-false}" == "true" ]] && echo "  loki_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_loki_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${TEMPO_ENABLED:-false}" == "true" ]] && echo "  tempo_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_tempo_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${ALERTMANAGER_ENABLED:-false}" == "true" ]] && echo "  alertmanager_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_alertmanager_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${PGADMIN_ENABLED:-false}" == "true" ]] && echo "  pgadmin_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_pgadmin_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${PORTAINER_ENABLED:-false}" == "true" ]] && echo "  portainer_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_portainer_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_data:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_certbot_data" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
+  [[ "${SSL_PROVIDER:-selfsigned}" == "letsencrypt" ]] && echo "  certbot_lib:" >> docker-compose.yml && echo "    name: \${PROJECT_NAME:-nself}_certbot_lib" >> docker-compose.yml && echo "    driver: local" >> docker-compose.yml
   # Add volumes for custom services with pre-built templates
   # These need named volumes since they don't use host mounts
   for i in $(seq 1 ${CUSTOM_SERVICE_COUNT:-0}); do
@@ -251,7 +253,11 @@ EOF
     # Pre-built AI service templates need data volumes
     case "$template_type" in
       graphrag|graph-builder|falkordb|graphiti)
-        [[ -n "$service_name" ]] && echo "  ${service_name}_data:" >> docker-compose.yml
+        [[ -n "$service_name" ]] && {
+           echo "  ${service_name}_data:" >> docker-compose.yml
+           echo "    name: \${PROJECT_NAME:-nself}_${service_name}_data" >> docker-compose.yml
+           echo "    driver: local" >> docker-compose.yml
+        }
         ;;
     esac
   done
@@ -259,26 +265,87 @@ EOF
   # Add volumes for AIO Bundles
   [[ "${RAGFLOW_ENABLED:-false}" == "true" ]] && cat >> docker-compose.yml <<VOL
   rf_db_data:
+    name: \${PROJECT_NAME:-nself}_rf_db_data
+    driver: local
   rf_redis_data:
+    name: \${PROJECT_NAME:-nself}_rf_redis_data
+    driver: local
   rf_es_data:
+    name: \${PROJECT_NAME:-nself}_rf_es_data
+    driver: local
   rf_minio_data:
+    name: \${PROJECT_NAME:-nself}_rf_minio_data
+    driver: local
   rf_ragflow_data:
+    name: \${PROJECT_NAME:-nself}_rf_ragflow_data
+    driver: local
 VOL
   [[ "${DIFY_ENABLED:-false}" == "true" ]] && cat >> docker-compose.yml <<VOL
   df_db_data:
+    name: \${PROJECT_NAME:-nself}_df_db_data
+    driver: local
   df_redis_data:
+    name: \${PROJECT_NAME:-nself}_df_redis_data
+    driver: local
   df_weaviate_data:
+    name: \${PROJECT_NAME:-nself}_df_weaviate_data
+    driver: local
   df_storage_data:
+    name: \${PROJECT_NAME:-nself}_df_storage_data
+    driver: local
   df_sandbox_dependencies:
+    name: \${PROJECT_NAME:-nself}_df_sandbox_dependencies
+    driver: local
   df_plugin_storage:
+    name: \${PROJECT_NAME:-nself}_df_plugin_storage
+    driver: local
   df_plugins:
+    name: \${PROJECT_NAME:-nself}_df_plugins
+    driver: local
   df_squid_cache:
+    name: \${PROJECT_NAME:-nself}_df_squid_cache
+    driver: local
 VOL
-  [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && echo "  fw_db_data:" >> docker-compose.yml && echo "  fw_app_data:" >> docker-compose.yml
-  [[ "${KG_ENABLED:-false}" == "true" ]] && echo "  kg_neo4j_data:" >> docker-compose.yml && echo "  kg_neo4j_logs:" >> docker-compose.yml
-  [[ "${MG_ENABLED:-false}" == "true" ]] && echo "  mg_falkordb_data:" >> docker-compose.yml && echo "  mg_graphiti_data:" >> docker-compose.yml
-  [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && echo "  lf_db_data:" >> docker-compose.yml && echo "  lf_app_data:" >> docker-compose.yml
-  [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && echo "  ml_db_data:" >> docker-compose.yml && echo "  ml_minio_data:" >> docker-compose.yml
+  [[ "${FLOWISE_ENABLED:-false}" == "true" ]] && {
+    echo "  fw_db_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_fw_db_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+    echo "  fw_app_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_fw_app_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+  }
+  [[ "${KG_ENABLED:-false}" == "true" ]] && {
+    echo "  kg_neo4j_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_kg_neo4j_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+    echo "  kg_neo4j_logs:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_kg_neo4j_logs" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+  }
+  [[ "${MG_ENABLED:-false}" == "true" ]] && {
+    echo "  mg_falkordb_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_mg_falkordb_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+    echo "  mg_graphiti_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_mg_graphiti_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+  }
+  [[ "${LANGFLOW_ENABLED:-false}" == "true" ]] && {
+    echo "  lf_db_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_lf_db_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+    echo "  lf_app_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_lf_app_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+  }
+  [[ "${MLFLOW_ENABLED:-false}" == "true" ]] && {
+    echo "  ml_db_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_ml_db_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+    echo "  ml_minio_data:" >> docker-compose.yml
+    echo "    name: \${PROJECT_NAME:-nself}_ml_minio_data" >> docker-compose.yml
+    echo "    driver: local" >> docker-compose.yml
+  }
 
   # Start services section
   echo "" >> docker-compose.yml

@@ -68,11 +68,16 @@ generate_df_stack() {
   # Dify Init Service (DB Migrations)
   df-init:
     image: langgenius/dify-api:latest
-    container_name: \${PROJECT_NAME:-nself}_df_init
+    container_name: ${PROJECT_NAME:-nself}_df_init
     command:
       - /bin/bash
       - -c
       - |
+        echo "Ensuring Dify databases exist..."
+        # Use python inside the dify-api image to check/create databases
+        python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='df-db'); conn.autocommit=True; cur=conn.cursor(); [cur.execute(f'CREATE DATABASE {db}') for db in ['dify', 'dify_plugin'] if (cur.execute(f'SELECT 1 FROM pg_database WHERE datname=\'{db}\''), not cur.fetchone())[1]]"
+
+        echo "Running Dify migrations..."
         for i in {1..5}; do
           if flask db upgrade; then
             echo "✅ Migration successful"
