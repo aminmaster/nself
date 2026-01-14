@@ -8,7 +8,7 @@ generate_fw_stack() {
   # Flowise Stack
   fw-db:
     image: postgres:16-alpine
-    container_name: \${PROJECT_NAME}_fw_db
+    container_name: \${PROJECT_NAME:-nself}_fw_db
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -25,7 +25,7 @@ generate_fw_stack() {
 
   fw-app:
     image: flowiseai/flowise:latest
-    container_name: \${PROJECT_NAME}_fw_app
+    container_name: \${PROJECT_NAME:-nself}_fw_app
     restart: unless-stopped
     # ports:
     #   - "${FLOWISE_PORT:-3002}:3000"

@@ -8,7 +8,7 @@ generate_df_stack() {
   # Dify Isolated Infrastructure
   df-db:
     image: postgres:15-alpine
-    container_name: \${PROJECT_NAME}_df_db
+    container_name: \${PROJECT_NAME:-nself}_df_db
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -25,7 +25,7 @@ generate_df_stack() {
 
   df-redis:
     image: redis:7-alpine
-    container_name: \${PROJECT_NAME}_df_redis
+    container_name: \${PROJECT_NAME:-nself}_df_redis
     restart: unless-stopped
     command: redis-server --requirepass "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"
     volumes:
@@ -40,7 +40,7 @@ generate_df_stack() {
 
   df-weaviate:
     image: semitechnologies/weaviate:1.27.0
-    container_name: \${PROJECT_NAME}_df_weaviate
+    container_name: \${PROJECT_NAME:-nself}_df_weaviate
     restart: unless-stopped
     environment:
       - QUERY_DEFAULTS_LIMIT=25
@@ -68,7 +68,7 @@ generate_df_stack() {
   # Dify Init Service (DB Migrations)
   df-init:
     image: langgenius/dify-api:latest
-    container_name: \${PROJECT_NAME}_df_init
+    container_name: \${PROJECT_NAME:-nself}_df_init
     command:
       - /bin/bash
       - -c
@@ -78,7 +78,7 @@ generate_df_stack() {
             echo "✅ Migration successful"
             exit 0
           fi
-          echo "⚠️ Migration failed, retrying in 5s (\$i/5)..."
+          echo "⚠️ Migration failed, retrying in 5s (\$\$i/5)..."
           sleep 5
         done
         echo "❌ Migration failed after 5 attempts"

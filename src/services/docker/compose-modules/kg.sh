@@ -81,7 +81,7 @@ FRONTEND_ENV
   # Knowledge Graph Stack
   kg-neo4j:
     image: neo4j:5.26
-    container_name: ${PROJECT_NAME}_kg_neo4j
+    container_name: \${PROJECT_NAME:-nself}_kg_neo4j
     restart: unless-stopped
     environment:
       NEO4J_AUTH: neo4j/${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -107,9 +107,9 @@ FRONTEND_ENV
     build:
       context: ${kg_builder_dir}/backend
       dockerfile: Dockerfile
-    image: ${PROJECT_NAME}_kg_builder_backend:latest
+    image: \${PROJECT_NAME:-nself}_kg_builder_backend:latest
     pull_policy: build
-    container_name: ${PROJECT_NAME}_kg_builder_backend
+    container_name: \${PROJECT_NAME:-nself}_kg_builder_backend
     restart: unless-stopped
     env_file:
       - ${kg_builder_dir}/backend/.env
@@ -137,9 +137,9 @@ FRONTEND_ENV
         - VITE_ENV=PROD
         - VITE_AUTH_TYPE=none
         - VITE_SKIP_AUTH=true
-    image: ${PROJECT_NAME}_kg_builder_frontend:latest
+    image: \${PROJECT_NAME:-nself}_kg_builder_frontend:latest
     pull_policy: build
-    container_name: ${PROJECT_NAME}_kg_builder_frontend
+    container_name: \${PROJECT_NAME:-nself}_kg_builder_frontend
     restart: unless-stopped
     env_file:
       - ${kg_builder_dir}/frontend/.env

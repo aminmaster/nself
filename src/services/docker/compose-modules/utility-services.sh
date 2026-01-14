@@ -12,7 +12,7 @@ generate_mailpit_service() {
   # Mailpit - Email Testing Tool
   mailpit:
     image: axllent/mailpit:${MAILPIT_VERSION:-latest}
-    container_name: \${PROJECT_NAME}_mailpit
+    container_name: \${PROJECT_NAME:-nself}_mailpit
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -59,7 +59,7 @@ generate_nself_admin_service() {
     build:
       context: ./services/admin
       dockerfile: Dockerfile
-    container_name: \${PROJECT_NAME}_admin
+    container_name: \${PROJECT_NAME:-nself}_admin
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -176,7 +176,7 @@ generate_rabbitmq_service() {
   # RabbitMQ - Message Broker
   rabbitmq:
     image: rabbitmq:\${RABBITMQ_VERSION:-3.13-management-alpine}
-    container_name: \${PROJECT_NAME}_rabbitmq
+    container_name: \${PROJECT_NAME:-nself}_rabbitmq
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -210,7 +210,7 @@ generate_backup_service() {
   # Backup Service - Automated Database Backups
   backup:
     image: postgres:${POSTGRES_VERSION:-16-alpine}
-    container_name: \${PROJECT_NAME}_backup
+    container_name: \${PROJECT_NAME:-nself}_backup
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -263,7 +263,7 @@ DOCKERFILE
     build:
       context: ./mlflow
       dockerfile: Dockerfile
-    container_name: \${PROJECT_NAME}_mlflow
+    container_name: \${PROJECT_NAME:-nself}_mlflow
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -303,7 +303,7 @@ generate_search_services() {
   # Meilisearch - Lightning Fast Search
   meilisearch:
     image: getmeili/meilisearch:\${MEILISEARCH_VERSION:-v1.5}
-    container_name: \${PROJECT_NAME}_meilisearch
+    container_name: \${PROJECT_NAME:-nself}_meilisearch
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -348,7 +348,7 @@ generate_certbot_service() {
   # Certbot - Let's Encrypt SSL (with Cloudflare DNS plugin)
   certbot:
     image: certbot/dns-cloudflare:latest
-    container_name: \${PROJECT_NAME}_certbot
+    container_name: \${PROJECT_NAME:-nself}_certbot
     volumes:
       - ./nginx/certbot:/var/www/certbot
       - ./ssl/certificates:/etc/nginx/ssl

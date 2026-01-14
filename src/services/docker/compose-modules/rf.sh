@@ -137,7 +137,7 @@ generate_rf_stack() {
   # RAGFlow Isolated Infrastructure
   rf-db:
     image: postgres:16-alpine
-    container_name: \${PROJECT_NAME}_rf_db
+    container_name: \${PROJECT_NAME:-nself}_rf_db
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -154,7 +154,7 @@ generate_rf_stack() {
 
   rf-redis:
     image: redis:7-alpine
-    container_name: \${PROJECT_NAME}_rf_redis
+    container_name: \${PROJECT_NAME:-nself}_rf_redis
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
     volumes:
@@ -169,7 +169,7 @@ generate_rf_stack() {
 
   rf-es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
-    container_name: \${PROJECT_NAME}_rf_es
+    container_name: \${PROJECT_NAME:-nself}_rf_es
     restart: unless-stopped
     environment:
       discovery.type: single-node
@@ -191,7 +191,7 @@ generate_rf_stack() {
 
   rf-minio:
     image: minio/minio:latest
-    container_name: \${PROJECT_NAME}_rf_minio
+    container_name: \${PROJECT_NAME:-nself}_rf_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -204,7 +204,7 @@ generate_rf_stack() {
 
   rf-init:
     image: postgres:16-alpine
-    container_name: \${PROJECT_NAME}_rf_init
+    container_name: \${PROJECT_NAME:-nself}_rf_init
     depends_on:
       rf-db:
         condition: service_healthy
@@ -218,22 +218,22 @@ generate_rf_stack() {
         MAX_RETRIES=30
         COUNT=0
         until psql -h rf-db -U postgres -lqt | cut -d \| -f 1 | grep -qw "ragflow"; do
-          if [ \$COUNT -ge \$MAX_RETRIES ]; then
-            echo "❌ Timeout waiting for database creation or connection after \${MAX_RETRIES} attempts."
+          if [ \$\$COUNT -ge \$\$MAX_RETRIES ]; then
+            echo "❌ Timeout waiting for database creation or connection after \$\${MAX_RETRIES} attempts."
             exit 1
           fi
-          echo "Attempting database creation (\$COUNT/\$MAX_RETRIES)..."
+          echo "Attempting database creation (\$\$COUNT/\$\$MAX_RETRIES)..."
           # Try to create, suppress error if it exists (race condition)
           psql -h rf-db -U postgres -c "CREATE DATABASE ragflow;" 2>/dev/null || true
           
           sleep 5
-          COUNT=\$((COUNT+1))
+          COUNT=\$\$((COUNT+1))
         done
         echo "✅ RAGFlow database ready."
 
   rf-ragflow:
     image: infiniflow/ragflow:\${RAGFLOW_IMAGE_TAG:-v0.23.1}
-    container_name: \${PROJECT_NAME}_rf_ragflow
+    container_name: \${PROJECT_NAME:-nself}_rf_ragflow
     restart: unless-stopped
     ports:
       - "9380:9380"

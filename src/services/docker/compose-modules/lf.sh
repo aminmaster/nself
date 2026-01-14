@@ -8,7 +8,7 @@ generate_lf_stack() {
   # LangFlow Stack
   lf-db:
     image: postgres:16-alpine
-    container_name: \${PROJECT_NAME}_lf_db
+    container_name: \${PROJECT_NAME:-nself}_lf_db
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
@@ -25,7 +25,7 @@ generate_lf_stack() {
 
   lf-app:
     image: langflowai/langflow:latest
-    container_name: \${PROJECT_NAME}_lf_app
+    container_name: \${PROJECT_NAME:-nself}_lf_app
     restart: unless-stopped
     ports:
       - "7860:7860"

@@ -17,7 +17,7 @@ generate_postgres_service() {
   # PostgreSQL Database
   postgres:
     image: postgres:${POSTGRES_VERSION:-16-alpine}
-    container_name: \${PROJECT_NAME}_postgres
+    container_name: \${PROJECT_NAME:-nself}_postgres
     restart: unless-stopped
     shm_size: 256mb
     networks:
@@ -63,7 +63,7 @@ generate_hasura_service() {
   # Hasura GraphQL Engine
   hasura:
     image: hasura/graphql-engine:${HASURA_VERSION:-v2.36.0}
-    container_name: \${PROJECT_NAME}_hasura
+    container_name: \${PROJECT_NAME:-nself}_hasura
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -154,7 +154,7 @@ EOF
   # Hasura Auth Service
   auth:
     image: ${auth_image}
-    container_name: \${PROJECT_NAME}_auth
+    container_name: \${PROJECT_NAME:-nself}_auth
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -254,7 +254,7 @@ generate_db_seed_service() {
   # Database Seeder (Deferred Superadmin)
   db-seed:
     image: postgres:\${POSTGRES_VERSION:-16-alpine}
-    container_name: \${PROJECT_NAME}_db_seed
+    container_name: \${PROJECT_NAME:-nself}_db_seed
     restart: "no"
     networks:
       - ${DOCKER_NETWORK}
@@ -292,7 +292,7 @@ generate_minio_service() {
   # MinIO Object Storage
   minio:
     image: minio/minio:${MINIO_VERSION:-latest}
-    container_name: \${PROJECT_NAME}_minio
+    container_name: \${PROJECT_NAME:-nself}_minio
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
@@ -332,7 +332,7 @@ EOF
   # MinIO Client - One-time bucket initialization (run with --profile init-containers)
   minio-client:
     image: minio/mc:latest
-    container_name: ${PROJECT_NAME}_minio_client
+    container_name: \${PROJECT_NAME:-nself}_minio_client
     restart: "no"
     profiles:
       - init-containers
@@ -368,7 +368,7 @@ generate_redis_service() {
   # Redis Cache
   redis:
     image: redis:${REDIS_VERSION:-7-alpine}
-    container_name: \${PROJECT_NAME}_redis
+    container_name: \${PROJECT_NAME:-nself}_redis
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK}
