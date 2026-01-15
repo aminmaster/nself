@@ -832,7 +832,6 @@ server {
     # Kibana monitoring at /es path (avoids wildcard cert issues)
     location /es {${kibana_auth_config}
         set \$target_rf_kibana rf-kibana;
-        rewrite ^/es$ /es/ permanent;
         proxy_pass http://\$target_rf_kibana:5601;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
