@@ -90,15 +90,6 @@ ragflow:
 admin:
   host: 0.0.0.0
   http_port: 9381
-mysql:
-  name: 'ragflow'
-  user: 'postgres'
-  password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
-  host: 'rf-db'
-  port: 5432
-  max_connections: 900
-  stale_timeout: 300
-  max_allowed_packet: 1073741824
 postgres:
   name: 'ragflow'
   user: 'postgres'
