@@ -90,13 +90,13 @@ ragflow:
 admin:
   host: 0.0.0.0
   http_port: 9381
-postgres:
+mysql:
   name: 'ragflow'
-  user: 'postgres'
+  user: 'root'
   password: '${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}'
   host: 'rf-db'
-  port: 5432
-  max_connections: 100
+  port: 3306
+  max_connections: 1000
   stale_timeout: 30
 minio:
   user: '${NSELF_ADMIN_USER:-admin}'
@@ -127,18 +127,19 @@ generate_rf_stack() {
 
   # RAGFlow Isolated Infrastructure
   rf-db:
-    image: postgres:16-alpine
+    image: mysql:8.0.39
     container_name: \${PROJECT_NAME:-nself}_rf_db
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
-      POSTGRES_DB: ragflow
+      MYSQL_ROOT_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      MYSQL_DATABASE: ragflow
+    command: --max_connections=1000 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --tls_version="TLSv1.2,TLSv1.3"
     volumes:
-      - rf_db_data:/var/lib/postgresql/data
+      - rf_mysql_data:/var/lib/mysql
     networks:
       - ${DOCKER_NETWORK}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "mysqladmin" ,"ping", "-uroot", "-p${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -180,8 +181,22 @@ generate_rf_stack() {
       timeout: 20s
       retries: 10
 
+  rf-kibana:
+    image: kibana:8.11.3
+    container_name: \${PROJECT_NAME:-nself}_rf_kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://rf-es:9200
+    depends_on:
+      rf-es:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
   rf-minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
     container_name: \${PROJECT_NAME:-nself}_rf_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -202,19 +217,19 @@ generate_rf_stack() {
     networks:
       - ${DOCKER_NETWORK}
     environment:
-      DB_TYPE: postgres
+      DB_TYPE: mysql
       DB_NAME: ragflow
-      DB_USER: postgres
+      DB_USER: root
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       DB_HOST: rf-db
-      DB_PORT: 5432
+      DB_PORT: 3306
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         echo "Waiting for rf-db..."
         MAX_RETRIES=30
         COUNT=0
-        until python3 -c "import psycopg2; psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='rf-db')" 2>/dev/null; do
+        until python3 -c "import pymysql; pymysql.connect(host='rf-db', user='root', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', port=3306)" 2>/dev/null; do
           if [ \$\$COUNT -ge \$\$MAX_RETRIES ]; then
             echo "❌ Timeout waiting for database connection after \$\${MAX_RETRIES} attempts."
             exit 1
@@ -225,9 +240,9 @@ generate_rf_stack() {
         done
 
         echo "Ensuring ragflow database exists..."
-        python3 -c "import psycopg2; conn=psycopg2.connect(dbname='postgres', user='postgres', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', host='rf-db'); conn.autocommit=True; cur=conn.cursor(); cur.execute('SELECT 1 FROM pg_database WHERE datname=\'ragflow\''); exists=cur.fetchone(); [cur.execute('CREATE DATABASE ragflow') if not exists else None]"
+        python3 -c "import pymysql; conn=pymysql.connect(host='rf-db', user='root', password='${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}', port=3306); cur=conn.cursor(); cur.execute('CREATE DATABASE IF NOT EXISTS ragflow CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');"
 
-        echo "Initializing RAGFlow database tables..."
+        echo "Initializing RAGFlow database tables (MySQL)..."
         python3 -c "from common import settings; settings.init_settings(); from api.db.db_models import init_database_tables; import logging; logging.basicConfig(level=logging.INFO); init_database_tables()"
         
         echo "✅ RAGFlow database migration complete."
@@ -241,12 +256,12 @@ generate_rf_stack() {
       - "9381:9381"
     command: ["--enable-adminserver"]
     environment:
-      DB_TYPE: postgres
+      DB_TYPE: mysql
       DB_NAME: ragflow
-      DB_USER: postgres
+      DB_USER: root
       DB_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       DB_HOST: rf-db
-      DB_PORT: 5432
+      DB_PORT: 3306
       MINIO_HOST: rf-minio
       MINIO_USER: ${NSELF_ADMIN_USER:-admin}
       MINIO_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
