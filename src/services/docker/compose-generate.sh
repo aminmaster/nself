@@ -264,8 +264,11 @@ EOF
 
   # Add volumes for AIO Bundles
   [[ "${RAGFLOW_ENABLED:-false}" == "true" ]] && cat >> docker-compose.yml <<VOL
-  rf_db_data:
-    name: \${PROJECT_NAME:-nself}_rf_db_data
+  rf_mysql_data:
+    name: \${PROJECT_NAME:-nself}_rf_mysql_data
+    driver: local
+  rf_kibana_data:
+    name: \${PROJECT_NAME:-nself}_rf_kibana_data
     driver: local
   rf_redis_data:
     name: \${PROJECT_NAME:-nself}_rf_redis_data
