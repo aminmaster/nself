@@ -481,6 +481,7 @@ output_table() {
         local ragflow_sub="${RAGFLOW_SUBDOMAIN:-rf}"
         echo -e "  RAGFlow:        ${COLOR_GREEN}${protocol}://${ragflow_sub}.${domain}${COLOR_RESET}"
         echo -e "   - Admin:       ${COLOR_GRAY}${protocol}://${ragflow_sub}.${domain}/admin${COLOR_RESET}"
+        echo -e "   - Kibana:      ${COLOR_GRAY}${protocol}://${ragflow_sub}.${domain}/es${COLOR_RESET}"
         has_ai=true
     fi
 

@@ -803,6 +803,21 @@ EOF
   # 6. RAGFlow (Modular) - Only if AIO is not present
   if [[ "${RAGFLOW_ENABLED:-false}" == "true" && "$aio_stack_exists" == "false" ]]; then
     local rf_subdomain="${RAGFLOW_SUBDOMAIN:-rf}"
+    
+    # Generate Basic Auth for Kibana if enabled
+    local kibana_auth_config=""
+    if [[ "${RF_KIBANA_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
+       local auth_user="${RF_KIBANA_BASIC_AUTH_USER:-${NSELF_ADMIN_USER:-admin}}"
+       local auth_pass="${RF_KIBANA_BASIC_AUTH_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin}}"
+       
+       echo "Generating Basic Auth for RAGFlow Kibana (/es)..."
+       echo "${auth_user}:$(openssl passwd -apr1 "${auth_pass}")" > nginx/conf.d/rf_kibana.htpasswd
+       
+       kibana_auth_config='
+        auth_basic "Kibana Restricted Access";
+        auth_basic_user_file /etc/nginx/conf.d/rf_kibana.htpasswd;'
+    fi
+    
     cat > nginx/sites/ragflow.conf <<EOF
 server {
     listen 443 ssl;
@@ -814,15 +829,30 @@ server {
 
     resolver 127.0.0.11 valid=30s;
 
-    location / {
-        set \$target_rf rf-ragflow;
-        proxy_pass http://\$target_rf:80;
+    # Kibana monitoring at /es path (avoids wildcard cert issues)
+    location /es {${kibana_auth_config}
+        rewrite ^/es$ /es/ permanent;
+        rewrite ^/es/(.*) /\\\$1 break;
+        set \\\$target_rf_kibana rf-kibana;
+        proxy_pass http://\\\$target_rf_kibana:5601;
         proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location / {
+        set \\\$target_rf rf-ragflow;
+        proxy_pass http://\\\$target_rf:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_set_header Upgrade \\\$http_upgrade;
         proxy_set_header Connection "upgrade";
         
         # Increase timeouts for long-running RAG tasks
@@ -831,48 +861,9 @@ server {
     }
 }
 EOF
+  fi
 
-    # RAGFlow Kibana (Monitoring)
-    local kibana_auth_config=""
-    if [[ "${RF_KIBANA_BASIC_AUTH_ENABLED:-true}" == "true" ]]; then
-       local auth_user="${RF_KIBANA_BASIC_AUTH_USER:-${NSELF_ADMIN_USER:-admin}}"
-       local auth_pass="${RF_KIBANA_BASIC_AUTH_PASSWORD:-${NSELF_ADMIN_PASSWORD:-admin}}"
-       
-       echo "Generating Basic Auth for RAGFlow Kibana..."
-       echo "${auth_user}:$(openssl passwd -apr1 "${auth_pass}")" > nginx/conf.d/rf_kibana.htpasswd
-       
-       kibana_auth_config="
-    auth_basic \"Kibana Restricted Access\";
-    auth_basic_user_file /etc/nginx/conf.d/rf_kibana.htpasswd;
-"
-    fi
-
-    cat > nginx/sites/rf-kibana.conf <<EOF
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name es.${rf_subdomain}.${base_domain};
-
-    ssl_certificate /etc/nginx/ssl/${base_domain}/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/${base_domain}/privkey.pem;
-
-    resolver 127.0.0.11 valid=30s;
-    
-    ${kibana_auth_config}
-
-    location / {
-        set \$target_rf_kibana rf-kibana;
-        proxy_pass http://\$target_rf_kibana:5601;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-EOF
+# NOTE: Kibana is exposed as /es path under the main RAGFlow subdomain to avoid wildcard SSL certificate issues
   fi
 
   # 7. Dify (Modular)
