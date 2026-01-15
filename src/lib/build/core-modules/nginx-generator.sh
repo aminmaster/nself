@@ -833,7 +833,6 @@ server {
     location /es {${kibana_auth_config}
         set \$target_rf_kibana rf-kibana;
         rewrite ^/es$ /es/ permanent;
-        rewrite ^/es/(.*) /\$1 break;
         proxy_pass http://\$target_rf_kibana:5601;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
