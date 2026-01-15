@@ -863,9 +863,6 @@ server {
 EOF
   fi
 
-# NOTE: Kibana is exposed as /es path under the main RAGFlow subdomain to avoid wildcard SSL certificate issues
-  fi
-
   # 7. Dify (Modular)
   if [[ "${DIFY_ENABLED:-false}" == "true" ]]; then
     local df_subdomain="${DIFY_SUBDOMAIN:-df}"
