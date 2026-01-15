@@ -190,7 +190,7 @@ generate_rf_stack() {
     environment:
       ELASTICSEARCH_HOSTS: http://rf-es:9200
       SERVER_BASEPATH: "/es"
-      SERVER_REWRITEBASEPATH: "false"
+      SERVER_REWRITEBASEPATH: "true"
     depends_on:
       rf-es:
         condition: service_healthy
