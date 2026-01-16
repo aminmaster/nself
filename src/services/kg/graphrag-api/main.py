@@ -116,6 +116,42 @@ async def indexing(request: IndexRequest):
         logger.exception("Indexing failed")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/models")
+async def list_models():
+    """
+    Fetch available models from OpenRouter or return hardcoded fallbacks
+    """
+    provider = os.getenv("DEFAULT_LLM_PROVIDER", "openai").lower()
+    
+    if provider == "openrouter":
+        try:
+            import requests
+            api_key = OPENROUTER_API_KEY or OPENAI_API_KEY
+            res = requests.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=10
+            )
+            if res.ok:
+                data = res.json()
+                # Return a simplified list for the UI
+                return {
+                    "provider": "openrouter",
+                    "models": [m["id"] for m in data.get("data", [])]
+                }
+        except Exception as e:
+            logger.error(f"Failed to fetch OpenRouter models: {e}")
+    
+    # Fallbacks for standard providers
+    fallbacks = {
+        "openai": ["gpt-4o", "gpt-4o-mini", "o1-preview"],
+        "anthropic": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"]
+    }
+    return {
+        "provider": provider,
+        "models": fallbacks.get(provider, [])
+    }
+
 @app.post("/community")
 async def community_detection():
     # Placeholder for triggering Leiden + Community Summaries
