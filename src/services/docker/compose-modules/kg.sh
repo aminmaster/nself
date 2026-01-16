@@ -167,10 +167,12 @@ FRONTEND_ENV
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      DEFAULT_LLM_PROVIDER: openai
-      DEFAULT_MODEL: gpt-4o-mini
-      EMBEDDING_MODEL: text-embedding-3-small
-      VECTOR_INDEX_NAME: kg_embeddings
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-openai}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-gpt-4o-mini}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      VECTOR_INDEX_NAME: ${VECTOR_INDEX_NAME:-kg_embeddings}
       DEBUG: "${DEBUG:-false}"
     depends_on:
       kg-neo4j:
@@ -196,10 +198,12 @@ FRONTEND_ENV
       NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      DEFAULT_LLM_PROVIDER: openai
-      DEFAULT_MODEL: gpt-4o-mini
-      EMBEDDING_MODEL: text-embedding-3-small
-      VECTOR_INDEX_NAME: kg_embeddings
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-openai}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-gpt-4o-mini}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      VECTOR_INDEX_NAME: ${VECTOR_INDEX_NAME:-kg_embeddings}
       RABBITMQ_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-kP8z4s5OMdFOVD1i}
       RABBITMQ_HOST: rabbitmq

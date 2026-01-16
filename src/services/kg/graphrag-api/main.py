@@ -24,6 +24,8 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "aiopassword")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL")
 
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-4o-mini")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
@@ -41,8 +43,15 @@ except Exception as e:
 # Initialize LLM & Embeddings
 def get_llm():
     provider = os.getenv("DEFAULT_LLM_PROVIDER", "openai").lower()
+    
+    # Handle OpenRouter specifically if provider is set to 'openrouter'
+    if provider == "openrouter":
+        base_url = LLM_BASE_URL or "https://openrouter.ai/api/v1"
+        api_key = OPENROUTER_API_KEY or OPENAI_API_KEY
+        return OpenAILLM(model_name=DEFAULT_MODEL, api_key=api_key, base_url=base_url)
+        
     if provider == "openai":
-        return OpenAILLM(model_name=DEFAULT_MODEL, api_key=OPENAI_API_KEY)
+        return OpenAILLM(model_name=DEFAULT_MODEL, api_key=OPENAI_API_KEY, base_url=LLM_BASE_URL)
     elif provider == "anthropic":
         return AnthropicLLM(model_name=DEFAULT_MODEL, api_key=ANTHROPIC_API_KEY)
     else:
