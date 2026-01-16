@@ -185,6 +185,34 @@ FRONTEND_ENV
       timeout: 10s
       retries: 5
 
+  kg-graphrag-worker:
+    image: \${PROJECT_NAME:-nself}_kg_graphrag_api:latest
+    container_name: \${PROJECT_NAME:-nself}_kg_graphrag_worker
+    restart: unless-stopped
+    command: celery -A worker worker --loglevel=info -Q kg_tasks
+    environment:
+      NEO4J_URI: bolt://kg-neo4j:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: ${NSELF_ADMIN_PASSWORD:-${POSTGRES_PASSWORD:-aiopassword}}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DEFAULT_LLM_PROVIDER: openai
+      DEFAULT_MODEL: gpt-4o-mini
+      EMBEDDING_MODEL: text-embedding-3-small
+      VECTOR_INDEX_NAME: kg_embeddings
+      RABBITMQ_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-kP8z4s5OMdFOVD1i}
+      RABBITMQ_HOST: rabbitmq
+      ES_HOST: http://aio-es:9200
+      KG_API_URL: http://kg-graphrag-api:8000/indexing
+    depends_on:
+      kg-graphrag-api:
+        condition: service_healthy
+      kg-neo4j:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
 EOF
 }
 
